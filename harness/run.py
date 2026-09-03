@@ -17,6 +17,7 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 
+from harness import env as env_mod
 from harness import prompt as prompt_mod
 from harness.report import cost as cost_mod
 from harness.report.results import RunResult, dataset_fingerprint, new_run_id
@@ -137,6 +138,12 @@ def main() -> int:
     ap.add_argument("--sleep", type=float, default=0.0, help="pause between calls")
     ap.add_argument("--dry-run", action="store_true", help="estimate cost, call nothing")
     args = ap.parse_args()
+
+    # Before anything asks for a key. Names only — a run log that echoed the
+    # values would put them in the terminal scrollback and any pasted output.
+    loaded = env_mod.load()
+    if loaded:
+        print(f"  .env: loaded {', '.join(sorted(loaded))}")
 
     keys = list(MODELS) if args.all else args.model
     if not keys:
