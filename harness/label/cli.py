@@ -18,6 +18,7 @@ from __future__ import annotations
 import argparse
 import json
 import random
+import re
 import sys
 from collections import Counter
 from datetime import date, datetime, timezone
@@ -86,7 +87,34 @@ def load_pool() -> list[dict]:
     return pool
 
 
+#: Input that is plainly meant for a shell, not for this prompt. A long
+#: labelling session looks enough like a terminal that it is easy to forget the
+#: program is still running and type the next command straight into it — which
+#: the menu then rejects as an invalid key, so the command is neither run nor
+#: reported as unrun, and the session silently goes nowhere.
+#: Only tokens that are never the start of a product description. Build tools
+#: make surprisingly poor sentinels here, because so many of them are ordinary
+#: goods words: "cat food, 400 g", "cd player", "type approval certificate",
+#: "clear glass bottles", "echo cancelling headphones", "make up kit" (3304),
+#: "uv lamp", "poetry books" (4901). All of those are left out. A flag or a
+#: path is the reliable tell; the program names are the residue that is safe.
+_COMMAND_LIKE = re.compile(
+    r"^(?:python\d?|py|pip\d?|pytest|git|npm|node|pwsh|powershell|docker)\b"
+    r"|^cd\s+(?:\S*[\\/]|\.\.)"
+    r"|\s--?[A-Za-z]",
+    re.I,
+)
+
+
+def _looks_like_a_shell_command(val: str) -> bool:
+    # A leading ./ or .\ is an invocation and nothing else, space or not.
+    if val.startswith(("./", ".\\")):
+        return True
+    return " " in val and bool(_COMMAND_LIKE.search(val))
+
+
 def _ask(prompt: str, *, allow_empty: bool = False) -> str:
+    last: str | None = None
     while True:
         try:
             # Strip a leading BOM as well as whitespace: piping input on
@@ -97,6 +125,17 @@ def _ask(prompt: str, *, allow_empty: bool = False) -> str:
             raise Quit from None
         if val.lower() == ":q":
             raise Quit
+        # Say what happened rather than rejecting it as a bad menu key. Typing
+        # the same thing twice means it really was the intended answer, so this
+        # informs without trapping anyone who genuinely wants that text.
+        if val != last and _looks_like_a_shell_command(val):
+            print("\n    That reads as a shell command, and this is the labelling")
+            print("    tool's prompt — it went to this program, not to your shell,")
+            print("    and nothing was run.")
+            print("    Leave with :q (or Ctrl+C), then run it at the shell.")
+            print("    To use that text as your answer, enter it again.\n")
+            last = val
+            continue
         if val or allow_empty:
             return val
 
@@ -632,6 +671,18 @@ def run_review_first_pass(
     print(f"  states: {dict(Counter(_state_of({'collection_meta': e.collection_meta}) for e in todo).most_common())}")
     print("  A suggestion is a starting point. The slab is YOUR judgement:")
     print("  derive it from Notification 9/2025, not from anything shown here.")
+
+    # Say up front how much of this queue is the seven-question path. Landing on
+    # an ungrounded suggestion first and grinding through it is how someone
+    # concludes the tool is slow, when the fast queue was one flag away.
+    if not grounded_only:
+        n_grounded = sum(1 for e in todo if e.slab != UNCERTAIN and e.hsn4)
+        if n_grounded and n_grounded < len(todo):
+            print(RULE)
+            print(f"  {n_grounded} of these carry a slab read out of the archived")
+            print("  Gazette and can be accepted in two keystrokes. The other")
+            print(f"  {len(todo) - n_grounded} span several schedules and need the full pass.")
+            print("  To take the quick ones first:  --grounded-only")
     print(RULE)
 
     written = 0
