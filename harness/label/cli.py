@@ -146,7 +146,7 @@ def present(record: dict, ex_id: str, index: int, batch_pos: int) -> None:
     else:
         print(f"  {text}")
     print(RULE)
-    _print_hints(record.get("collection_meta", {}))
+    _print_hints(record.get("collection_meta", {}), record)
 
 
 #: Metadata that helps and metadata that misleads are presented differently on
@@ -166,7 +166,35 @@ _SAFE_HINTS = (
 )
 
 
-def _print_hints(meta: dict) -> None:
+def _ruling_outcome(record: dict):
+    """The authority's own determination, read from the cached PDF.
+
+    The excerpt stops before the findings so the input cannot contain the
+    answer, but the annotator still has to establish the heading — and the
+    authority did that work in the same document. Best-effort: it locates the
+    operative passage in roughly 60% of rulings, and says how much to trust
+    what it found.
+    """
+    if record.get("source") != "aar":
+        return None
+    try:
+        from harness.collect.aar import cached_pdf_for, extract_pdf_text
+        from harness.collect.ruling_outcome import extract_outcome
+    except Exception:  # noqa: BLE001 - pypdf is an optional extra
+        return None
+
+    pdf = cached_pdf_for(record)
+    if not pdf.exists():
+        return None
+    try:
+        text, _ = extract_pdf_text(pdf.read_bytes())
+        return extract_outcome(text)
+    except Exception:  # noqa: BLE001 - a hint is never worth a crash
+        return None
+
+
+def _print_hints(meta: dict, record: dict | None = None) -> None:
+    record = record or {"collection_meta": meta}
     shown = False
     for key in _SAFE_HINTS:
         value = meta.get(key)
@@ -180,6 +208,16 @@ def _print_hints(meta: dict) -> None:
     if families:
         print(f"  possible moved family: {', '.join(families)}  (candidate only —")
         print("     verify against Notification 9/2025 before tagging)")
+        shown = True
+
+    if outcome := _ruling_outcome(record):
+        print()
+        print(f"  what the authority decided ({outcome.confidence}):")
+        if outcome.headings:
+            print(f"     heading(s): {', '.join(outcome.headings)}")
+        print(f"     \"{outcome.quote[:300]}\"")
+        print("     The HEADING is durable and usable. Any rate here is not:")
+        print("     derive the slab from Notification 9/2025 yourself.")
         shown = True
 
     stale = meta.get("stale_rates_in_ruling")
