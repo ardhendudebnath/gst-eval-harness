@@ -24,6 +24,7 @@ from datetime import date, datetime, timezone
 from pathlib import Path
 
 from harness.schema import (
+    SOURCES,
     TARGET_STRATA,
     UNANSWERABLE,
     UNANSWERABLE_REASONS,
@@ -258,7 +259,43 @@ def label_one(record: dict, ex_id: str) -> Example | None:
 # --------------------------------------------------------------------------
 
 
-def run_label(target_total: int, keyword: str | None) -> int:
+def select_queue(
+    pool: list[dict],
+    done_source_ids: set[str],
+    *,
+    keyword: str | None = None,
+    source: str | None = None,
+    stale: str | None = None,
+) -> list[dict]:
+    """Records still to label, narrowed by the requested filters.
+
+    `stale` selects rulings that quote a given rate. Passing "12" queues the
+    rulings whose slab was abolished on 22 Sep 2025 — by construction the
+    `rate-changed-2025` examples, and the ones the headline finding rests on,
+    so they are worth labelling first while the guideline is freshest.
+    """
+    queue = [r for r in pool if r.get("source_id") not in done_source_ids]
+
+    if source:
+        queue = [r for r in queue if r.get("source") == source]
+    if stale:
+        queue = [
+            r
+            for r in queue
+            if stale in (r.get("collection_meta", {}).get("stale_rates_in_ruling") or [])
+        ]
+    if keyword:
+        k = keyword.lower()
+        queue = [r for r in queue if k in r["input"].lower()]
+    return queue
+
+
+def run_label(
+    target_total: int,
+    keyword: str | None,
+    source: str | None = None,
+    stale: str | None = None,
+) -> int:
     labelled = list(read_jsonl(GOLDEN))
     done_source_ids = {e.source_id for e in labelled if e.source_id}
 
@@ -270,11 +307,20 @@ def run_label(target_total: int, keyword: str | None) -> int:
         )
         return 1
 
-    queue = [r for r in pool if r.get("source_id") not in done_source_ids]
-    if keyword:
-        k = keyword.lower()
-        queue = [r for r in queue if k in r["input"].lower()]
-        print(f"\n  filter {keyword!r}: {len(queue)} candidates")
+    queue = select_queue(
+        pool, done_source_ids, keyword=keyword, source=source, stale=stale
+    )
+    active = [f"{k}={v!r}" for k, v in
+              (("filter", keyword), ("source", source), ("stale", stale)) if v]
+    if active:
+        print(f"\n  {'  '.join(active)}: {len(queue)} candidates")
+
+    if stale == "12":
+        print(
+            "\n  These rulings quote 12%, a slab abolished on 22 Sep 2025.\n"
+            "  Take the heading from the ruling; derive the slab from Notification\n"
+            "  9/2025 yourself. Tag each one rate-changed-2025."
+        )
 
     if not queue:
         print("\n  Nothing left to label with those settings.\n")
@@ -372,13 +418,21 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--target", type=int, default=400, help="target dataset size")
     ap.add_argument("--filter", type=str, default=None, help="only show inputs containing this")
+    ap.add_argument("--source", choices=sorted(SOURCES), default=None)
+    ap.add_argument(
+        "--stale",
+        metavar="RATE",
+        default=None,
+        help="only rulings quoting this rate; --stale 12 queues the abolished-slab "
+        "examples that seed the rate-changed-2025 slice",
+    )
     ap.add_argument("--relabel", type=int, metavar="N", default=None)
     ap.add_argument("--seed", type=int, default=None)
     args = ap.parse_args()
 
     if args.relabel:
         return run_relabel(args.relabel, args.seed)
-    return run_label(args.target, args.filter)
+    return run_label(args.target, args.filter, args.source, args.stale)
 
 
 if __name__ == "__main__":

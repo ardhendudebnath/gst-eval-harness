@@ -143,6 +143,26 @@ _GOODS_END = re.compile(
 #: certainly landed in boilerplate rather than the facts.
 MIN_EXCERPT_WORDS = 25
 
+#: Applications withdrawn or thrown out before a determination. One reached the
+#: pool where the applicant withdrew "quoting the reason that there was an
+#: inadvertent mistake in their application with regard to manufacturing
+#: process" — the goods description is disowned by the person who wrote it, and
+#: no authority ever ruled on it. Labelling that wastes annotator effort and
+#: puts an example in the golden set whose facts nobody stands behind.
+_WITHDRAWN = re.compile(
+    r"\b(?:request(?:ed)?\s+(?:to\s+|for\s+)?withdraw"
+    r"|permitted\s+to\s+withdraw"
+    r"|withdrawn\s+by\s+the\s+applicant"
+    r"|application\s+is\s+(?:hereby\s+)?withdrawn"
+    r"|not\s+maintainable"
+    r"|rejected\s+as\s+inadmissible)\b",
+    re.I,
+)
+
+
+def is_withdrawn(text: str) -> bool:
+    return bool(_WITHDRAWN.search(text))
+
 _HSN = re.compile(
     r"\b(?:HSN|H\.?S\.?N\.?|heading|chapter|tariff\s+item|sub-?heading)"
     r"[^0-9\n]{0,25}(\d{4}(?:\s?\d{2}){0,2})",
@@ -365,6 +385,7 @@ def collect(
         "scanned": 0,
         "no_pdf": 0,
         "fetch_failed": 0,
+        "withdrawn": 0,
         "no_facts_section": 0,
         "too_short": 0,
         "out_of_scope": 0,
@@ -423,6 +444,10 @@ def collect(
                 text, n_pages = extract_pdf_text(raw)
                 if is_scanned(text, n_pages):
                     stats["scanned"] += 1
+                    continue
+
+                if is_withdrawn(text):
+                    stats["withdrawn"] += 1
                     continue
 
                 segmented = segment_goods_description(text, max_words)

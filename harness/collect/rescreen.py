@@ -20,8 +20,8 @@ import sys
 from collections import Counter
 from pathlib import Path
 
-from harness.collect.aar import is_about_services
-from harness.collect.normalise import in_length_bounds
+from harness.collect.aar import is_about_services, is_withdrawn
+from harness.collect.normalise import in_length_bounds, normalise
 from harness.schema import out_of_scope_term, read_jsonl
 
 GOLDEN = Path("data/golden.jsonl")
@@ -80,6 +80,7 @@ def main() -> int:
     dropped: Counter[str] = Counter()
     families: Counter[str] = Counter()
     protected = 0
+    redacted = 0
 
     for rec in records:
         # Never drop a record that already backs a labelled example.
@@ -102,6 +103,11 @@ def main() -> int:
             if is_about_services({"brief": brief}):
                 dropped["services"] += 1
                 continue
+            # Withdrawn applications carry no determination and facts the
+            # applicant has disowned.
+            if is_withdrawn(rec["input"]):
+                dropped["withdrawn"] += 1
+                continue
         if not in_length_bounds(rec["input"]):
             dropped["length"] += 1
             continue
@@ -109,6 +115,17 @@ def main() -> int:
         if key in seen:
             dropped["duplicate"] += 1
             continue
+
+        # Re-run redaction. Filters alone cannot fix a record that was collected
+        # before a redaction pattern existed — the name is already on disk, and
+        # only re-normalising removes it.
+        if rec.get("source") == "aar":
+            cleaned, applied = normalise(rec["input"], is_ruling=True)
+            if cleaned != rec["input"]:
+                rec["input"] = cleaned
+                meta = rec.setdefault("collection_meta", {})
+                meta["transforms"] = sorted(set(meta.get("transforms", [])) | set(applied))
+                redacted += 1
 
         seen.add(key)
         kept.append(rec)
@@ -118,12 +135,14 @@ def main() -> int:
     print(f"  dropped:  {sum(dropped.values())}  {dict(dropped)}")
     if families:
         print(f"  families: {dict(families.most_common())}")
+    if redacted:
+        print(f"  redacted: {redacted} record(s) further cleaned by current patterns")
 
     if args.dry_run:
         print("\n  --dry-run: nothing written")
         return 0
 
-    if not dropped:
+    if not dropped and not redacted:
         print("\n  nothing to do")
         return 0
 

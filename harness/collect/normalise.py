@@ -74,6 +74,41 @@ _REPRESENTATIVE_RE = re.compile(
 # Trailing street address ending in a PIN code.
 _PINCODE_ADDR_RE = re.compile(r"[^.]{0,120}?\b\d{6}\b|\b\d{3}\s?\d{3}\b(?=\s*[.,])")
 
+# Honorific-prefixed personal names. These are not only representatives: sole
+# proprietors are named as individuals ("Mr. <name>, Prop. of ..."), and
+# signature blocks carry the adjudicating members' names.
+#
+# The (?!No\.) guard is load-bearing. "G.O.Ms No. 110, Revenue (CT-II)
+# Department" is a Telangana Government Order citation — legitimate legal text
+# that a bare honorific pattern would silently destroy.
+_PERSON_NAME_RE = re.compile(
+    r"\b(?:Sri|Shri|Smt|Mr|Ms|Mrs|Dr)\.?\s+"
+    r"(?!No\.)"
+    r"[A-Z][\w.\-]{1,24}(?:\s+[A-Z][\w.\-]{1,24}){0,3}"
+)
+
+# The proprietor's surname is repeated without the honorific, so the
+# honorific pattern alone leaves it behind: "Mr. <full name>, Prop.of .<surname>
+# (hereinafter called as .<surname> or Applicant)".
+_PROPRIETOR_RE = re.compile(
+    r"\b[Pp]rop(?:rietor)?\.?\s*(?:of|:)?\s*\.?\s*"
+    r"[A-Z][\w.\-]{1,30}(?:\s+[A-Z][\w.\-]{1,30}){0,2}"
+)
+_ALIAS_RE = re.compile(
+    r"\b(?:herein\s*after|hereinafter)\s+(?:called|referred)\s+(?:as|to\s+as)\s*\.?\s*"
+    r"[A-Z][\w.\-]{1,30}"
+)
+
+# "doing business at <address>" and "(Prop. : ), No. 18-100, <street>, <town>".
+_BUSINESS_ADDR_RE = re.compile(
+    r"\bdoing\s+business\s+at\b[^.]{0,160}", re.I
+)
+_STREET_ADDR_RE = re.compile(
+    r"\bNo\.\s*\d[\w\-/]*\s*,[^.]{0,120}?"
+    r"(?:Road|Street|Nagar|Lane|Colony|Layout|Cross|Block|Marg|Sarani)\b[^.]{0,60}",
+    re.I,
+)
+
 # Procedural furniture in rulings — the exact analogue of "Buy Now / Free
 # Delivery" in a product listing, and stripped for the same reason. It carries
 # no classification signal, and leaving it in would pad every input by a few
@@ -147,6 +182,11 @@ def normalise(text: str, *, is_ruling: bool = False) -> tuple[str, list[str]]:
             ("gstin", _GSTIN_RE),
             ("arn", _ARN_RE),
             ("applicant", _APPLICANT_RE),
+            ("person_name", _PERSON_NAME_RE),
+            ("proprietor", _PROPRIETOR_RE),
+            ("alias", _ALIAS_RE),
+            ("business_address", _BUSINESS_ADDR_RE),
+            ("street_address", _STREET_ADDR_RE),
             ("address", _PINCODE_ADDR_RE),
             *_RULING_FURNITURE,
         ):
