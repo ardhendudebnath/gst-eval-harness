@@ -141,15 +141,35 @@ self-agreement check meaningful.
 
 ## 4. Primary sources
 
-| Document | Where |
+**The Gazette texts are archived in this repository**, under
+[`primary/`](primary/), pinned by SHA-256 in `primary/MANIFEST.json`:
+
+| File | Document | Pages |
+|---|---|---|
+| `09-2025-CTR.pdf` | Notification 9/2025–CT(R), rated goods | 52 |
+| `10-2025-CTR.pdf` | Notification 10/2025–CT(R), exempt goods | 12 |
+| `19-2025-CTR.pdf` | Notification 19/2025–CT(R), omitting Schedule VII | 2 |
+
+```bash
+make verify-sources    # checks hashes and re-reads the entries that must exist
+```
+
+CI runs it, so a corrupted or swapped file fails the build rather than quietly
+changing what the dataset means. Verification is not only by hash: each
+document carries content assertions — 9/2025 must contain "Motorcycles of
+engine capacity exceeding 350 cc", 19/2025 must contain "Biris" and "shall be
+omitted" — so the check confirms the file is the document it claims to be, not
+merely unchanged.
+
+| Also useful | Where |
 |---|---|
-| CBIC GST rate finder (official portal) | <https://taxinformation.cbic.gov.in/> |
+| CBIC GST rate finder | <https://taxinformation.cbic.gov.in/> |
 | CBIC GST rates landing page | <https://cbic-gst.gov.in/gst-goods-services-rates.html> |
-| Notification 10/2025–CT(R), Gazette text (PDF) | <https://taxo.online/wp-content/uploads/2025/09/NN-10-2025_CT_R.pdf> |
 
 Secondary commentary was used to establish the *structure* of the schedules
-during drafting. No secondary source is permitted as the authority for an
-individual example's label.
+during drafting, and every structural claim has since been replaced by a
+reading of the Gazette. No secondary source is permitted as the authority for
+an individual example's label.
 
 ---
 
@@ -196,8 +216,14 @@ because that was the applicant's rejected contention.
 - [x] Decide whether to bring cement, aerated drinks and tobacco into scope.
       **All three lifted.** Alcohol is the only remaining exclusion, and it is
       categorical rather than a scope choice.
-- [ ] Archive the Gazette PDFs into `primary/` with their SHA-256 hashes,
-      rather than relying on a third-party mirror.
+- [x] Archive the Gazette PDFs into `primary/` with their SHA-256 hashes.
+      Done, with `MANIFEST.json` and `python -m harness.verify_primary`, which
+      CI runs. **Partly open:** the copies came from the taxo.online mirror,
+      because the official CBIC portal serves an incomplete TLS certificate
+      chain and could not be fetched over a verified connection. Bypassing
+      verification for documents whose integrity is the whole point would be
+      self-defeating, so the copies are pinned by hash and their content is
+      asserted instead. Re-fetch from CBIC if their chain is ever fixed.
 
 **Last checked against primary sources:** 2026-09-04, against the Gazette text
 of Notification 9/2025 and 19/2025.

@@ -37,6 +37,10 @@ rescreen:
 validate:
 	$(PY) -m harness.validate
 
+# Hash- and content-check the archived Gazette notifications.
+verify-sources:
+	$(PY) -m harness.verify_primary
+
 strict:
 	$(PY) -m harness.validate --strict
 

@@ -44,6 +44,13 @@ jobs:
           python -m pip install pypdf
           python -m pytest tests -q
 
+      # The archived notifications are the ground truth for every rate claim in
+      # the repository. This checks their hashes and re-reads the entries that
+      # must be present, so a corrupted or swapped file fails the build rather
+      # than silently changing what the dataset means.
+      - name: Verify archived primary sources
+        run: python -m harness.verify_primary
+
       # Schema + composition checks on the golden set. Not --strict yet: the
       # dataset is still being built and will be off-target until it is frozen.
       - name: Validate dataset
