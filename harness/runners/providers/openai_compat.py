@@ -23,26 +23,44 @@ from harness.runners.registry import ModelSpec
 ENDPOINTS = {
     "openai": "https://api.openai.com/v1/chat/completions",
     "openrouter": "https://openrouter.ai/api/v1/chat/completions",
+    # NVIDIA's API catalog serves open-weight models over the same wire format.
+    "nvidia": "https://integrate.api.nvidia.com/v1/chat/completions",
 }
-KEY_VARS = {"openai": "OPENAI_API_KEY", "openrouter": "OPENROUTER_API_KEY"}
+KEY_VARS = {
+    "openai": "OPENAI_API_KEY",
+    "openrouter": "OPENROUTER_API_KEY",
+    "nvidia": "NVIDIA_API_KEY",
+}
+MODEL_VARS = {"openrouter": "OPENROUTER_MODEL", "nvidia": "NVIDIA_MODEL"}
 
+#: Headroom for reasoning. Nemotron-style models emit their chain into a
+#: separate `reasoning_content` field that still bills as output tokens, so a
+#: classification-sized budget truncates the answer that follows it.
 MAX_TOKENS = 4000
+MAX_TOKENS_THINKING = 16384
 
 
 class OpenAICompatRunner:
-    def __init__(self, spec: ModelSpec, *, timeout: float = 120.0):
+    def __init__(
+        self,
+        spec: ModelSpec,
+        *,
+        timeout: float = 300.0,
+        thinking: bool = True,
+    ):
         if spec.provider not in ENDPOINTS:
             raise RunnerError(f"no OpenAI-compatible endpoint for {spec.provider!r}")
 
         self.provider = spec.provider
         self.spec = spec
-        # The open-weight slot carries no id until one is chosen, so that the
-        # registry never implies a model has been picked or called.
-        self.model = spec.model_id or os.environ.get("OPENROUTER_MODEL", "")
+        # A slot may carry no id until one is chosen, so the registry never
+        # implies a model has been picked or called.
+        env_var = MODEL_VARS.get(spec.provider, "")
+        self.model = spec.model_id or (os.environ.get(env_var, "") if env_var else "")
         if not self.model:
             raise RunnerError(
-                f"no model id for {spec.key!r}; set OPENROUTER_MODEL to the "
-                "open-weight model you intend to benchmark"
+                f"no model id for {spec.key!r}; set {env_var or 'the model id'} "
+                "to the model you intend to benchmark"
             )
 
         self._key = os.environ.get(KEY_VARS[self.provider], "")
@@ -50,6 +68,10 @@ class OpenAICompatRunner:
             raise RunnerError(f"{KEY_VARS[self.provider]} is not set")
         self._url = ENDPOINTS[self.provider]
         self._timeout = timeout
+        # On by default: Claude models think adaptively unless told otherwise,
+        # so leaving reasoning off here would compare a thinking model against
+        # a non-thinking one. Recorded on every completion either way.
+        self.thinking = thinking
 
     @timed
     def run(self, prompt: str, *, system: str | None = None) -> Completion:
@@ -58,9 +80,17 @@ class OpenAICompatRunner:
             messages.append({"role": "system", "content": system})
         messages.append({"role": "user", "content": prompt})
 
-        body = json.dumps(
-            {"model": self.model, "max_tokens": MAX_TOKENS, "messages": messages}
-        ).encode("utf-8")
+        payload: dict = {
+            "model": self.model,
+            "max_tokens": MAX_TOKENS_THINKING if self.thinking else MAX_TOKENS,
+            "messages": messages,
+        }
+        if self.provider == "nvidia" and self.thinking:
+            # Nemotron-family reasoning switch. Harmless on models that ignore
+            # it; the served model id in the response records what actually ran.
+            payload["chat_template_kwargs"] = {"enable_thinking": True}
+
+        body = json.dumps(payload).encode("utf-8")
         req = urllib.request.Request(
             self._url,
             data=body,
@@ -84,19 +114,32 @@ class OpenAICompatRunner:
             blank.error = f"{type(exc).__name__}: {exc}"
             return blank
 
-        return parse_response(payload, self.model, self.provider)
+        completion = parse_response(response, self.model, self.provider)
+        completion.extra["thinking"] = self.thinking
+        return completion
 
 
 def parse_response(payload: dict, model: str, provider: str) -> Completion:
     """Turn a chat-completions body into a Completion.
 
     Separate from the request so it can be tested without a network call, and
-    tolerant of the fields OpenRouter omits for some upstream providers.
+    tolerant of the fields some upstream providers omit.
+
+    Reasoning is deliberately **not** merged into `text`. Models that reason
+    return it in a separate `reasoning_content` field, and folding it into the
+    answer would feed the chain of thought to a parser looking for `SLAB:` —
+    which matches whichever rate the model considered first rather than the one
+    it concluded with. Its length is recorded so the tokens are accounted for.
     """
     choices = payload.get("choices") or []
     message = (choices[0].get("message") or {}) if choices else {}
     usage = payload.get("usage") or {}
     details = usage.get("prompt_tokens_details") or {}
+
+    reasoning = message.get("reasoning_content") or ""
+    extra: dict = {}
+    if reasoning:
+        extra["reasoning_chars"] = len(reasoning)
 
     return Completion(
         text=message.get("content") or "",
@@ -109,4 +152,5 @@ def parse_response(payload: dict, model: str, provider: str) -> Completion:
         request_id=payload.get("id"),
         stop_reason=(choices[0].get("finish_reason") if choices else None),
         error=None if choices else "empty_response: no choices returned",
+        extra=extra,
     )

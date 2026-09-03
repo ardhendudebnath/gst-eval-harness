@@ -139,11 +139,87 @@ def test_missing_usage_does_not_crash():
 # --- construction ---------------------------------------------------------
 
 
-def test_open_weight_without_a_model_id_refuses_clearly(monkeypatch):
-    monkeypatch.delenv("OPENROUTER_MODEL", raising=False)
-    monkeypatch.setenv("OPENROUTER_API_KEY", "x")
-    with pytest.raises(RunnerError, match="OPENROUTER_MODEL"):
+def test_missing_api_key_refuses_clearly(monkeypatch):
+    monkeypatch.delenv("NVIDIA_API_KEY", raising=False)
+    with pytest.raises(RunnerError, match="NVIDIA_API_KEY"):
         build("open-weight")
+
+
+# --- the open-weight tier -------------------------------------------------
+
+
+def test_open_weight_names_a_self_hostable_model():
+    # The plan asks for one you could self-host — that is what makes it the
+    # bridge to project 03. 30B total / 3B active fits on one GPU.
+    spec = get("open-weight")
+    assert "30b" in spec.model_id.lower()
+    assert spec.tier == "open-weight"
+
+
+def test_the_550b_is_an_extra_not_the_open_weight_entry():
+    # Open weights, but nobody self-hosts 550B, so it cannot discharge the
+    # requirement — it is a separate optional comparison.
+    assert get("open-weight-xl").model_id != get("open-weight").model_id
+    assert "not self-hostable" in get("open-weight-xl").note
+
+
+def test_open_weight_models_are_unpriced_until_a_price_is_read():
+    # A fabricated price silently reorders the ranking that
+    # cost-per-correct-answer exists to produce.
+    assert not priced(get("open-weight"))
+    assert not priced(get("open-weight-xl"))
+
+
+def test_nvidia_endpoint_is_the_catalog():
+    from harness.runners.providers.openai_compat import ENDPOINTS
+
+    assert ENDPOINTS["nvidia"] == "https://integrate.api.nvidia.com/v1/chat/completions"
+
+
+# --- reasoning models -----------------------------------------------------
+
+
+def test_reasoning_is_not_merged_into_the_answer():
+    # Folding the chain of thought into the text would feed the parser
+    # whichever rate the model considered first, not the one it concluded with.
+    c = parse_response(
+        {
+            "choices": [{
+                "message": {
+                    "content": "SLAB: 18\nHSN: 9608",
+                    "reasoning_content": "Maybe SLAB: 12? No, that is abolished.",
+                },
+                "finish_reason": "stop",
+            }],
+            "usage": {"prompt_tokens": 500, "completion_tokens": 900},
+        },
+        "nvidia/nemotron-3.5-lightning-30b-a3b", "nvidia",
+    )
+    assert c.text == "SLAB: 18\nHSN: 9608"
+    assert "12" not in c.text
+
+    from harness.prompt import parse
+
+    assert parse(c.text).slab == "18"
+
+
+def test_reasoning_length_is_recorded_so_tokens_are_accounted_for():
+    c = parse_response(
+        {
+            "choices": [{"message": {"content": "SLAB: 5", "reasoning_content": "x" * 40}}],
+            "usage": {"prompt_tokens": 10, "completion_tokens": 60},
+        },
+        "m", "nvidia",
+    )
+    assert c.extra["reasoning_chars"] == 40
+    assert c.tokens_out == 60  # reasoning bills as output
+
+
+def test_no_reasoning_field_is_fine():
+    c = parse_response(
+        {"choices": [{"message": {"content": "SLAB: 5"}}], "usage": {}}, "m", "nvidia"
+    )
+    assert "reasoning_chars" not in c.extra
 
 
 def test_completion_ok_flag():

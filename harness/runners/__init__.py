@@ -23,7 +23,7 @@ def build(key: str, **kwargs) -> Runner:
         from harness.runners.providers.anthropic_api import AnthropicRunner
 
         return AnthropicRunner(spec, **kwargs)
-    if spec.provider in ("openai", "openrouter"):
+    if spec.provider in ("openai", "openrouter", "nvidia"):
         from harness.runners.providers.openai_compat import OpenAICompatRunner
 
         return OpenAICompatRunner(spec, **kwargs)

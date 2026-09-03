@@ -78,17 +78,36 @@ MODELS: dict[str, ModelSpec] = {
         usd_in_per_m=1.00,
         usd_out_per_m=5.00,
     ),
-    # The open-weight tier the plan asks for, reached through OpenRouter so it
-    # needs no self-hosting. Price is left at zero deliberately: it must be
-    # read from OpenRouter and dated before any cost figure is published.
+    # The open-weight tier the plan asks for: a model you could actually
+    # self-host, which is what makes it the bridge to project 03. Served here
+    # through NVIDIA's catalog so no GPU is needed to benchmark it.
+    #
+    # 30B total with 3B active fits on a single GPU, so "could self-host" is
+    # true rather than aspirational. The 550B sibling is a stronger model but
+    # cannot discharge this requirement — nobody is self-hosting 550B.
+    #
+    # Price is zero deliberately: it must be read from the provider and dated
+    # before any cost figure is published. See `priced()`.
     "open-weight": ModelSpec(
         key="open-weight",
-        provider="openrouter",
-        model_id="",
+        provider="nvidia",
+        model_id="nvidia/nemotron-3.5-lightning-30b-a3b",
         tier="open-weight",
         usd_in_per_m=0.0,
         usd_out_per_m=0.0,
-        note="set OPENROUTER_MODEL and record its price before publishing cost",
+        note="record NVIDIA's price for this model, with the date, before "
+             "publishing any cost figure",
+    ),
+    # Optional extra data point: open weights at frontier scale. Not the
+    # open-weight entry, because the plan asks for one you could self-host.
+    "open-weight-xl": ModelSpec(
+        key="open-weight-xl",
+        provider="nvidia",
+        model_id="nvidia/nemotron-3-ultra-550b-a55b",
+        tier="open-weight",
+        usd_in_per_m=0.0,
+        usd_out_per_m=0.0,
+        note="550B — an extra comparison, not self-hostable; price unrecorded",
     ),
 }
 
