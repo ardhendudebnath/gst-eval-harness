@@ -87,11 +87,35 @@ amending notification settles it:
 Compensation cess on tobacco was simultaneously reduced to nil, and a separate
 excise duty introduced, so the cess no longer sits on top of the GST rate.
 
-**Consequence for labelling:** the tobacco families are no longer *unsettled*.
-They remain out of scope for v1.0 as a deliberate scope choice
-(`guideline.md` §4d), not because the rate is unknown, and that exclusion could
-now reasonably be revisited. Biris at 18 % against everything else at 40 % is
-the kind of within-family split that makes good hard examples.
+Read directly from the Gazette, **Schedule VII contained only six entries** —
+pan masala and the five tobacco headings — and nothing else. Omitting it
+therefore stranded no other family.
+
+### Aerated drinks and cement were never unsettled
+
+Both were excluded from v1.0 on the assumption that they sat in Schedule VII
+awaiting a transitional decision. Reading the notification shows they never did:
+
+| Goods | Heading | Schedule | Rate | Pre-reform |
+|---|---|---|---|---|
+| All goods incl. aerated waters, containing added sugar or flavoured | 2202 10 | III | **40 %** | 28 % + cess |
+| Carbonated beverages of fruit drink / with fruit juice | 2202 | III | **40 %** | 28 % + cess |
+| Caffeinated beverages | 2202 99 90 | III | **40 %** | 28 % + cess |
+| Other non-alcoholic beverages | 2202 91 00, 2202 99 90 | III | **40 %** | |
+| Waters without added sugar; plant-based, soya and milk drinks; fruit-juice based (non-carbonated) | 2201, 2202 99, 2202 99 10/20/30 | I | **5 %** | |
+| Portland, aluminous, slag and super-sulphate cement, incl. clinkers | 2523 | II | **18 %** | 28 % |
+
+Neither family is touched by Notification 19/2025.
+
+**Consequence for scope.** Every family excluded by `guideline.md` §4d now has
+a settled rate, so none of them is excluded because the answer is unknown — the
+exclusion is a scope choice throughout, and a costly one. Cement moved 28 % →
+18 % and aerated drinks 28 % + cess → 40 %, so both are `rate-changed-2025`
+examples *and* unusually sharp stale-slab probes: a model reciting the old
+table answers 28 % for either, and 28 % is itself now an abolished slab. Biris
+at 18 % against the rest of the tobacco family at 40 % is a similar
+within-family split. These are among the best examples available, and they are
+currently being filtered out.
 
 ---
 
@@ -161,10 +185,14 @@ because that was the applicant's rejected contention.
       Schedule III (40 %), biris to Schedule II (18 %).
 - [x] Check for amending notifications after 17 September 2025.
       Found 19/2025 (31 Dec 2025, in force 1 Feb 2026).
+- [x] Confirm the position on aerated beverages and cement.
+      **Both settled and neither was ever in Schedule VII**: aerated and
+      carbonated drinks at Schedule III (40 %), cement at Schedule II (18 %).
 - [ ] Re-verify the rates asserted in the five worked examples of
       `../guideline.md` against the primary text.
-- [ ] Confirm the position on aerated beverages and cement specifically —
-      19/2025 covers tobacco and pan masala but was not read for those.
+- [ ] Decide whether to bring cement, aerated drinks and tobacco into scope
+      now that all three are settled — see the note above on why they are
+      unusually good examples.
 - [ ] Archive the Gazette PDFs into `primary/` with their SHA-256 hashes,
       rather than relying on a third-party mirror.
 

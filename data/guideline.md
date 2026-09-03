@@ -167,12 +167,23 @@ make clear whether the item is the good itself or a part of it →
 Do **not** label products in these families; they are dropped at collection time
 by `harness.schema.out_of_scope_term`.
 
-**Excluded as a v1.0 scope choice.** Tobacco and pan masala are no longer
-*unsettled* — Notification 19/2025 puts them in Schedule III (40 %) and biris
-in Schedule II (18 %) from 1 February 2026. They stay out of v1.0 because the
-collectors were built around that exclusion, not because the rate is unknown,
-and the decision could reasonably be revisited. Aerated drinks and cement have
-not been checked against 19/2025 and remain genuinely unconfirmed.
+**Excluded as a v1.0 scope choice — none of these is unsettled any more.**
+The original reason was that Schedule VII's fate was unknown. It is now known,
+and checked against the Gazette:
+
+| Family | Rate today | Was |
+|---|---|---|
+| Tobacco, cigarettes, pan masala | 40 % (Sch. III) | 28 % + cess |
+| Biris | 18 % (Sch. II) | 28 % + cess |
+| Aerated, carbonated and caffeinated drinks | 40 % (Sch. III) | 28 % + cess |
+| Cement | 18 % (Sch. II) | 28 % |
+
+They stay out of v1.0 only because the collectors were built around the
+exclusion. That is worth revisiting: every one of them moved off the
+now-abolished 28 % slab, which makes them sharp stale-slab probes, and biris
+against the rest of the tobacco family is a good within-family split.
+
+Until that decision is taken, drop:
 
 - tobacco, cigarettes, bidis, pan masala, gutkha
 - aerated, carbonated and energy drinks
