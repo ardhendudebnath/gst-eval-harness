@@ -281,6 +281,32 @@ def test_weak_vocabulary_in_the_facts_does_not_reject_goods(facts):
     assert not is_about_services({"brief": "Classification of goods"}, facts)
 
 
+@pytest.mark.parametrize(
+    "brief",
+    [
+        # Government-entity status is a Notification 11/2017 concessional-rate
+        # concept, so a ruling turning on it is a works-contract ruling.
+        "Whether APEPDCL can be treated as a limb of Government of AP or not? "
+        "What is the rate of tax of the work executed and under which SAC/HSN code",
+        "GSRDC is a Government Entity. In addition, GSRDC shall also be a "
+        "Government Authority, in such case what is the rate",
+        "Whether the above work of APIIC executed by the applicant after "
+        "22.08.2017 falls under the 18% rate of tax or 12% rate of tax?",
+        "composite supply of works contract provided to a government authority "
+        "or a Government Entity having GST rate of 5%",
+    ],
+)
+def test_government_entity_rulings_are_rejected(brief):
+    assert is_about_services({"brief": brief})
+
+
+def test_ordinary_government_supply_is_not_rejected():
+    # Supplying goods to a government buyer is not a works contract.
+    assert not is_about_services(
+        {"brief": "Classification of stationery supplied to a government school"}
+    )
+
+
 def test_weak_vocabulary_in_the_brief_still_rejects():
     # The same word is trustworthy in the Council's curated one-liner.
     assert is_about_services({"brief": "Classification of storage services provided"})

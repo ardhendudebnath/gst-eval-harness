@@ -22,6 +22,7 @@ import sys
 from collections import Counter
 from datetime import date, datetime, timezone
 from pathlib import Path
+from typing import Callable
 
 from harness.collect.rate_changed import record_candidate_families
 from harness.schema import (
@@ -312,6 +313,9 @@ def select_queue(
     source: str | None = None,
     stale: str | None = None,
     changed_candidates: bool = False,
+    state: str | None = None,
+    exclude_state: str | None = None,
+    spread_states: bool = False,
 ) -> list[dict]:
     """Records still to label, narrowed by the requested filters.
 
@@ -330,35 +334,51 @@ def select_queue(
             for r in queue
             if stale in (r.get("collection_meta", {}).get("stale_rates_in_ruling") or [])
         ]
+    if state:
+        s = state.lower()
+        queue = [r for r in queue if s in _state_of(r).lower()]
+    if exclude_state:
+        x = exclude_state.lower()
+        queue = [r for r in queue if x not in _state_of(r).lower()]
     if changed_candidates:
         queue = _interleave_by_family([r for r in queue if record_candidate_families(r)])
     if keyword:
         k = keyword.lower()
         queue = [r for r in queue if k in r["input"].lower()]
+    if spread_states:
+        queue = _interleave(queue, _state_of)
     return queue
 
 
-def _interleave_by_family(records: list[dict]) -> list[dict]:
-    """Round-robin candidates across families so the slice does not skew.
+def _state_of(record: dict) -> str:
+    return record.get("collection_meta", {}).get("state", "") or "(unknown)"
 
-    The pool is dominated by a couple of families — biscuits and chocolate are
-    together about 60% of candidates — so labelling the first N in file order
-    would produce a rate-changed-2025 slice that is mostly biscuits, and a
-    headline finding that is really a claim about biscuits. Interleaving means
-    stopping early still leaves a spread.
+
+def _interleave(records: list[dict], key: Callable[[dict], str]) -> list[dict]:
+    """Round-robin records across a grouping so an early stop still spreads.
+
+    Both pools are lopsided: biscuits and chocolate are together about 60% of
+    the rate-changed listing candidates, and Gujarat is 23 of the 31 rulings
+    quoting the abolished slab. Labelling the first N in file order would make
+    the headline finding a claim about biscuits, or about Gujarat packaging
+    disputes. Interleaving means stopping at any point still leaves a spread.
     """
     buckets: dict[str, list[dict]] = {}
     for record in records:
-        # First family only: each record belongs to one queue position.
-        buckets.setdefault(record_candidate_families(record)[0], []).append(record)
+        buckets.setdefault(key(record), []).append(record)
 
     ordered: list[dict] = []
     while buckets:
-        for family in list(buckets):
-            ordered.append(buckets[family].pop(0))
-            if not buckets[family]:
-                del buckets[family]
+        for group in list(buckets):
+            ordered.append(buckets[group].pop(0))
+            if not buckets[group]:
+                del buckets[group]
     return ordered
+
+
+def _interleave_by_family(records: list[dict]) -> list[dict]:
+    # First family only: each record takes one queue position.
+    return _interleave(records, lambda r: record_candidate_families(r)[0])
 
 
 def run_label(
@@ -367,6 +387,10 @@ def run_label(
     source: str | None = None,
     stale: str | None = None,
     changed_candidates: bool = False,
+    *,
+    state: str | None = None,
+    exclude_state: str | None = None,
+    spread_states: bool = False,
 ) -> int:
     labelled = list(read_jsonl(GOLDEN))
     done_source_ids = {e.source_id for e in labelled if e.source_id}
@@ -386,6 +410,9 @@ def run_label(
         source=source,
         stale=stale,
         changed_candidates=changed_candidates,
+        state=state,
+        exclude_state=exclude_state,
+        spread_states=spread_states,
     )
     active = [
         f"{k}={v!r}"
@@ -394,6 +421,9 @@ def run_label(
             ("source", source),
             ("stale", stale),
             ("changed-candidates", changed_candidates or None),
+            ("state", state),
+            ("exclude-state", exclude_state),
+            ("spread-states", spread_states or None),
         )
         if v
     ]
@@ -509,7 +539,13 @@ def run_relabel(n: int, seed: int | None) -> int:
     return 0
 
 
-def run_review_first_pass(quarantine: Path) -> int:
+def run_review_first_pass(
+    quarantine: Path,
+    *,
+    state: str | None = None,
+    exclude_state: str | None = None,
+    spread_states: bool = False,
+) -> int:
     """Review model first-pass suggestions into the golden set.
 
     Every row must be judged individually. A suggestion the annotator accepts
@@ -526,8 +562,26 @@ def run_review_first_pass(quarantine: Path) -> int:
     done = {e.source_id for e in labelled if e.source_id}
     todo = [e for e in pending if e.source_id not in done]
 
+    # Same state controls as the labelling queue. Gujarat is 23 of the 31
+    # rulings quoting the abolished slab, so reviewing in file order would make
+    # the finding a claim about Gujarat.
+    if state or exclude_state or spread_states:
+        as_records = [
+            {"collection_meta": e.collection_meta, "_ex": e} for e in todo
+        ]
+        if state:
+            s = state.lower()
+            as_records = [r for r in as_records if s in _state_of(r).lower()]
+        if exclude_state:
+            x = exclude_state.lower()
+            as_records = [r for r in as_records if x not in _state_of(r).lower()]
+        if spread_states:
+            as_records = _interleave(as_records, _state_of)
+        todo = [r["_ex"] for r in as_records]
+
     print(f"\n{RULE}")
     print(f"  Reviewing {len(todo)} model suggestion(s) of {len(pending)}.")
+    print(f"  states: {dict(Counter(_state_of({'collection_meta': e.collection_meta}) for e in todo).most_common())}")
     print("  A suggestion is a starting point. The slab is YOUR judgement:")
     print("  derive it from Notification 9/2025, not from anything shown here.")
     print(RULE)
@@ -610,6 +664,17 @@ def main() -> int:
     )
     ap.add_argument("--relabel", type=int, metavar="N", default=None)
     ap.add_argument("--seed", type=int, default=None)
+    ap.add_argument("--state", default=None, help="only rulings from this state")
+    ap.add_argument(
+        "--exclude-state",
+        default=None,
+        help="skip rulings from this state; Gujarat dominates the ruling pool",
+    )
+    ap.add_argument(
+        "--spread-states",
+        action="store_true",
+        help="round-robin the queue across states so an early stop still spreads",
+    )
     ap.add_argument(
         "--review-first-pass",
         nargs="?",
@@ -621,11 +686,23 @@ def main() -> int:
     args = ap.parse_args()
 
     if args.review_first_pass:
-        return run_review_first_pass(Path(args.review_first_pass))
+        return run_review_first_pass(
+            Path(args.review_first_pass),
+            state=args.state,
+            exclude_state=args.exclude_state,
+            spread_states=args.spread_states,
+        )
     if args.relabel:
         return run_relabel(args.relabel, args.seed)
     return run_label(
-        args.target, args.filter, args.source, args.stale, args.changed_candidates
+        args.target,
+        args.filter,
+        args.source,
+        args.stale,
+        args.changed_candidates,
+        state=args.state,
+        exclude_state=args.exclude_state,
+        spread_states=args.spread_states,
     )
 
 

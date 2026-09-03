@@ -106,7 +106,14 @@ _STATUTE_NAME = re.compile(
 #: are safe to look for in the facts as well as the brief.
 _SERVICE_STRONG = re.compile(
     r"\b(?:works\s+contract|job\s*work|EPC\s+contract|turnkey"
-    r"|erection[,\s]+testing|supply\s+of\s+services?\b|SAC\s+code)\b",
+    r"|erection[,\s]+testing|supply\s+of\s+services?\b|SAC\s+code"
+    # "Government Entity" and "Government Authority" are concessional-rate
+    # concepts from Notification 11/2017, so a ruling turning on whether a body
+    # qualifies is a works-contract ruling. Measured over the corpus, these
+    # four alternations drop exactly four records and all four are services.
+    r"|Government\s+(?:Entity|Authority)|limb\s+of\s+(?:the\s+)?Government"
+    r"|execution\s+of\s+(?:the\s+)?work)\b"
+    r"|\bwork(?:s)?\b[^.]{0,40}\b(?:executed|awarded)\b",
     re.I,
 )
 
