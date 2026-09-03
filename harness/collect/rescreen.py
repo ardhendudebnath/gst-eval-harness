@@ -20,7 +20,7 @@ import sys
 from collections import Counter
 from pathlib import Path
 
-from harness.collect.aar import is_about_services, is_withdrawn
+from harness.collect.aar import is_about_services, is_withdrawn, reextract
 from harness.collect.normalise import in_length_bounds, normalise
 from harness.schema import out_of_scope_term, read_jsonl
 
@@ -61,6 +61,14 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("pool", type=Path)
     ap.add_argument("--dry-run", action="store_true")
+    ap.add_argument(
+        "--reextract",
+        type=int,
+        metavar="WORDS",
+        default=None,
+        help="rebuild ruling excerpts from cached PDFs at this word cap "
+        "(no network; the cap is a policy choice, not a property of the source)",
+    )
     args = ap.parse_args()
 
     if not args.pool.exists():
@@ -81,6 +89,7 @@ def main() -> int:
     families: Counter[str] = Counter()
     protected = 0
     redacted = 0
+    reextracted = 0
 
     for rec in records:
         # Never drop a record that already backs a labelled example.
@@ -108,6 +117,28 @@ def main() -> int:
             if is_withdrawn(rec["input"]):
                 dropped["withdrawn"] += 1
                 continue
+        # Rewriting happens before the length and duplicate checks, so both are
+        # applied to the text that will actually be shipped.
+        if rec.get("source") == "aar":
+            if args.reextract:
+                rebuilt = reextract(rec, args.reextract)
+                if rebuilt is None:
+                    dropped["reextract_failed"] += 1
+                    continue
+                if rebuilt["input"] != rec["input"]:
+                    reextracted += 1
+                rec = rebuilt
+
+            # Re-run redaction. Filters alone cannot fix a record collected
+            # before a redaction pattern existed — the name is already on disk,
+            # and only re-normalising removes it.
+            cleaned, applied = normalise(rec["input"], is_ruling=True)
+            if cleaned != rec["input"]:
+                rec["input"] = cleaned
+                meta = rec.setdefault("collection_meta", {})
+                meta["transforms"] = sorted(set(meta.get("transforms", [])) | set(applied))
+                redacted += 1
+
         if not in_length_bounds(rec["input"]):
             dropped["length"] += 1
             continue
@@ -115,17 +146,6 @@ def main() -> int:
         if key in seen:
             dropped["duplicate"] += 1
             continue
-
-        # Re-run redaction. Filters alone cannot fix a record that was collected
-        # before a redaction pattern existed — the name is already on disk, and
-        # only re-normalising removes it.
-        if rec.get("source") == "aar":
-            cleaned, applied = normalise(rec["input"], is_ruling=True)
-            if cleaned != rec["input"]:
-                rec["input"] = cleaned
-                meta = rec.setdefault("collection_meta", {})
-                meta["transforms"] = sorted(set(meta.get("transforms", [])) | set(applied))
-                redacted += 1
 
         seen.add(key)
         kept.append(rec)
@@ -137,12 +157,22 @@ def main() -> int:
         print(f"  families: {dict(families.most_common())}")
     if redacted:
         print(f"  redacted: {redacted} record(s) further cleaned by current patterns")
+    if reextracted:
+        print(f"  re-cut:   {reextracted} excerpt(s) rebuilt at {args.reextract} words")
+        words = [len(r["input"].split()) for r in kept if r.get("source") == "aar"]
+        if words:
+            words.sort()
+            long_ctx = sum(1 for n in words if n >= 800)
+            print(
+                f"            ruling words: median={words[len(words) // 2]} "
+                f"max={words[-1]}  |  {long_ctx} at 800+ (long_context candidates)"
+            )
 
     if args.dry_run:
         print("\n  --dry-run: nothing written")
         return 0
 
-    if not dropped and not redacted:
+    if not dropped and not redacted and not reextracted:
         print("\n  nothing to do")
         return 0
 

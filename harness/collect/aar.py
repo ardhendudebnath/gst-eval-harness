@@ -507,6 +507,43 @@ def collect(
     return written
 
 
+def reextract(record: dict, max_words: int) -> dict | None:
+    """Rebuild one collected record's excerpt from its cached PDF.
+
+    The word cap is a policy choice, not a property of the source, so changing
+    it must not mean re-crawling: the PDF is already on disk and the index
+    metadata is already in the record. Returns None when the cached PDF is
+    missing or no longer yields a usable excerpt.
+    """
+    href = record.get("collection_meta", {}).get("ruling_url", "")
+    name = record.get("source_id") or Path(href).name
+    cached = CACHE / name
+    if not cached.exists():
+        return None
+
+    text, pages = extract_pdf_text(cached.read_bytes())
+    if is_scanned(text, pages) or is_withdrawn(text):
+        return None
+
+    segmented = segment_goods_description(text, max_words)
+    if segmented is None:
+        return None
+    excerpt, truncated = segmented
+
+    cleaned, applied = normalise(excerpt, is_ruling=True)
+    if len(cleaned.split()) < MIN_EXCERPT_WORDS:
+        return None
+
+    updated = dict(record)
+    updated["input"] = cleaned
+    meta = dict(record.get("collection_meta", {}))
+    meta["transforms"] = applied
+    meta["truncated"] = truncated
+    meta["max_words"] = max_words
+    updated["collection_meta"] = meta
+    return updated
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--pages", type=int, default=40)
