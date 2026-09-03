@@ -38,6 +38,62 @@ _RATING_RE = re.compile(r"[★☆⭐✩✪✫✬✭✮✯]+|\(\s*\d+(?:\.\d+)?\s
 # here is harmless; leaking a taxpayer identifier is not.
 _GSTIN_RE = re.compile(r"\b\d{2}[A-Za-z0-9]{13}\b")
 
+# Permanent Account Number: five letters, four digits, one letter. Found in the
+# corpus as "having PAN-ABCDE1234F and registered office at ...", which nothing
+# here matched. A PAN identifies a taxpayer as directly as a GSTIN does, and
+# this dataset is published, so the keyword form is stripped as well as the
+# bare shape — OCR damage to a labelled PAN still leaves the label.
+#
+# The keyword form must still see a PAN-shaped token: exactly ten alphanumerics
+# containing a digit. Accepting any 8-12 character word after "PAN" would strip
+# "pan preparations" and "pan masala" — goods this dataset exists to classify.
+_PAN_RE = re.compile(
+    r"\bPAN\s*(?:No\.?|Number)?\s*[-:]?\s*"
+    r"(?=[A-Za-z0-9]{10}\b)(?=[A-Za-z0-9]*\d)[A-Za-z0-9]{10}\b"
+    r"|\b[A-Za-z]{5}\d{4}[A-Za-z]\b"
+)
+
+# "registered office at Plot No.418, Kadodara" — no street-type word, so
+# _STREET_ADDR_RE never fired. Anchored on the phrase instead of the shape.
+#
+# Stopping at any period truncates the match to "registered office at Plot No"
+# and leaves ".418, Kadodara, Navsari" in the text, because Indian addresses are
+# full of "No." and "Plot No.". A period only ends the address when it is not
+# part of a number.
+_REGISTERED_OFFICE_RE = re.compile(
+    r"\b(?:registered|corporate|head|branch)\s+office\s*"
+    r"(?:is\s+)?(?:at|in|situated\s+at|located\s+at)?\s*"
+    r"(?:[^.]|\.(?=\s*\d)){0,160}",
+    re.I,
+)
+
+# Third parties named in the reasoning — "other player in similar line, M/s
+# Zenith Boilers Limited appears to have been clearing". _APPLICANT_RE terminates on
+# punctuation or a small set of verbs, and prose like this continues past all
+# of them. A company suffix is the reliable end of a company name.
+_COMPANY_RE = re.compile(
+    r"\b(?:M/s\.?|Messrs\.?)\s*[A-Z][\w&.'\- ]{2,60}?"
+    r"(?:Limited|Ltd\.?|Pvt\.?|Private|LLP|Industries|Enterprises?|Corporation"
+    r"|Corp\.?|Company|Traders?|Mills|Works|Agencies|Associates)\b",
+    re.I,
+)
+
+# The general shape, for names with no recognisable suffix: "[redacted]
+# of Howrah" is a manufacturer named in the reasoning, and no suffix list would
+# have caught it. A company name is the run of capitalised tokens after M/s,
+# ending where ordinary lowercase prose resumes. Capped at six tokens so a
+# sentence that continues in title case cannot be swallowed whole.
+#
+# "M/s" is required — a bare capitalised run is most of the notification's own
+# goods vocabulary, and matching that would gut the dataset.
+# The (?!No) guard is the same one _PERSON_NAME_RE carries, and for the same
+# reason: "M/?s" also matches the "Ms" in "G.O.Ms No. 110, Revenue (CT-II)
+# Department" and in "Notification Ms. No. ...", which are statutory citations,
+# not parties. Without it this pattern deletes the legal text it sits next to.
+_MS_NAME_RE = re.compile(
+    r"\bM/?s\.?\s*(?!No\b|No\.)(?:[A-Z][\w.&'\-]*(?:\s+|$)){1,6}"
+)
+
 # Terminates on punctuation including brackets, because applicant names are
 # routinely followed by "(for short-'applicant')" rather than a comma.
 _APPLICANT_RE = re.compile(
@@ -191,8 +247,15 @@ def normalise(text: str, *, is_ruling: bool = False) -> tuple[str, list[str]]:
             ("address_field", _ADDRESS_FIELD_RE),
             ("representative", _REPRESENTATIVE_RE),
             ("gstin", _GSTIN_RE),
+            ("pan", _PAN_RE),
             ("arn", _ARN_RE),
+            ("registered_office", _REGISTERED_OFFICE_RE),
+            # Before the looser applicant pattern, which would otherwise stop
+            # short and leave the company suffix stranded.
+            ("company", _COMPANY_RE),
             ("applicant", _APPLICANT_RE),
+            # Last, so the tighter patterns above claim what they can first.
+            ("ms_name", _MS_NAME_RE),
             ("person_name", _PERSON_NAME_RE),
             ("role_name", _ROLE_NAME_RE),
             ("proprietor", _PROPRIETOR_RE),
