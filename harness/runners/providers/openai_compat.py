@@ -121,9 +121,11 @@ class OpenAICompatRunner:
             text="", model=self.model, provider=self.provider,
             tokens_in=0, tokens_out=0, latency_ms=0,
         )
+        # `body`, not `payload`: reusing the request variable for the response
+        # both destroys the request and reads as if the two were the same thing.
         try:
             with urllib.request.urlopen(req, timeout=self._timeout) as resp:
-                payload = json.loads(resp.read().decode("utf-8"))
+                body = json.loads(resp.read().decode("utf-8"))
         except urllib.error.HTTPError as exc:
             blank.error = f"http_{exc.code}: {exc.read()[:200].decode('utf-8', 'replace')}"
             return blank
@@ -131,7 +133,7 @@ class OpenAICompatRunner:
             blank.error = f"{type(exc).__name__}: {exc}"
             return blank
 
-        completion = parse_response(response, self.model, self.provider)
+        completion = parse_response(body, self.model, self.provider)
         completion.extra["thinking"] = self.thinking
         return completion
 
