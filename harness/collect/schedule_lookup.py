@@ -58,11 +58,35 @@ class Match:
     heading: str
     entries: list[Entry] = field(default_factory=list)
     exempt_entries: list[str] = field(default_factory=list)
+    #: Chapter-level entries, found only when the heading itself is not listed.
+    #: Never resolve a slab — they are a pointer for the annotator, not a
+    #: determination. See `chapter_only`.
+    chapter_entries: list[Entry] = field(default_factory=list)
 
     @property
     def ambiguous(self) -> bool:
-        """More than one place it could sit — the annotator must choose."""
-        return len(self.entries) + len(self.exempt_entries) > 1
+        """More than one place it could sit — the annotator must choose.
+
+        Chapter entries count. They only exist when the heading itself is
+        absent, so they never inflate a heading that has its own entry, and a
+        chapter listed at two rates is a real choice to make.
+        """
+        return (
+            len(self.entries) + len(self.exempt_entries) + len(self.chapter_entries) > 1
+        )
+
+    @property
+    def chapter_only(self) -> bool:
+        """The heading is absent, but its chapter is specified.
+
+        The schedules describe a great deal of the tariff at chapter level —
+        "63 [other than 6305 32 00, 6305 33 00, 6309] Other made up textile
+        articles" — so a heading with no entry of its own is usually covered
+        rather than unlisted. Reporting "not found" for those was wrong, and
+        wrong in the direction that matters: it reads as "the notification is
+        silent" when the notification is not silent at all.
+        """
+        return not self.entries and not self.exempt_entries and bool(self.chapter_entries)
 
     @property
     def slab(self) -> str | None:
@@ -113,6 +137,31 @@ def _entry_text(text: str, pos: int, width: int = 240) -> str:
     return re.sub(r"\s+", " ", text[start : pos + width]).strip()
 
 
+#: A chapter number carrying goods. Every genuine chapter entry in these
+#: schedules is introduced by its serial number — "390. 63 [other than
+#: 6305 32 00, 6305 33 00, 6309] Other made up textile articles", "36. 29 All
+#: organic chemicals" — and requiring that is what separates a chapter
+#: reference from a two-digit fragment of a longer tariff code. Without it,
+#: the "29" in "0101 29 Live horses" reads as chapter 29 and puts live horses
+#: forward as an organic chemical.
+_SERIAL = r"(?:^|[^\d])\d{1,3}\s*\.\s*"
+
+
+def _chapter_entries(
+    text: str, bounds: list[tuple[int, str]], chapter: str
+) -> dict[str, str]:
+    pattern = re.compile(
+        rf"{_SERIAL}({re.escape(chapter)})\s*(?:\[[^\]]*\]\s*)?(?=[A-Z])"
+    )
+    by_schedule: dict[str, str] = {}
+    for m in pattern.finditer(text):
+        sched = _schedule_at(bounds, m.start(1))
+        if sched is None or sched in by_schedule:
+            continue
+        by_schedule[sched] = _entry_text(text, m.start(1))
+    return by_schedule
+
+
 def lookup(heading: str) -> Match | None:
     """Find `heading` in the archived notifications. None if not archived."""
     if not RATED.exists():
@@ -139,6 +188,12 @@ def lookup(heading: str) -> Match | None:
                 by_schedule[sched] = text
     for sched, text in by_schedule.items():
         match.entries.append(Entry(sched, SCHEDULE_SLAB.get(sched), text))
+
+    # Only when the heading itself is absent. A heading that has its own entry
+    # is governed by it, and dragging in the chapter would invent competition.
+    if not match.entries:
+        for sched, text in _chapter_entries(rated, bounds, heading[:2]).items():
+            match.chapter_entries.append(Entry(sched, SCHEDULE_SLAB.get(sched), text))
 
     if EXEMPT.exists():
         exempt = _text(str(EXEMPT))

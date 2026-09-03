@@ -137,9 +137,34 @@ def suggest(record: dict, ex_id: str) -> Example:
         elif found.ambiguous:
             alternatives = [f"Sch {e.schedule} = {e.slab}%: {e.text[:150]}" for e in found.entries]
             alternatives += [f"EXEMPT (0%): {x[:150]}" for x in found.exempt_entries]
+            # Chapter-level entries, when the heading itself is not listed. Kept
+            # visibly distinct: these describe the chapter, so whether these
+            # goods fall inside one is the reading the annotator has to do.
+            alternatives += [
+                f"CHAPTER {hsn4[:2]} Sch {e.schedule} = {e.slab}%: {e.text[:150]}"
+                for e in found.chapter_entries
+            ]
+            if found.chapter_only:
+                slab_basis = (
+                    f"{hsn4} has no entry of its own; chapter {hsn4[:2]} is "
+                    f"specified in {len(alternatives)} places. Whether these goods "
+                    "fall inside one is a reading of the entry, not a lookup."
+                )
+            else:
+                slab_basis = (
+                    f"{hsn4} appears in {len(alternatives)} places in the notifications. "
+                    "Choosing between them is a judgement about these goods, not a lookup."
+                )
+        elif found.chapter_entries:
+            # Exactly one chapter-level entry. Still not resolved: a chapter
+            # entry carries exclusions, and reading whether these goods sit
+            # inside them is the annotator's call.
+            e = found.chapter_entries[0]
+            alternatives = [f"CHAPTER {hsn4[:2]} Sch {e.schedule} = {e.slab}%: {e.text[:150]}"]
             slab_basis = (
-                f"{hsn4} appears in {len(alternatives)} places in the notifications. "
-                "Choosing between them is a judgement about these goods, not a lookup."
+                f"{hsn4} has no entry of its own; chapter {hsn4[:2]} is specified "
+                f"once, in Schedule {e.schedule}. Confirm these goods are not "
+                "inside its exclusions."
             )
         else:
             slab_basis = f"{hsn4} has no current rated or exempt entry"
