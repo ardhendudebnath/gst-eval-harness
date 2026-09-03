@@ -20,6 +20,7 @@ import sys
 from collections import Counter
 from pathlib import Path
 
+from harness.collect.aar import is_about_services
 from harness.collect.normalise import in_length_bounds
 from harness.schema import out_of_scope_term, read_jsonl
 
@@ -27,9 +28,14 @@ GOLDEN = Path("data/golden.jsonl")
 
 
 def _dedupe_key(text: str) -> str:
+    """Content key, matching the collectors' own near-duplicate rule.
+
+    Capped at 400 characters so two copies of the same ruling that diverge in a
+    trailing clause still collide.
+    """
     import re
 
-    return re.sub(r"[^a-z0-9]+", "", text.lower())
+    return re.sub(r"[^a-z0-9]+", "", text.lower())[:400]
 
 
 def _haystack(rec: dict) -> str:
@@ -87,6 +93,15 @@ def main() -> int:
             dropped["out_of_scope"] += 1
             families[term] += 1
             continue
+
+        # Rulings only: s.97(2)(a) covers goods *or services*, so the clause
+        # filter alone lets services through. Replaying it here cleans pools
+        # collected before a service term was added to the vocabulary.
+        if rec.get("source") == "aar":
+            brief = rec.get("collection_meta", {}).get("ruling_brief", "")
+            if is_about_services({"brief": brief}):
+                dropped["services"] += 1
+                continue
         if not in_length_bounds(rec["input"]):
             dropped["length"] += 1
             continue

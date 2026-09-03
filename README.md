@@ -178,8 +178,16 @@ Written honestly, and expanded as the work proceeds.
 - **Roughly three quarters of ruling PDFs are scans** with no text layer and are
   skipped, and files above 1.5 MB are skipped before download as probable scans.
   Both filters bias the ruling slice toward authorities that publish digitally —
-  West Bengal, Tamil Nadu, Gujarat and Rajasthan are over-represented relative
+  Tamil Nadu, Gujarat, West Bengal and Karnataka are over-represented relative
   to their share of rulings.
+
+  Measured yield, over 65 index pages: 650 rows → 199 classification-of-goods
+  → 26 usable excerpts (82 skipped as oversized, 53 scanned, 23 with no
+  locatable facts section). Extrapolated across all 308 pages that is roughly
+  **140–180 ruling examples**, so the ruling sources cannot fill the `hard`,
+  `long_context` and `adversarial` strata alone. Open Food Facts supplies the
+  remainder of `hard` through pre-packaged-and-labelled conditionality, and most
+  of `out_of_scope` through listings too vague to classify.
 - **Ruling excerpts are cut by pattern matching**, not by understanding. The
   segmenter stops before the authority's findings so the answer cannot leak, and
   refuses to emit anything when it cannot locate the facts section — but it can

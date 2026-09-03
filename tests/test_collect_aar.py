@@ -10,6 +10,7 @@ import pytest
 from harness.collect.aar import (
     _hsn_candidates,
     _stale_rates,
+    dedupe_key,
     extract_pdf_text,
     is_about_services,
     is_classification,
@@ -165,6 +166,44 @@ def test_goods_rulings_survive_the_services_screen(brief):
     row = {"category": "97(2) (a)", "brief": brief}
     assert not is_about_services(row)
     assert is_classification(row)
+
+
+@pytest.mark.parametrize(
+    "brief",
+    [
+        # All three reached the pool in a live run: an activity can be a service
+        # without the brief ever using the word "service".
+        "Whether lodging along with food to the students by a private boarding"
+        " house is a composite supply",
+        "The applicant is printing content provided by the customers."
+        " Classification of the nature of the activity",
+        "The applicability of GST for invoices raised for storage charges for"
+        " storing their imported goods",
+    ],
+)
+def test_service_activities_without_the_word_service_are_rejected(brief):
+    assert is_about_services({"brief": brief})
+
+
+def test_printed_goods_are_not_confused_with_printing_services():
+    # "printed advertisement materials" asks whether the output is goods;
+    # "printing content" describes an activity. Only the latter is a service.
+    assert not is_about_services({"brief": "Whether printed advertisement materials are goods"})
+
+
+# --- content dedupe -------------------------------------------------------
+
+
+def test_same_ruling_under_two_filenames_collides():
+    # A Cryo Container ruling was published twice under different filenames;
+    # source_id dedupe alone let both into the pool.
+    a = "The applicant submits that the Cryo Container, also known as Liquid Nitrogen Container, is made of aluminium."
+    b = "The  applicant  submits that the CRYO CONTAINER, also known as liquid nitrogen container, is made of aluminium!"
+    assert dedupe_key(a) == dedupe_key(b)
+
+
+def test_different_rulings_do_not_collide():
+    assert dedupe_key("Quartz slabs of crushed quartz") != dedupe_key("Polypropylene mats plaited")
 
 
 # --- file size ------------------------------------------------------------

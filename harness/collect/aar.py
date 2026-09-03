@@ -99,7 +99,10 @@ _SERVICE_RE = re.compile(
     r"\b(?:services?|job\s*work|works\s+contract|SAC\b|renting|rental|leasing|lease"
     r"|transport(?:ation)?\s+of|consultancy|repair(?:ing|s)?|maintenance"
     r"|installation|manpower|catering|canteen|hostel|accommodation|admission"
-    r"|training|coaching|tour\s+operator|commission\s+agent)\b",
+    r"|training|coaching|tour\s+operator|commission\s+agent"
+    # Added after these leaked through a live run: an activity can be a service
+    # without the brief ever using the word "service".
+    r"|lodging|boarding\s+house|printing|storage|warehousing|hiring)\b",
     re.I,
 )
 
@@ -146,6 +149,19 @@ _HSN = re.compile(
     re.I,
 )
 _RATE = re.compile(r"(\d{1,2}(?:\.\d+)?)\s*%")
+
+_DEDUPE_RE = re.compile(r"[^a-z0-9]+")
+
+
+def dedupe_key(text: str) -> str:
+    """Content key for near-duplicate detection.
+
+    Deduplicating on `source_id` alone is not enough: the same ruling is
+    published more than once under different filenames (one Cryo Container
+    ruling arrived twice), and a benchmark that scores the same item twice
+    overstates whatever a model does with it.
+    """
+    return _DEDUPE_RE.sub("", text.lower())[:400]
 
 
 def _strip_html(fragment: str) -> str:
@@ -329,10 +345,13 @@ def collect(
     max_size_mb: float = 1.5,
 ) -> int:
     seen_ids: set[str] = set()
+    seen_keys: set[str] = set()
     if out_path.exists():
         for line in out_path.read_text(encoding="utf-8").splitlines():
             if line.strip():
-                seen_ids.add(json.loads(line)["source_id"])
+                rec = json.loads(line)
+                seen_ids.add(rec["source_id"])
+                seen_keys.add(dedupe_key(rec["input"]))
         print(f"resuming — {len(seen_ids)} rulings already collected", file=sys.stderr)
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
@@ -349,6 +368,7 @@ def collect(
         "no_facts_section": 0,
         "too_short": 0,
         "out_of_scope": 0,
+        "duplicate": 0,
         "already_had": 0,
     }
 
@@ -419,7 +439,13 @@ def collect(
                     stats["out_of_scope"] += 1
                     continue
 
+                key = dedupe_key(cleaned)
+                if key in seen_keys:
+                    stats["duplicate"] += 1
+                    continue
+
                 seen_ids.add(source_id)
+                seen_keys.add(key)
                 fh.write(
                     json.dumps(
                         {
