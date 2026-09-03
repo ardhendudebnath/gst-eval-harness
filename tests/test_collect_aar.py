@@ -1,8 +1,16 @@
 """Tests for the AAR collector.
 
-Fixtures below are real text pulled from live rulings on gstcouncil.gov.in
-(OCR damage included, deliberately), so the parser is exercised against what
-the source actually emits rather than an idealised version of it.
+Fixtures reproduce the *structure* of real rulings on gstcouncil.gov.in —
+the labelled-table header, the section ordering, and the OCR damage — because
+the parser has to cope with what the source actually emits rather than an
+idealised version of it.
+
+Party details are synthetic throughout: `ABCDE1234F` is the standard
+placeholder PAN used in Indian tax documentation, and the companies, addresses
+and names below are invented. The rulings these were modelled on are public,
+but `data/DATA_LICENCE.md` §1.2 commits to stripping party-identifying detail,
+and a test suite that shipped real names while asserting they get stripped
+would contradict that.
 """
 
 import pytest
@@ -20,17 +28,18 @@ from harness.collect.aar import (
 )
 from harness.collect.normalise import normalise
 
-# Real West Bengal ruling text. These authorities open with a labelled table
-# rather than prose, which is how applicant names and postal addresses were
-# reaching the pool unredacted.
+# West Bengal-style layout: a labelled table rather than prose, which is how
+# applicant names and postal addresses were reaching the pool unredacted.
+# The truncated opening word is faithful — segmentation used to start mid-word
+# here. Party details are invented.
 WB_TEXT = """y such Appeal shall be filed in accordance with Section 100 (3) of
 the GST Act and the Rules prescribed thereunder, and the Regulations prescribed
 by the West Bengal Authority for Advance Ruling Regulations, 2018.
-Name of the applicant Eskag Pharma Pvt Ltd Address Suite No. 804, 805 AG-112,
-Salt Lake, Baishakhi, 8th floor, Kolkata - 700091 GSTIN Case Number 06 of 2019
-ARN AD1901190003801 Date of application January 25, 2019
+Name of the applicant Examplco Pharma Pvt Ltd Address Suite No. 101, Sample
+Tower, 4th floor, Kolkata - 700099 GSTIN Case Number 06 of 2019
+ARN AD1901190000000 Date of application January 25, 2019
 Order number and date 46/WBAAR/2018-19 dated 26/03/2019
-Applicant's representative heard Dipankar Majumdar, Advocate
+Applicant's representative heard A. N. Example, Advocate
 1. Admissibility of the Application
 1.1 The Applicant is stated to be a manufacturer of pharmaceuticals, APIs and
 other medicaments. He seeks a ruling on classification of fifteen products
@@ -39,13 +48,13 @@ DISCUSSION AND FINDINGS
 The products are classifiable under HSN 2106.
 """
 
-# One real row from the index, trimmed to the cells the parser reads.
+# An index row with the cell classes the parser keys on.
 INDEX_HTML = """
 <table class="table table-bordered customdatatable">
 <tr><th>Sr. No.</th><th>Name of the Applicant</th></tr>
 <tr>
 <td headers="a" class="views-field views-field-counter">1</td>
-<td headers="b" class="views-field views-field-title">M/s Inox India Pvt. Ltd.</td>
+<td headers="b" class="views-field views-field-title">M/s Examplco Cryogenics Pvt. Ltd.</td>
 <td headers="c" class="views-field views-field-field-states-ut">Gujarat</td>
 <td headers="d" class="views-field views-field-body"><p>Whether supply of Cryo
 Container is classifiable under HSN 7613 0019 or HSN 9617 0012?</p></td>
@@ -64,9 +73,9 @@ GOODS AND SERVICE TAX
 1. Name and address of the applicant
 
 Brief facts:
-M/s. Bhagat Dhanadal Corporation (for short-'applicant'), 1, Bhagat
-Estate, Khokhra, Ahmedabad, Gujarat- 380 021, is a
-partnership firm & their GSTIN number is 24ABCDE1234FlZ5.
+M/s. Examplco Seed Products (for short-'applicant'), 1, Sample
+Estate, Ahmedabad, Gujarat- 380 099, is a
+partnership firm & their GSTIN number is 24ABCDE1234FlZU.
 2. The applicant deals in various types of seed mix, two of which are 'Mix
 mukhwas' and 'Roasted til & ajwain', which they claim is made up of mixed
 roasted and salted seeds. The applicant submits that the goods merit
@@ -88,7 +97,7 @@ def test_parse_index_row():
     rows = parse_index_page(INDEX_HTML)
     assert len(rows) == 1  # the <th> header row is skipped
     row = rows[0]
-    assert row["applicant"] == "M/s Inox India Pvt. Ltd."
+    assert row["applicant"] == "M/s Examplco Cryogenics Pvt. Ltd."
     assert row["state"] == "Gujarat"
     assert row["category"] == "97(2) (a)"
     assert row["pdf"] == "/sites/default/files/AAR/guj.gaar.r.2018-10.pdf"
@@ -330,37 +339,36 @@ def test_stale_rates_keeps_only_plausible_slabs():
 
 
 def test_ocr_mangled_gstin_is_stripped():
-    # The real GSTIN in this ruling OCR'd as 24ABCDE1234FlZ5: letter l for
-    # digit 1, which the strict GSTIN grammar does not match.
+    # Real ruling GSTINs come back from OCR with letter l substituted for
+    # digit 1, which the strict 15-character GSTIN grammar does not match.
     cleaned, applied = normalise(RULING_TEXT, is_ruling=True)
-    assert "24ABCDE1234FlZ5" not in cleaned
+    assert "24ABCDE1234FlZU" not in cleaned
     assert "strip_gstin" in applied
 
 
 def test_applicant_name_followed_by_bracket_is_stripped():
     cleaned, applied = normalise(RULING_TEXT, is_ruling=True)
-    assert "Bhagat Dhanadal Corporation" not in cleaned
+    assert "Examplco Seed Products" not in cleaned
     assert "strip_applicant" in applied
     # The goods survive redaction — that is the part being benchmarked.
     assert "seed mix" in cleaned
 
 
 def test_labelled_table_applicant_and_address_are_stripped():
-    # West Bengal names the applicant in a table field with no "M/s" prefix,
-    # which is how "Eskag Pharma Pvt Ltd, Suite No. 804 ... Kolkata - 700091"
-    # was reaching the pool intact.
+    # Several authorities name the applicant in a table field with no "M/s"
+    # prefix, which is how names and postal addresses reached the pool intact.
     cleaned, applied = normalise(WB_TEXT, is_ruling=True)
-    assert "Eskag Pharma" not in cleaned
-    assert "Salt Lake" not in cleaned
-    assert "700091" not in cleaned
+    assert "Examplco Pharma" not in cleaned
+    assert "Sample Tower" not in cleaned
+    assert "700099" not in cleaned
     assert "strip_applicant_field" in applied
     assert "strip_address_field" in applied
 
 
 def test_arn_and_representative_name_are_stripped():
     cleaned, applied = normalise(WB_TEXT, is_ruling=True)
-    assert "AD1901190003801" not in cleaned
-    assert "Dipankar Majumdar" not in cleaned
+    assert "AD1901190000000" not in cleaned
+    assert "A. N. Example" not in cleaned
     assert "strip_arn" in applied
     assert "strip_representative" in applied
 

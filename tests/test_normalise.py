@@ -32,10 +32,13 @@ def test_strips_rating_glyphs_and_emoji():
 
 
 def test_ruling_mode_strips_applicant_and_gstin():
-    text = "M/s Acme Foods Private Limited, having GSTIN 29AABCU9603R1ZM, supplies atta."
+    # ABCDE1234F is the standard placeholder PAN in Indian tax documentation,
+    # so this GSTIN is recognisably synthetic rather than someone's real one.
+    # 15 characters: 2 state digits + 10-char PAN + entity digit + Z + checksum.
+    text = "M/s Acme Foods Private Limited, having GSTIN 29ABCDE1234F1Z5, supplies atta."
     out, applied = normalise(text, is_ruling=True)
     assert "Acme Foods" not in out
-    assert "29AABCU9603R1ZM" not in out
+    assert "29ABCDE1234F1Z5" not in out
     assert "supplies atta" in out
     assert "strip_applicant" in applied and "strip_gstin" in applied
 
