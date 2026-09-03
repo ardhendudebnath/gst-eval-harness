@@ -41,6 +41,15 @@ class ModelSpec:
     #: Flipped to True only by a completed run recorded in results/.
     verified: bool = False
     note: str = ""
+    #: Which reasoning switch this family uses. The three are incompatible and
+    #: sending the wrong one is silently ignored, so it is recorded per model
+    #: rather than guessed per provider. See providers/openai_compat.py.
+    reasoning_style: str = ""
+    #: Published container image, where one exists. This is the evidence for
+    #: the plan's "one open-weight model you could self-host" — a model with a
+    #: pullable image and a documented run command is demonstrably
+    #: self-hostable, which an inference from parameter count is not.
+    nim_image: str = ""
 
     def cost_usd(self, tokens_in: int, tokens_out: int) -> float:
         return (
@@ -91,15 +100,44 @@ MODELS: dict[str, ModelSpec] = {
     "open-weight": ModelSpec(
         key="open-weight",
         provider="nvidia",
+        model_id="nvidia/llama-3.3-nemotron-super-49b-v1.5",
+        tier="open-weight",
+        usd_in_per_m=0.0,
+        usd_out_per_m=0.0,
+        reasoning_style="system_toggle",
+        nim_image="nvcr.io/nim/nvidia/llama-3.3-nemotron-super-49b-v1.5:latest",
+        note="has a published NIM container, so self-hostability is "
+             "demonstrable; record NVIDIA's price before publishing cost",
+    ),
+    # The same model on your own GPU. Identical wire format, so the only
+    # difference is NIM_BASE_URL — which is the whole point: the open-weight
+    # row can be reproduced locally, and that is the bridge to project 03.
+    "open-weight-local": ModelSpec(
+        key="open-weight-local",
+        provider="nim",
+        model_id="nvidia/llama-3.3-nemotron-super-49b-v1.5",
+        tier="open-weight",
+        usd_in_per_m=0.0,
+        usd_out_per_m=0.0,
+        reasoning_style="system_toggle",
+        nim_image="nvcr.io/nim/nvidia/llama-3.3-nemotron-super-49b-v1.5:latest",
+        note="self-hosted; cost is your GPU time, not a per-token price",
+    ),
+    # Lighter open-weight option: 30B total with 3B active runs on far less
+    # VRAM than a 49B dense model, at the price of a different reasoning
+    # switch and no published container to point at.
+    "open-weight-lite": ModelSpec(
+        key="open-weight-lite",
+        provider="nvidia",
         model_id="nvidia/nemotron-3.5-lightning-30b-a3b",
         tier="open-weight",
         usd_in_per_m=0.0,
         usd_out_per_m=0.0,
-        note="record NVIDIA's price for this model, with the date, before "
-             "publishing any cost figure",
+        reasoning_style="chat_template",
+        note="30B/3B-active — lighter to self-host; price unrecorded",
     ),
-    # Optional extra data point: open weights at frontier scale. Not the
-    # open-weight entry, because the plan asks for one you could self-host.
+    # Optional extra: open weights at frontier scale. Not the open-weight
+    # entry, because the plan asks for one you could self-host.
     "open-weight-xl": ModelSpec(
         key="open-weight-xl",
         provider="nvidia",
@@ -107,6 +145,7 @@ MODELS: dict[str, ModelSpec] = {
         tier="open-weight",
         usd_in_per_m=0.0,
         usd_out_per_m=0.0,
+        reasoning_style="chat_template",
         note="550B — an extra comparison, not self-hostable; price unrecorded",
     ),
 }

@@ -20,18 +20,32 @@ import urllib.request
 from harness.runners.base import Completion, RunnerError, timed
 from harness.runners.registry import ModelSpec
 
+#: A self-hosted NIM container serves the same wire format on localhost, so
+#: the only difference between benchmarking a model in the cloud and on your
+#: own GPU is this URL. That is what makes the open-weight row the bridge to
+#: project 03 rather than a claim about one.
+DEFAULT_NIM_BASE = "http://localhost:8000"
+
 ENDPOINTS = {
     "openai": "https://api.openai.com/v1/chat/completions",
     "openrouter": "https://openrouter.ai/api/v1/chat/completions",
     # NVIDIA's API catalog serves open-weight models over the same wire format.
     "nvidia": "https://integrate.api.nvidia.com/v1/chat/completions",
+    # Filled in from NIM_BASE_URL at construction time.
+    "nim": "",
 }
 KEY_VARS = {
     "openai": "OPENAI_API_KEY",
     "openrouter": "OPENROUTER_API_KEY",
     "nvidia": "NVIDIA_API_KEY",
+    # A local container needs no key.
+    "nim": "",
 }
-MODEL_VARS = {"openrouter": "OPENROUTER_MODEL", "nvidia": "NVIDIA_MODEL"}
+MODEL_VARS = {
+    "openrouter": "OPENROUTER_MODEL",
+    "nvidia": "NVIDIA_MODEL",
+    "nim": "NIM_MODEL",
+}
 
 #: Headroom for reasoning. Nemotron-style models emit their chain into a
 #: separate `reasoning_content` field that still bills as output tokens, so a
@@ -63,10 +77,16 @@ class OpenAICompatRunner:
                 "to the model you intend to benchmark"
             )
 
-        self._key = os.environ.get(KEY_VARS[self.provider], "")
-        if not self._key:
-            raise RunnerError(f"{KEY_VARS[self.provider]} is not set")
-        self._url = ENDPOINTS[self.provider]
+        key_var = KEY_VARS[self.provider]
+        self._key = os.environ.get(key_var, "") if key_var else ""
+        if key_var and not self._key:
+            raise RunnerError(f"{key_var} is not set")
+
+        if self.provider == "nim":
+            base = os.environ.get("NIM_BASE_URL", DEFAULT_NIM_BASE).rstrip("/")
+            self._url = f"{base}/v1/chat/completions"
+        else:
+            self._url = ENDPOINTS[self.provider]
         self._timeout = timeout
         # On by default: Claude models think adaptively unless told otherwise,
         # so leaving reasoning off here would compare a thinking model against
@@ -85,19 +105,16 @@ class OpenAICompatRunner:
             "max_tokens": MAX_TOKENS_THINKING if self.thinking else MAX_TOKENS,
             "messages": messages,
         }
-        if self.provider == "nvidia" and self.thinking:
-            # Nemotron-family reasoning switch. Harmless on models that ignore
-            # it; the served model id in the response records what actually ran.
-            payload["chat_template_kwargs"] = {"enable_thinking": True}
+        apply_reasoning(payload, self.spec.reasoning_style, self.thinking)
 
-        body = json.dumps(payload).encode("utf-8")
+        headers = {"Content-Type": "application/json"}
+        # A local NIM container takes no key; sending an empty bearer token to
+        # one is a 401 waiting to happen.
+        if self._key:
+            headers["Authorization"] = f"Bearer {self._key}"
+
         req = urllib.request.Request(
-            self._url,
-            data=body,
-            headers={
-                "Authorization": f"Bearer {self._key}",
-                "Content-Type": "application/json",
-            },
+            self._url, data=json.dumps(payload).encode("utf-8"), headers=headers
         )
 
         blank = Completion(
@@ -117,6 +134,30 @@ class OpenAICompatRunner:
         completion = parse_response(response, self.model, self.provider)
         completion.extra["thinking"] = self.thinking
         return completion
+
+
+def apply_reasoning(payload: dict, style: str, thinking: bool) -> None:
+    """Set whichever reasoning switch this model family actually uses.
+
+    Three incompatible mechanisms, and sending the wrong one is silently
+    ignored rather than rejected — so a model would run with reasoning off
+    while the result file claimed it was on:
+
+      chat_template  Nemotron 3.x — chat_template_kwargs.enable_thinking
+      system_toggle  Llama-Nemotron Super — a leading "detailed thinking on"
+                     system message, which is part of its prompt format
+      effort         reasoning_effort, for models that expose a level
+    """
+    if style == "chat_template":
+        payload["chat_template_kwargs"] = {"enable_thinking": bool(thinking)}
+    elif style == "system_toggle":
+        # Must lead the conversation, per the model's documented format.
+        payload["messages"] = [
+            {"role": "system", "content": f"detailed thinking {'on' if thinking else 'off'}"},
+            *payload["messages"],
+        ]
+    elif style == "effort":
+        payload["reasoning_effort"] = "max" if thinking else "low"
 
 
 def parse_response(payload: dict, model: str, provider: str) -> Completion:

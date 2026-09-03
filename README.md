@@ -213,6 +213,31 @@ pip install -e ".[collect]" && make collect
 
 Model runs (week 4 onward) need API keys; copy `.env.example` to `.env`.
 
+### Running the open-weight model on your own GPU
+
+The open-weight row is deliberately a model with a **published container**, so
+self-hostability is demonstrable rather than inferred. The same row can be
+reproduced locally — a NIM container serves the same OpenAI-compatible format,
+so the only thing that changes is the base URL:
+
+```bash
+docker run -it --rm --gpus all --shm-size=16GB \
+  -e NGC_API_KEY -v "$LOCAL_NIM_CACHE:/opt/nim/.cache" -u $(id -u) -p 8000:8000 \
+  nvcr.io/nim/nvidia/llama-3.3-nemotron-super-49b-v1.5:latest
+```
+
+```bash
+python -m harness.run --model open-weight-local    # hits localhost:8000
+```
+
+`NIM_BASE_URL` points it elsewhere if the GPU is on another machine. Running
+both `open-weight` (hosted) and `open-weight-local` (self-hosted) is a useful
+check in itself: the same weights behind two serving stacks should score the
+same, and a gap means the serving configuration differs, not the model.
+
+This is the bridge to Project 03 — the same model, the same harness, running
+where you control it.
+
 ---
 
 ## Limitations

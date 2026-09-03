@@ -148,12 +148,21 @@ def test_missing_api_key_refuses_clearly(monkeypatch):
 # --- the open-weight tier -------------------------------------------------
 
 
-def test_open_weight_names_a_self_hostable_model():
-    # The plan asks for one you could self-host — that is what makes it the
-    # bridge to project 03. 30B total / 3B active fits on one GPU.
+def test_open_weight_entry_has_a_published_container():
+    # The plan asks for one you could self-host. A pullable image and a
+    # documented run command is evidence; a parameter count is an inference.
     spec = get("open-weight")
-    assert "30b" in spec.model_id.lower()
+    assert spec.nim_image.startswith("nvcr.io/nim/")
     assert spec.tier == "open-weight"
+
+
+def test_the_same_model_is_registered_hosted_and_local():
+    # Identical model, identical wire format, different base URL. That is the
+    # bridge to project 03 — the row can be reproduced on your own GPU.
+    hosted, local = get("open-weight"), get("open-weight-local")
+    assert hosted.model_id == local.model_id
+    assert hosted.nim_image == local.nim_image
+    assert local.provider == "nim"
 
 
 def test_the_550b_is_an_extra_not_the_open_weight_entry():
@@ -163,11 +172,79 @@ def test_the_550b_is_an_extra_not_the_open_weight_entry():
     assert "not self-hostable" in get("open-weight-xl").note
 
 
-def test_open_weight_models_are_unpriced_until_a_price_is_read():
+@pytest.mark.parametrize(
+    "key", ["open-weight", "open-weight-local", "open-weight-lite", "open-weight-xl"]
+)
+def test_open_weight_models_are_unpriced_until_a_price_is_read(key):
     # A fabricated price silently reorders the ranking that
     # cost-per-correct-answer exists to produce.
-    assert not priced(get("open-weight"))
-    assert not priced(get("open-weight-xl"))
+    assert not priced(get(key))
+
+
+def test_local_nim_needs_no_api_key(monkeypatch):
+    from harness.runners.providers.openai_compat import KEY_VARS
+
+    assert KEY_VARS["nim"] == ""
+
+
+def test_local_nim_url_comes_from_the_environment(monkeypatch):
+    monkeypatch.setenv("NIM_BASE_URL", "http://gpu-box:9000")
+    r = build("open-weight-local")
+    assert r._url == "http://gpu-box:9000/v1/chat/completions"
+
+
+def test_local_nim_defaults_to_localhost(monkeypatch):
+    monkeypatch.delenv("NIM_BASE_URL", raising=False)
+    assert build("open-weight-local")._url.startswith("http://localhost:8000")
+
+
+# --- reasoning switches are not interchangeable ---------------------------
+
+
+def test_each_family_gets_its_own_switch():
+    from harness.runners.providers.openai_compat import apply_reasoning
+
+    chat: dict = {"messages": []}
+    apply_reasoning(chat, "chat_template", True)
+    assert chat["chat_template_kwargs"] == {"enable_thinking": True}
+
+    effort: dict = {"messages": []}
+    apply_reasoning(effort, "effort", True)
+    assert effort["reasoning_effort"] == "max"
+
+
+def test_system_toggle_leads_the_conversation():
+    # The model's documented prompt format puts it first; buried later it is
+    # silently ignored and the run would claim reasoning it never did.
+    from harness.runners.providers.openai_compat import apply_reasoning
+
+    payload = {"messages": [{"role": "user", "content": "classify this"}]}
+    apply_reasoning(payload, "system_toggle", True)
+    assert payload["messages"][0] == {
+        "role": "system", "content": "detailed thinking on"
+    }
+    assert payload["messages"][-1]["content"] == "classify this"
+
+
+def test_system_toggle_off_says_off():
+    from harness.runners.providers.openai_compat import apply_reasoning
+
+    payload = {"messages": []}
+    apply_reasoning(payload, "system_toggle", False)
+    assert payload["messages"][0]["content"] == "detailed thinking off"
+
+
+def test_no_style_adds_nothing():
+    from harness.runners.providers.openai_compat import apply_reasoning
+
+    payload = {"messages": [{"role": "user", "content": "x"}]}
+    apply_reasoning(payload, "", True)
+    assert payload == {"messages": [{"role": "user", "content": "x"}]}
+
+
+def test_every_open_weight_model_declares_its_switch():
+    for key in ("open-weight", "open-weight-local", "open-weight-lite", "open-weight-xl"):
+        assert get(key).reasoning_style, f"{key} has no reasoning_style"
 
 
 def test_nvidia_endpoint_is_the_catalog():
