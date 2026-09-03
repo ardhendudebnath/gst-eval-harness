@@ -181,13 +181,20 @@ Written honestly, and expanded as the work proceeds.
   Tamil Nadu, Gujarat, West Bengal and Karnataka are over-represented relative
   to their share of rulings.
 
-  Measured yield, over 65 index pages: 650 rows → 199 classification-of-goods
-  → 26 usable excerpts (82 skipped as oversized, 53 scanned, 23 with no
-  locatable facts section). Extrapolated across all 308 pages that is roughly
-  **140–180 ruling examples**, so the ruling sources cannot fill the `hard`,
-  `long_context` and `adversarial` strata alone. Open Food Facts supplies the
-  remainder of `hard` through pre-packaged-and-labelled conditionality, and most
-  of `out_of_scope` through listings too vague to classify.
+  Measured across 158 index pages (150–307): **1,580 rows → 456
+  classification-of-goods rulings → 92 usable excerpts**. The attrition is
+  almost entirely scans (243) plus rulings with no locatable facts section (54),
+  with smaller losses to oversized files, withdrawn applications and duplicates.
+  Recovering oversized files yielded only 4 usable rulings from 14 downloaded,
+  which is the evidence for skipping them: oversized really does mean scanned.
+
+  Pages 0–149 hold newer rulings and are far worse — a sample showed 27 of 28
+  classification rulings were scans, against roughly half in the older range —
+  so the practical ceiling is close to the 92 already collected. The ruling
+  sources therefore cannot fill `hard`, `long_context` and `adversarial` alone.
+  Open Food Facts supplies the remainder of `hard` through
+  pre-packaged-and-labelled conditionality, and most of `out_of_scope` through
+  listings too vague to classify.
 - **Ruling excerpts are cut by pattern matching**, not by understanding. The
   segmenter stops before the authority's findings so the answer cannot leak, and
   refuses to emit anything when it cannot locate the facts section — but it can

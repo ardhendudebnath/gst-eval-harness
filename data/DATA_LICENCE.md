@@ -38,12 +38,19 @@ s.96 of the CGST Act, published by the GST Council for public reference.
 
 This repository reproduces only the **statement-of-facts passage** describing
 the goods — never the full order, and never the authority's findings or the
-ruling itself. Two excerpt tiers:
+ruling itself.
 
-| Tier | Cap | Used for |
-|---|---|---|
-| default | 300 words | most strata |
-| `--long` | 1,200 words | the `long_context` stratum |
+**Excerpts are capped at 1,200 words.** An earlier 300-word cap was measured
+against the collected corpus and found to truncate *every* ruling — the median
+statement of facts runs 1,121 words — so it was not trimming outliers but
+cutting each order off mid-sentence, and it made the `long_context` stratum
+unreachable by construction. At 1,200 words roughly half the rulings are still
+truncated and the excerpt length reflects the source rather than an arbitrary
+policy number.
+
+The cap is applied by `harness.collect.aar` and can be changed without
+re-crawling: `rescreen --reextract WORDS` rebuilds excerpts from the cached
+PDFs.
 
 Every example records `ruling_url`, so the complete order is one click away and
 this repository never becomes a substitute for the source.
