@@ -200,6 +200,98 @@ def test_printed_goods_are_not_confused_with_printing_services():
     assert not is_about_services({"brief": "Whether printed advertisement materials are goods"})
 
 
+# --- services identifiable only from the facts ----------------------------
+
+
+def test_works_contract_named_in_the_facts_not_the_brief():
+    # Real leak: the brief cites a notification entry and never says "service";
+    # only the facts say "composite supply of works contract".
+    brief = (
+        "The issue relates to applicability of Entry 3(vi) of Notification "
+        "No.11/2017-CT(Rate) dated 28.06.2017 & determination of transaction value."
+    )
+    facts = (
+        "The applicant has submitted that the entire contract shall be treated as a "
+        "contract for the composite supply of works contract involving a supply of "
+        "goods and services."
+    )
+    assert is_about_services({"brief": brief}, facts)
+
+
+def test_services_rate_notification_is_a_service_signal():
+    # 11/2017-CT(Rate) prescribes rates for services; goods are 1/2017, now 9/2025.
+    assert is_about_services({"brief": "Applicability of Entry 3(vi) of Notification 11/2017-CT(Rate)"})
+
+
+def test_goods_rate_notification_is_not_a_service_signal():
+    assert not is_about_services(
+        {"brief": "Classification under Sl. No. 192 of Schedule II of Notification 1/2017-CT(Rate)"}
+    )
+
+
+@pytest.mark.parametrize(
+    "brief",
+    [
+        "Whether EPC Contract in respect of power distribution falls under Government Entity",
+        "Erection, Testing and Commissioning of substations on turnkey basis",
+    ],
+)
+def test_works_contract_vocabulary_is_caught(brief):
+    assert is_about_services({"brief": brief})
+
+
+def test_goods_ruling_with_facts_still_passes():
+    brief = "What is the Classification as per HSN and rate of tax on Pallets and Box Pallets"
+    facts = (
+        "The Applicant is a private limited company engaged in the manufacture of "
+        "plywood pallets, plywood boxes, corrugated boxes and paper packaging products."
+    )
+    assert not is_about_services({"brief": brief}, facts)
+
+
+# --- false positives that dropped real goods rulings ----------------------
+#
+# Every case below is text from a genuine goods ruling that a naive screen
+# rejected. The tax is the "Goods and Services Tax", so weak vocabulary in the
+# 1,200-word facts is noise, not signal.
+
+
+@pytest.mark.parametrize(
+    "facts",
+    [
+        # The statute's own name, present in every single ruling.
+        "registered under the Goods and Services Act, 2017. He is desirous of "
+        "knowing the GST rate applicable on the finished goods Pallets.",
+        "prior to introduction of Goods and Service Tax Act, the polypropylene "
+        "non-woven bags were being classified under heading No. 6305.",
+        # "catering to" is a verb phrase, not food service.
+        "manufacture and supply of High Precision Components and Assemblies, "
+        "catering to a global clientele in the automotive and aerospace sectors.",
+        # "storage" describing what goods do or where they sit.
+        "the resulting material is put in storage bins which is in the "
+        "semi-finished stage of manufacture of poultry meal.",
+        "used as liners for water ponds and canals, for storage of water bodies "
+        "in states with scanty rainfall.",
+        # Boilerplate recital of what GST is levied on.
+        "Applicant understands that GST is a tax to be levied on supply of goods "
+        "and/or services under the Act.",
+    ],
+)
+def test_weak_vocabulary_in_the_facts_does_not_reject_goods(facts):
+    assert not is_about_services({"brief": "Classification of goods"}, facts)
+
+
+def test_weak_vocabulary_in_the_brief_still_rejects():
+    # The same word is trustworthy in the Council's curated one-liner.
+    assert is_about_services({"brief": "Classification of storage services provided"})
+
+
+def test_statute_name_in_the_brief_is_also_neutralised():
+    assert not is_about_services(
+        {"brief": "Classification of pallets under the Goods and Services Tax Act"}
+    )
+
+
 # --- content dedupe -------------------------------------------------------
 
 

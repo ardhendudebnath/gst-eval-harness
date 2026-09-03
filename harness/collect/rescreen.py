@@ -118,7 +118,7 @@ def main() -> int:
         # collected before a service term was added to the vocabulary.
         if rec.get("source") == "aar":
             brief = rec.get("collection_meta", {}).get("ruling_brief", "")
-            if is_about_services({"brief": brief}):
+            if is_about_services({"brief": brief}, rec.get("input", "")):
                 dropped["services"] += 1
                 continue
             # Withdrawn applications carry no determination and facts the

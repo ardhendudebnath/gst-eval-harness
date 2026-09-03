@@ -95,14 +95,41 @@ _CLASSIFICATION_HINTS = (
 #: construction contracts, club memberships and transformer repair — all real
 #: classification disputes, none of them goods. Services are Chapter 99 (SAC)
 #: and out of scope per guideline.md §1.
-_SERVICE_RE = re.compile(
-    r"\b(?:services?|job\s*work|works\s+contract|SAC\b|renting|rental|leasing|lease"
-    r"|transport(?:ation)?\s+of|consultancy|repair(?:ing|s)?|maintenance"
-    r"|installation|manpower|catering|canteen|hostel|accommodation|admission"
-    r"|training|coaching|tour\s+operator|commission\s+agent"
-    # Added after these leaked through a live run: an activity can be a service
-    # without the brief ever using the word "service".
-    r"|lodging|boarding\s+house|printing|storage|warehousing|hiring)\b",
+# The tax is called the "Goods and Services Tax", so the word "service" appears
+# in literally every ruling. Neutralise the statute's own name before screening,
+# or the word is pure noise.
+_STATUTE_NAME = re.compile(
+    r"Goods?\s+and\s+Services?\s+(?:Tax\s+)?(?:Act|Rules)?|GST\s+Act", re.I
+)
+
+#: STRONG signals: unambiguous even inside 1,200 words of legal prose, so they
+#: are safe to look for in the facts as well as the brief.
+_SERVICE_STRONG = re.compile(
+    r"\b(?:works\s+contract|job\s*work|EPC\s+contract|turnkey"
+    r"|erection[,\s]+testing|supply\s+of\s+services?\b|SAC\s+code)\b",
+    re.I,
+)
+
+#: WEAK signals: trustworthy only in the Council's curated one-line brief. In
+#: the facts they fire on ordinary goods language — "catering to a global
+#: clientele", "put in storage bins", "for storage of water bodies" — and
+#: dropped seven genuine goods rulings before this split existed.
+_SERVICE_WEAK = re.compile(
+    r"\b(?:services?|renting|rental|leasing|lease|transport(?:ation)?\s+of"
+    r"|consultancy|repair(?:ing|s)?|maintenance|installation|manpower"
+    r"|catering(?!\s+to)|canteen|hostel|accommodation|admission|training|coaching"
+    r"|tour\s+operator|commission\s+agent|lodging|boarding\s+house|printing"
+    r"|storage|warehousing|hiring|erection|commissioning)\b",
+    re.I,
+)
+
+#: Notification 11/2017-CT(Rate) prescribes rates for **services**; goods are
+#: 1/2017 and now 9/2025. A ruling turning on an entry in 11/2017 is a services
+#: ruling however its brief is worded — two Odisha orders about "Entry 3(vi) of
+#: Notification No.11/2017" reached the pool with no service word in the brief
+#: at all.
+_SERVICE_NOTIFICATION = re.compile(
+    r"\b11\s*/\s*2017\s*[-–—]?\s*(?:CT|C\.?T\.?|Central\s+Tax|IT|Integrated\s+Tax)",
     re.I,
 )
 
@@ -216,9 +243,20 @@ def parse_index_page(html: str) -> list[dict]:
     return rows
 
 
-def is_about_services(row: dict) -> bool:
-    """True when the Council's brief describes a services dispute."""
-    return bool(_SERVICE_RE.search(row.get("brief", "")))
+def is_about_services(row: dict, excerpt: str = "") -> bool:
+    """True when the ruling is about services rather than goods.
+
+    Two tiers, because the brief and the facts are different kinds of text.
+    The brief is a curated one-liner where "services" means something; the
+    facts are 1,200 words of legal prose where it is noise. So strong,
+    unambiguous phrases are looked for in both, and the softer vocabulary only
+    in the brief.
+    """
+    brief = row.get("brief", "")
+    strong_hay = _STATUTE_NAME.sub(" ", scope_text(excerpt, brief))
+    if _SERVICE_STRONG.search(strong_hay) or _SERVICE_NOTIFICATION.search(strong_hay):
+        return True
+    return bool(_SERVICE_WEAK.search(_STATUTE_NAME.sub(" ", brief)))
 
 
 def is_classification(row: dict) -> bool:
@@ -386,6 +424,7 @@ def collect(
         "no_pdf": 0,
         "fetch_failed": 0,
         "withdrawn": 0,
+        "services": 0,
         "no_facts_section": 0,
         "too_short": 0,
         "out_of_scope": 0,
@@ -460,6 +499,13 @@ def collect(
                 if len(cleaned.split()) < MIN_EXCERPT_WORDS:
                     stats["too_short"] += 1
                     continue
+                # Second services screen, now that the facts are available. The
+                # first one saw only the brief, which can describe a works
+                # contract purely by notification entry.
+                if is_about_services(row, cleaned):
+                    stats["services"] += 1
+                    continue
+
                 if term := out_of_scope_term(scope_text(cleaned, row["brief"])):
                     stats["out_of_scope"] += 1
                     continue
