@@ -188,11 +188,14 @@ because that was the applicant's rejected contention.
 - [x] Confirm the position on aerated beverages and cement.
       **Both settled and neither was ever in Schedule VII**: aerated and
       carbonated drinks at Schedule III (40 %), cement at Schedule II (18 %).
-- [ ] Re-verify the rates asserted in the five worked examples of
-      `../guideline.md` against the primary text.
-- [ ] Decide whether to bring cement, aerated drinks and tobacco into scope
-      now that all three are settled — see the note above on why they are
-      unusually good examples.
+- [x] Re-verify the rates asserted in the five worked examples of
+      `../guideline.md`. **Four confirmed with schedule and serial recorded;
+      WE-5 was wrong** — it claimed candles at 18 % when Schedule I serial 253
+      rates them at 5 % — and has been rewritten around what the notification
+      actually says.
+- [x] Decide whether to bring cement, aerated drinks and tobacco into scope.
+      **All three lifted.** Alcohol is the only remaining exclusion, and it is
+      categorical rather than a scope choice.
 - [ ] Archive the Gazette PDFs into `primary/` with their SHA-256 hashes,
       rather than relying on a third-party mirror.
 

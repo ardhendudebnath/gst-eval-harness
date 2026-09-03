@@ -259,9 +259,9 @@ shrug. Always fill `labeller_notes` with the specific missing fact.
 
 ## 6. Five worked examples
 
-> ⚠ The rates asserted below are drafted from the schedule structure and are on
-> the verification checklist in `reference/rate_schedule.md`. Re-confirm each
-> against the Gazette text before the v1.0 freeze.
+> ✅ **All five verified against the Gazette text** of Notification 9/2025 and
+> 10/2025 on 2026-09-04, with the schedule and serial number recorded in each.
+> WE-5 was found to be wrong and has been rewritten — see the note there.
 
 ### WE-1 — typical
 
@@ -274,13 +274,19 @@ shrug. Always fill `labeller_notes` with the specific missing fact.
 ```
 slab = 0 · hsn4 = "2501" · answerable = true
 justification: "Common edible salt, HSN 2501, exempt under Notification
-10/2025-CT(R). Exemption is unconditional, so the 1 kg branded pouch does not
-attract the pre-packaged test."
+10/2025-CT(R) serial 109. The entry is unconditional, so the 1 kg branded
+pouch does not attract the pre-packaged test."
 difficulty = typical
 ```
 
+**Verified.** Notification 10/2025, serial 109: *"2501 Salt (including table
+salt and denatured salt) and pure sodium chloride, whether or not in aqueous
+solutions or containing added anti-caking or free flowing agents; sea water"*.
+No pre-packaged qualifier, and 2501 appears nowhere in 9/2025.
+
 *Teaching point:* step 3 precedes the conditionality tests. Reaching for §4a
-here is a common early mistake.
+here is a common early mistake — and this entry shows why the order matters,
+because an unconditional exemption ends the enquiry.
 
 ### WE-2 — typical, and a rate that moved
 
@@ -291,10 +297,14 @@ here is a common early mistake.
 
 ```
 slab = 5 · hsn4 = "3306" · answerable = true
-justification: "Dentifrice, HSN 3306, Notification 9/2025 Schedule I (2.5% CGST
-+ 2.5% SGST). Rated 18% before 22 Sep 2025."
+justification: "Toothpaste, HSN 3306, Notification 9/2025 Schedule I serial 246
+(2.5% CGST + 2.5% SGST). Rated 18% before 22 Sep 2025."
 difficulty = typical · tags = ["rate-changed-2025"]
 ```
+
+**Verified.** Schedule I, serial 246: *"3306 Toothpaste"*. The neighbouring
+entries are worth knowing, since the whole personal-care block moved together:
+245 hair oil and shampoo, 247 tooth powder, 249 shaving cream, 251 toilet soap.
 
 *Teaching point:* tag every example whose rate moved on 22 Sep 2025. These form
 the slice that exposes stale model knowledge, and the harness reports accuracy
@@ -311,19 +321,34 @@ on this slice separately.
 
 ```
 slab = 5 · hsn4 = "1101" · answerable = true
-justification: "Wheat flour, HSN 1101. Exempt under Notification 10/2025 only
-when not pre-packaged and labelled. Brand plus declared 5 kg quantity makes this
-pre-packaged and labelled, so Notification 9/2025 Schedule I applies."
+justification: "Wheat flour, HSN 1101. Notification 10/2025 serial 70 exempts it
+only when NOT pre-packaged and labelled; Notification 9/2025 Schedule I serial 51
+rates it at 5% WHEN pre-packaged and labelled. Brand plus declared 5 kg quantity
+makes this pre-packaged and labelled."
 difficulty = hard · tags = ["conditionality", "pre-packaged"]
 ```
+
+**Verified, and the two entries are mirror images** — which is the clearest
+possible statement that the conditionality is real and not an inference:
+
+| Notification | Serial | Text |
+|---|---|---|
+| 10/2025 (exempt) | 70 | "1101 Wheat or meslin flour, **other than** pre-packaged and labelled" |
+| 9/2025 Sch. I (5 %) | 51 | "1101 Wheat or meslin flour, **pre-packaged and labelled**" |
 
 ### WE-4 — **edge case**: rate-determining fact absent
 
 **Input:** `Royal Enfield Motorcycle — Black, single owner`
 
 - Step 2: heading **8711** (motorcycles).
-- Step 4: the schedules split motorcycles at **350 cc** — at or below sits in the
-  standard schedule, above it in the demerit schedule.
+- Step 4: the schedules split heading 8711 at **350 cc**, and the two sides are
+  **22 percentage points apart**:
+
+  | Schedule | Serial | Text | Slab |
+  |---|---|---|---|
+  | II | 546 | "8711 Motorcycles (including mopeds) … **not exceeding 350 cc**" | 18 % |
+  | III | 8 | "8711 Motorcycles of engine capacity **exceeding 350 cc**" | 40 % |
+
 - Step 7: the description never states engine capacity. Royal Enfield sells
   models on both sides of the threshold, so this is not recoverable from the
   brand.
@@ -337,33 +362,64 @@ difficulty = hard · tags = ["unanswerable", "rate-fact-absent"]
 labeller_notes: "reason=rate-fact-absent; missing=engine_capacity_cc"
 ```
 
+**Verified.** Both entries exist as quoted, so the threshold is a real feature
+of the schedule and not an inference.
+
 *Teaching point:* `hsn4` is still recorded. The heading is knowable even when
 the slab is not — and separating the two lets the harness show that a model
-classified the good correctly yet still should have declined.
+classified the good correctly yet still should have declined. A 22-point spread
+is also what makes a confident guess here expensive.
 
 ### WE-5 — **edge case**: composite set, GRI 3(c) cascade
 
 **Input:** `Diwali Gift Hamper — assorted dry fruits 250g, two scented candles,
 decorative brass diya`
 
-- GRI 3(a): no single heading covers the set → fails.
-- GRI 3(b): dry fruits, candles and the diya are comparable in prominence; no
-  component gives the set its essential character → fails.
-- GRI 3(c): among headings **0802** (nuts), **3406** (candles) and **7418**
-  (brass articles), take the last in numerical order → **7418**.
+> ⚠ **This example was wrong and has been rewritten.** The earlier version
+> asserted that the components carried different rates — dry fruits 5 %,
+> candles 18 %, brass diya 18 % — and concluded 18 % via GRI 3(c). Checking the
+> Gazette showed candles are **5 %** (Schedule I serial 253, *"3406 Candles,
+> tapers and the like"*), not 18 %. The premise was false and so was the answer.
+> It is kept here, corrected, because the corrected version teaches something
+> more useful than the original did.
+
+Component rates, as verified:
+
+| Component | Heading | Entry | Slab |
+|---|---|---|---|
+| Assorted **dried** fruits | 0802 | 9/2025 Sch. I serial 23 — *dried* nuts | **5 %** |
+| Scented candles | 3406 | 9/2025 Sch. I serial 253 | **5 %** |
+| Decorative brass diya | 7418 | **splits — see below** | 5 % or 18 % |
+
+Heading 7418 is itself conditional:
+
+| Schedule | Serial | Text | Slab |
+|---|---|---|---|
+| I | 417 | "7418 Table, kitchen or **other household articles** of copper; Utensils" | 5 % |
+| II | 320 | "7418 All goods (**other than** table, kitchen or other household articles of copper; Utensils)" | 18 % |
+
+Brass is a copper alloy, and a diya is a household article, so it takes the
+Schedule I entry at 5 %.
 
 ```
-slab = 18 · hsn4 = "7418" · answerable = true
-justification: "Set put up for retail sale with no component supplying the
-essential character. GRI 3(b) fails; GRI 3(c) selects the heading last in
-numerical order, 7418, which sits in Notification 9/2025 Schedule II."
-difficulty = adversarial · tags = ["composite", "GRI-3c", "distractor"]
+slab = 5 · hsn4 = "0802" · answerable = true
+justification: "Set put up for retail sale. All three components are rated 5%:
+dried nuts (0802, Sch. I 23), candles (3406, Sch. I 253) and a brass diya as a
+household article of copper (7418, Sch. I 417). GRI 3 does not need to be
+reached, because the classification cannot change the rate."
+difficulty = hard · tags = ["composite", "conditionality"]
 ```
 
-*Teaching point:* the components have **different** rates, which is exactly what
-makes the set a set. Answering "18 % because gift hampers are 18 %" reaches the
-right number by the wrong route — and the judge is instructed to fail it, because
-the same shortcut gets the next hamper wrong.
+*Teaching point, and the reason the corrected version is the better example:*
+**check whether the components actually differ before reaching for GRI 3.**
+Running the cascade to 3(c) here produces a heading, but no *different* answer,
+and the original version of this example reached 18 % by doing exactly that on
+top of a rate it had not checked. The real work was in 7418's household-articles
+split, not in the GRI cascade.
+
+If you want a set where GRI 3 genuinely bites, build one across schedules — a
+hamper containing dried nuts (5 %) and a caffeinated drink (40 %) has a rate
+that really does turn on which heading wins.
 
 ---
 
