@@ -6,6 +6,9 @@ PY ?= python
 .PHONY: help collect validate strict label relabel agreement test clean
 
 help:
+	@echo "eval       run every model and rebuild the leaderboard"
+	@echo "eval-dry   estimate what a full run would cost, calling nothing"
+	@echo "board      rebuild the leaderboard from results/ without running"
 	@echo "collect    fetch the raw corpus from every public source"
 	@echo "collect-off  packaged-food listings only (no dependencies)"
 	@echo "collect-aar  advance rulings only (needs pypdf)"
@@ -16,6 +19,16 @@ help:
 	@echo "relabel    blind re-label of 50 rows for self-agreement"
 	@echo "agreement  score a re-label file (RELABEL=data/relabel-YYYY-MM-DD.jsonl)"
 	@echo "test       unit tests"
+
+# Every call costs money — check the estimate before running the real thing.
+eval:
+	$(PY) -m harness.run --all
+
+eval-dry:
+	$(PY) -m harness.run --all --dry-run
+
+board:
+	$(PY) -m harness.report.leaderboard
 
 collect: collect-off collect-aar
 

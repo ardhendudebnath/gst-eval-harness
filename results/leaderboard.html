@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GST rate-slab leaderboard</title>
+<style>
+:root {
+  --bg:#eef1f3; --card:#f8fafb; --rule:#c6d0d5; --ink:#101a1f;
+  --soft:#4a5c65; --faint:#7d8f98; --accent:#0d6a6d; --warn:#b06a12;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg:#0b1114; --card:#111a1e; --rule:#24343a; --ink:#e4edf0;
+    --soft:#9db0b8; --faint:#6b8089; --accent:#4fd0cd; --warn:#e8a33f;
+  }
+}
+* { box-sizing:border-box; }
+body { margin:0; background:var(--bg); color:var(--ink);
+  font:14px/1.6 "IBM Plex Sans",ui-sans-serif,system-ui,sans-serif; }
+.wrap { max-width:1080px; margin:0 auto; padding:36px 22px 60px; }
+h1 { font-size:1.7rem; margin:0 0 4px; letter-spacing:-.01em; }
+.sub { color:var(--soft); margin:0 0 22px; max-width:62ch; }
+.scroll { overflow-x:auto; border:1px solid var(--rule); border-radius:3px;
+  background:var(--card); }
+table { border-collapse:collapse; width:100%; font-variant-numeric:tabular-nums; }
+th,td { padding:9px 12px; text-align:right; white-space:nowrap;
+  border-bottom:1px solid var(--rule); }
+th { font-size:.7rem; letter-spacing:.08em; text-transform:uppercase;
+  color:var(--faint); font-weight:500; text-align:right; }
+th:first-child, td:first-child, .tier, .when { text-align:left; }
+tbody tr:last-child td { border-bottom:none; }
+.model b { display:block; }
+.mid, .when { font:400 .72rem/1.5 "IBM Plex Mono",ui-monospace,monospace;
+  color:var(--faint); }
+.tier { color:var(--soft); }
+.stale .dead { font:400 .72rem "IBM Plex Mono",monospace; color:var(--warn);
+  margin-left:5px; }
+.warn { color:var(--warn); }
+.empty { background:var(--card); border:1px solid var(--rule);
+  border-left:3px solid var(--accent); border-radius:2px; padding:16px 18px;
+  margin:0; }
+.notes { margin-top:26px; color:var(--soft); font-size:.86rem; max-width:70ch; }
+.notes li { margin-bottom:6px; }
+code { font-family:"IBM Plex Mono",monospace; font-size:.85em; }
+footer { margin-top:28px; padding-top:14px; border-top:1px solid var(--rule);
+  color:var(--faint); font:400 .72rem/1.7 "IBM Plex Mono",monospace; }
+</style></head><body><div class="wrap">
+<h1>GST rate-slab leaderboard</h1>
+<p class="sub">Classifying real Indian product descriptions into the GST slabs
+actually in force. Ranked by cost per correct answer, which is not the same
+ordering as accuracy.</p>
+<p class="empty"><strong>No model has been run yet.</strong> This table is empty because the harness has never called an API — not because models scored zero. It fills in when <code>python -m harness.run --all</code> completes against a labelled golden set.</p>
+<ul class="notes">
+<li><b>Stale-slab</b> is how often a model quoted a rate that no longer exists —
+12% (abolished 22 Sep 2025) or 28% (abolished 1 Feb 2026). It is reported
+separately from accuracy because reciting a superseded schedule is a different
+failure from being wrong.</li>
+<li><b>Failed and unparseable responses count as wrong</b>, not skipped.</li>
+<li><b>One prompt for every model.</b> Runs tagged <code>tuned</code> are a
+separate per-model pass and are not mixed into this table.</li>
+<li>Golden set is empty — no ceiling, and nothing to score against.</li>
+</ul>
+<footer>
+Generated 2026-09-03 22:09 UTC · prices read 2026-06-24 · FX read 2026-09-04 ·
+dataset none (0 rows)<br>
+Rates from Notification 9/2025-CT(R) as amended by 19/2025, archived and
+hash-pinned in <code>data/reference/primary/</code>.
+</footer>
+</div></body></html>
