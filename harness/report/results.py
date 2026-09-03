@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import sys
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
@@ -83,15 +84,37 @@ def new_run_id(model_key: str, prompt_mode: str = "shared") -> str:
     return f"{stamp}_{model_key}_{prompt_mode}"
 
 
+#: Enough to tell a run result from any other JSON that lands in `results/`.
+_RUN_MARKERS = ("run_id", "model_key", "summary")
+
+
 def load_all(directory: Path = RESULTS) -> list[RunResult]:
-    """Every run on disk, newest first."""
+    """Every run on disk, newest first.
+
+    This is called straight after a paid run, so the two failure modes are
+    deliberately not treated alike. A file that is not a run result at all —
+    someone's scratch JSON, an editor's backup — is skipped with a note, rather
+    than taking the leaderboard down over a file that was never ours. A file
+    that *is* a run result but will not load still raises: that is a run
+    someone paid for, and quietly dropping it would understate the record.
+    """
     if not directory.exists():
         return []
     runs = []
     for path in sorted(directory.glob("*.json")):
         try:
-            runs.append(RunResult.load(path))
-        except (json.JSONDecodeError, TypeError) as exc:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError as exc:
+            raise ValueError(f"{path}: {exc}") from exc
+
+        if not isinstance(data, dict) or not any(m in data for m in _RUN_MARKERS):
+            print(f"  {path.name}: not a run result, skipped", file=sys.stderr)
+            continue
+
+        known = {f for f in RunResult.__dataclass_fields__}  # type: ignore[attr-defined]
+        try:
+            runs.append(RunResult(**{k: v for k, v in data.items() if k in known}))
+        except TypeError as exc:
             raise ValueError(f"{path}: {exc}") from exc
     return sorted(runs, key=lambda r: r.started_at, reverse=True)
 
