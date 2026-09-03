@@ -22,7 +22,7 @@ from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
 
-from harness.collect.http import Unavailable, fetch_json
+from harness.collect.http import fetch_json
 from harness.collect.normalise import in_length_bounds, normalise
 from harness.schema import out_of_scope_term
 
@@ -162,7 +162,7 @@ def collect(pages: int, page_size: int, out_path: Path) -> int:
             )
             try:
                 payload = fetch_json(f"{API}?{qs}")
-            except (Unavailable, Exception) as exc:  # noqa: BLE001
+            except Exception as exc:  # noqa: BLE001
                 # Everything written so far is already on disk and the run is
                 # resumable, so a dead upstream ends the run rather than
                 # discarding it. Sustained load makes the API answer 503 and

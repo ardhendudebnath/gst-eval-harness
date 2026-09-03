@@ -144,12 +144,47 @@ def present(record: dict, ex_id: str, index: int, batch_pos: int) -> None:
     else:
         print(f"  {text}")
     print(RULE)
-    meta = record.get("collection_meta", {})
-    hints = {k: v for k, v in meta.items() if k != "transforms" and v}
-    if hints:
-        for k, v in hints.items():
-            v = str(v)
-            print(f"  {k}: {v[:180]}")
+    _print_hints(record.get("collection_meta", {}))
+
+
+#: Metadata that helps and metadata that misleads are presented differently on
+#: purpose. `stale_rates_in_ruling` is the single biggest labelling hazard in
+#: this dataset, so it never appears as a plain hint.
+_SAFE_HINTS = (
+    "categories",
+    "quantity",
+    "labels",
+    "state",
+    "order_no",
+    "hsn_candidates",
+    "ruling_brief",
+    "ruling_url",
+    "pdf_pages",
+    "truncated",
+)
+
+
+def _print_hints(meta: dict) -> None:
+    shown = False
+    for key in _SAFE_HINTS:
+        value = meta.get(key)
+        if value in (None, "", [], False):
+            continue
+        text = ", ".join(map(str, value)) if isinstance(value, list) else str(value)
+        print(f"  {key}: {text[:260]}")
+        shown = True
+
+    stale = meta.get("stale_rates_in_ruling")
+    if stale:
+        print()
+        print(f"  !! rates stated in this ruling: {', '.join(stale)}")
+        print("     These are PRE-22-Sep-2025 and must NOT be copied into the label.")
+        print("     Take the heading from the ruling; derive the slab from Notif. 9/2025.")
+        if "12" in stale:
+            print("     Contains 12%, which no longer exists -> tag rate-changed-2025.")
+        shown = True
+
+    if shown:
         print(RULE)
 
 

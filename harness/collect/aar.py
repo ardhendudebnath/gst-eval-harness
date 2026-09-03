@@ -44,7 +44,7 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 
-from harness.collect.http import Unavailable, fetch, fetch_text
+from harness.collect.http import fetch, fetch_text
 from harness.collect.normalise import normalise
 from harness.schema import out_of_scope_term
 
@@ -312,7 +312,7 @@ def _get_pdf(pdf_href: str) -> bytes | None:
         return cached.read_bytes()
     try:
         raw = fetch(BASE + pdf_href, timeout=120)
-    except (Unavailable, Exception) as exc:  # noqa: BLE001 - report and move on
+    except Exception as exc:  # noqa: BLE001 - report and move on
         print(f"    fetch failed: {exc}", file=sys.stderr)
         return None
     cached.parent.mkdir(parents=True, exist_ok=True)
@@ -356,7 +356,7 @@ def collect(
         for page in range(start_page, start_page + pages):
             try:
                 html = fetch_text(INDEX.format(page=page))
-            except (Unavailable, Exception) as exc:  # noqa: BLE001
+            except Exception as exc:  # noqa: BLE001
                 print(f"page {page}: {exc}\n  stopping; re-run to resume", file=sys.stderr)
                 break
 

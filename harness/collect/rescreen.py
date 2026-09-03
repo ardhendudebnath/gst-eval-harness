@@ -33,12 +33,20 @@ def _dedupe_key(text: str) -> str:
 
 
 def _haystack(rec: dict) -> str:
+    """Everything a scope rule should be able to see.
+
+    Includes the catalogue category and the ruling brief, because the excerpt
+    itself often never names the family: a listing reading "Thums up, 250 ml"
+    says nothing about carbonation, and a ruling excerpt about a manufacturing
+    process may only be identifiable as tobacco from its brief.
+    """
     meta = rec.get("collection_meta", {})
     return " ".join(
         [
             rec.get("input", ""),
             str(meta.get("categories") or ""),
             str(meta.get("labels") or ""),
+            str(meta.get("ruling_brief") or ""),
         ]
     )
 
