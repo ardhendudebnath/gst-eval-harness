@@ -1,0 +1,38 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Install
+        run: python -m pip install --upgrade pip pytest
+
+      # The dataset tooling is stdlib-only on purpose, so this must pass with
+      # nothing installed but pytest.
+      - name: Unit tests
+        run: python -m pytest tests -q
+
+      # Schema + composition checks on the golden set. Not --strict yet: the
+      # dataset is still being built and will be off-target until it is frozen.
+      - name: Validate dataset
+        run: python -m harness.validate
+
+  # Model runs and the nightly leaderboard refresh arrive in week 6, once there
+  # is a suite to run. Adding an empty scheduled job before then would only
+  # produce a green badge that means nothing.

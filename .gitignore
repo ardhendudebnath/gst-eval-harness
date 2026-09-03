@@ -1,0 +1,35 @@
+# --- secrets -------------------------------------------------------------
+.env
+.env.*
+!.env.example
+*.key
+
+# --- raw corpora (fetched by `make collect`, not redistributed) ----------
+data/raw/
+data/cache/
+
+# --- python --------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# --- editors / os --------------------------------------------------------
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- run scratch ---------------------------------------------------------
+results/**/*.tmp
+scratch/

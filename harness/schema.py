@@ -1,0 +1,293 @@
+"""Golden-set schema, and a validator with no third-party dependencies.
+
+Deliberately stdlib-only: `make validate` has to work on a fresh clone before
+anyone has run `pip install`. A dataset you cannot check is a dataset you cannot
+trust.
+"""
+
+from __future__ import annotations
+
+import json
+import re
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Any, Iterable, Iterator
+
+# --------------------------------------------------------------------------
+# Label space. See data/reference/rate_schedule.md.
+# --------------------------------------------------------------------------
+
+#: Combined GST rates available under Notification 9/2025 + 10/2025.
+VALID_SLABS: tuple[str, ...] = ("0", "0.25", "1.5", "3", "5", "18", "28", "40")
+
+#: Sentinel for "the description does not support any slab".
+UNANSWERABLE = "UNANSWERABLE"
+
+#: Abolished on 22 Sep 2025 — no successor schedule in Notification 9/2025.
+#: A model emitting this is reciting a rate table that no longer exists, which
+#: the harness scores separately as the stale-slab rate.
+ABOLISHED_SLABS: frozenset[str] = frozenset({"12"})
+
+DIFFICULTIES: frozenset[str] = frozenset(
+    {"typical", "hard", "long_context", "adversarial", "out_of_scope"}
+)
+
+#: Target composition from guideline.md §8, as a share of the frozen set.
+TARGET_STRATA: dict[str, float] = {
+    "typical": 0.40,
+    "hard": 0.25,
+    "long_context": 0.15,
+    "adversarial": 0.10,
+    "out_of_scope": 0.10,
+}
+
+UNANSWERABLE_REASONS: frozenset[str] = frozenset(
+    {
+        "no-product-kind",
+        "model-number-only",
+        "rate-fact-absent",
+        "packaging-indeterminate",
+        "multi-good-no-dominant",
+    }
+)
+
+SOURCES: frozenset[str] = frozenset({"off", "aar", "ogd", "gem"})
+
+_ID_RE = re.compile(r"^gst-\d{4}$")
+_HSN4_RE = re.compile(r"^\d{4}$")
+_REASON_RE = re.compile(r"reason=([a-z-]+)")
+
+# Families excluded from v1.0 (guideline §4d). Two distinct reasons:
+#
+#   * unsettled rate — the Schedule VII / 40% transitional position for demerit
+#     goods is not confirmed, so a label here could be wrong for reasons outside
+#     the annotator's control;
+#   * outside GST entirely — alcoholic liquor for human consumption is excluded
+#     from GST by the Constitution and taxed under state excise, so it has no
+#     slab to predict.
+OUT_OF_SCOPE_TERMS: tuple[str, ...] = (
+    # unsettled rate
+    "tobacco",
+    "cigarette",
+    "cigar",
+    "bidi",
+    "beedi",
+    "pan masala",
+    "gutkha",
+    "aerated",
+    "carbonated",
+    "soft drink",
+    "energy drink",
+    "cola",
+    # Bare "soda" is deliberately absent: baking soda (sodium bicarbonate) is a
+    # perfectly in-scope good. Aerated drinks are caught by the terms above.
+    "soda water",
+    "cement",
+    # outside GST
+    "beer",
+    "wine",
+    "whisky",
+    "whiskey",
+    "whiskies",
+    "vodka",
+    "rum",
+    "liquor",
+    "alcoholic",
+)
+
+# Word-boundary matching, so "rumali roti" is not rejected for containing "rum"
+# and "chocolate" is not rejected for "cola".
+#
+# The trailing (?:e?s)? matters more than it looks: catalogue categories are
+# written in the plural ("Colas", "Cigarettes", "Sweetened beverages"), and a
+# bare \b anchor silently fails against every one of them.
+_OUT_OF_SCOPE_RE = re.compile(
+    r"\b(?:" + "|".join(re.escape(t) for t in OUT_OF_SCOPE_TERMS) + r")(?:e?s)?\b",
+    re.I,
+)
+
+
+def out_of_scope_term(text: str) -> str | None:
+    """Return the out-of-scope family this text names, or None.
+
+    The single authority for scope screening — used by the collectors to reject
+    records before they enter the labelling pool, and by the validator as a
+    backstop for anything that slipped through.
+    """
+    m = _OUT_OF_SCOPE_RE.search(text)
+    return m.group(0).lower() if m else None
+
+
+# --------------------------------------------------------------------------
+
+
+@dataclass(slots=True)
+class Example:
+    """One labelled example. Field order mirrors the JSONL on disk."""
+
+    id: str
+    input: str
+    slab: str
+    hsn4: str | None
+    answerable: bool
+    justification: str
+    difficulty: str
+    tags: list[str] = field(default_factory=list)
+    source: str = ""
+    source_id: str = ""
+    collected_at: str = ""
+    labelled_at: str = ""
+    labeller_notes: str = ""
+    deprecated_by: str | None = None
+    collection_meta: dict[str, Any] = field(default_factory=dict)
+
+    @classmethod
+    def from_json(cls, obj: dict[str, Any]) -> "Example":
+        known = {f for f in cls.__dataclass_fields__}  # type: ignore[attr-defined]
+        return cls(**{k: v for k, v in obj.items() if k in known})
+
+    def to_json(self) -> dict[str, Any]:
+        out = {
+            "id": self.id,
+            "input": self.input,
+            "slab": self.slab,
+            "hsn4": self.hsn4,
+            "answerable": self.answerable,
+            "justification": self.justification,
+            "difficulty": self.difficulty,
+            "tags": self.tags,
+            "source": self.source,
+            "source_id": self.source_id,
+            "collected_at": self.collected_at,
+            "labelled_at": self.labelled_at,
+            "labeller_notes": self.labeller_notes,
+            "collection_meta": self.collection_meta,
+        }
+        if self.deprecated_by:
+            out["deprecated_by"] = self.deprecated_by
+        return out
+
+    @property
+    def is_active(self) -> bool:
+        """False once superseded by a corrected row (guideline §7.2)."""
+        return self.deprecated_by is None
+
+    @property
+    def unanswerable_reason(self) -> str | None:
+        m = _REASON_RE.search(self.labeller_notes or "")
+        return m.group(1) if m else None
+
+
+# --------------------------------------------------------------------------
+# Validation
+# --------------------------------------------------------------------------
+
+
+def validate_example(ex: Example) -> list[str]:
+    """Return a list of human-readable problems; empty means valid."""
+    errs: list[str] = []
+
+    if not _ID_RE.match(ex.id):
+        errs.append(f"id {ex.id!r} does not match 'gst-NNNN'")
+
+    if not ex.input or not ex.input.strip():
+        errs.append("input is empty")
+
+    # --- slab ------------------------------------------------------------
+    if ex.slab in ABOLISHED_SLABS:
+        errs.append(
+            f"slab {ex.slab!r} was abolished on 22 Sep 2025 and cannot be a "
+            "gold label (see data/reference/rate_schedule.md)"
+        )
+    elif ex.slab != UNANSWERABLE and ex.slab not in VALID_SLABS:
+        errs.append(
+            f"slab {ex.slab!r} not in {VALID_SLABS} or {UNANSWERABLE!r}"
+        )
+
+    # --- answerable must agree with slab ---------------------------------
+    if ex.answerable and ex.slab == UNANSWERABLE:
+        errs.append("answerable=true but slab is UNANSWERABLE")
+    if not ex.answerable and ex.slab != UNANSWERABLE:
+        errs.append(f"answerable=false but slab is {ex.slab!r}")
+
+    # --- unanswerable rows need a diagnosable reason ----------------------
+    if not ex.answerable:
+        reason = ex.unanswerable_reason
+        if reason is None:
+            errs.append(
+                "unanswerable row must carry 'reason=<code>' in labeller_notes"
+            )
+        elif reason not in UNANSWERABLE_REASONS:
+            errs.append(
+                f"unknown unanswerable reason {reason!r}; "
+                f"expected one of {sorted(UNANSWERABLE_REASONS)}"
+            )
+        if ex.difficulty not in ("out_of_scope", "hard"):
+            errs.append(
+                f"unanswerable row has difficulty {ex.difficulty!r}; "
+                "expected 'out_of_scope' or 'hard'"
+            )
+
+    # --- hsn4 ------------------------------------------------------------
+    if ex.hsn4 is not None and not _HSN4_RE.match(ex.hsn4):
+        errs.append(f"hsn4 {ex.hsn4!r} is not a 4-digit heading")
+    if ex.answerable and ex.hsn4 is None:
+        errs.append("answerable row is missing hsn4")
+
+    # --- metadata --------------------------------------------------------
+    if ex.difficulty not in DIFFICULTIES:
+        errs.append(
+            f"difficulty {ex.difficulty!r} not in {sorted(DIFFICULTIES)}"
+        )
+    if ex.source and ex.source not in SOURCES:
+        errs.append(f"source {ex.source!r} not in {sorted(SOURCES)}")
+    if not ex.justification.strip():
+        errs.append("justification is empty")
+
+    # --- scope ------------------------------------------------------------
+    if term := out_of_scope_term(ex.input):
+        errs.append(
+            f"input mentions out-of-scope family {term!r} "
+            "(guideline.md §4d) — drop this example"
+        )
+
+    return errs
+
+
+# --------------------------------------------------------------------------
+# JSONL I/O
+# --------------------------------------------------------------------------
+
+
+def read_jsonl(path: str | Path) -> Iterator[Example]:
+    p = Path(path)
+    if not p.exists():
+        return
+    with p.open("r", encoding="utf-8") as fh:
+        for lineno, line in enumerate(fh, 1):
+            line = line.strip()
+            if not line or line.startswith("//"):
+                continue
+            try:
+                yield Example.from_json(json.loads(line))
+            except (json.JSONDecodeError, TypeError) as exc:
+                raise ValueError(f"{p}:{lineno}: {exc}") from exc
+
+
+def append_jsonl(path: str | Path, examples: Iterable[Example]) -> int:
+    p = Path(path)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    n = 0
+    with p.open("a", encoding="utf-8") as fh:
+        for ex in examples:
+            fh.write(json.dumps(ex.to_json(), ensure_ascii=False) + "\n")
+            n += 1
+    return n
+
+
+def next_id(existing: Iterable[Example]) -> str:
+    highest = 0
+    for ex in existing:
+        if _ID_RE.match(ex.id):
+            highest = max(highest, int(ex.id.split("-")[1]))
+    return f"gst-{highest + 1:04d}"
