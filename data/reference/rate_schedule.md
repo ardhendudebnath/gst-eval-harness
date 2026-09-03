@@ -1,8 +1,9 @@
-# GST Rate Schedule Reference — as in force from 22 September 2025
+# GST Rate Schedule Reference — as in force today
 
-**Status:** v0.9 draft. Structure confirmed; individual entries still to be
-checked line-by-line against the primary Gazette text before the dataset is
-frozen (see [Verification checklist](#verification-checklist)).
+**Status:** v1.0. The schedule structure and the label space below are
+**verified against the Gazette text** of Notification 9/2025 (52 pages) and its
+amending Notification 19/2025. Individual entries are still checked one at a
+time as they are used — see [Verification checklist](#verification-checklist).
 
 This file is the *only* authority an annotator may consult when assigning a
 slab. If a product cannot be placed using this file plus the Customs Tariff
@@ -13,10 +14,11 @@ by a search engine, or by asking a model.
 
 ## 1. The governing notifications
 
-| Notification | Dated | In force from | Supersedes | Covers |
-|---|---|---|---|---|
-| **9/2025–Central Tax (Rate)** | 17 Sep 2025 | 22 Sep 2025 | 1/2017–CT(R) of 28 Jun 2017 | Rated goods, Schedules I–VII |
-| **10/2025–Central Tax (Rate)** | 17 Sep 2025 | 22 Sep 2025 | 2/2017–CT(R) of 28 Jun 2017 | Exempt (nil-rated) goods |
+| Notification | Dated | In force from | Effect |
+|---|---|---|---|
+| **9/2025–Central Tax (Rate)** | 17 Sep 2025 | 22 Sep 2025 | Supersedes 1/2017–CT(R). Rated goods, Schedules I–VII |
+| **10/2025–Central Tax (Rate)** | 17 Sep 2025 | 22 Sep 2025 | Supersedes 2/2017–CT(R). Exempt (nil-rated) goods |
+| **19/2025–Central Tax (Rate)** | 31 Dec 2025 | **1 Feb 2026** | Amends 9/2025. **Omits Schedule VII entirely**; moves tobacco and pan masala to Schedule III, biris to Schedule II |
 
 Parallel IGST and UTGST notifications were issued the same day. This benchmark
 labels the **combined GST rate** (CGST + SGST, equivalently the IGST rate), so
@@ -32,15 +34,17 @@ These notifications implement the decisions of the **56th GST Council meeting
 Notification 9/2025 lays out seven schedules. Doubling the CGST rate gives the
 combined GST rate that this benchmark uses as its label:
 
+Schedule order and rates below are **read from the Gazette text**, not inferred.
+
 | Schedule | CGST | **Combined GST (the label)** | Broad coverage |
 |---|---|---|---|
 | I | 2.5 % | **5 %** | Essential and mass-consumption goods |
 | II | 9 % | **18 %** | Standard rate — the residual for most goods |
-| III | 20 % | **40 %** | Demerit and luxury goods |
+| III | 20 % | **40 %** | Demerit and luxury goods, incl. tobacco from 1 Feb 2026 |
 | IV | 1.5 % | **3 %** | Precious metals (gold, silver, platinum) |
 | V | 0.125 % | **0.25 %** | Rough / unworked precious stones |
 | VI | 0.75 % | **1.5 %** | Cut and polished diamonds |
-| VII | 14 % | **28 %** | Narrow residual — see caution below |
+| ~~VII~~ | ~~14 %~~ | ~~28 %~~ | **Omitted 1 Feb 2026 by Notification 19/2025** |
 
 Plus, from Notification 10/2025:
 
@@ -51,34 +55,43 @@ Plus, from Notification 10/2025:
 ### Permitted label values
 
 ```
-0    0.25    1.5    3    5    18    28    40    UNANSWERABLE
+0    0.25    1.5    3    5    18    40    UNANSWERABLE
 ```
 
-### ⚠ 12 % is abolished
+### ⚠ Two slabs are abolished, on two different dates
 
-The 6 % CGST schedule of the old Notification 1/2017 has **no successor** in
-Notification 9/2025. **`12` is not a valid label.** Items formerly at 12 %
-were redistributed, predominantly to 5 %.
+| Slab | Abolished | By |
+|---|---|---|
+| **12 %** | 22 Sep 2025 | The 6 % CGST schedule of Notification 1/2017 has **no successor** in 9/2025. Items formerly at 12 % went predominantly to 5 %. |
+| **28 %** | 1 Feb 2026 | Notification 19/2025 omits *"the Schedule VII – 14 %, and the entries relating thereto"*. |
 
-This matters far beyond bookkeeping. It is the benchmark's primary probe of
-stale parametric knowledge: a model that emits `12` is reciting a rate table
-that ceased to exist on 22 September 2025. The harness scores this separately
-as the **stale-slab rate** (see `harness/scorers/`), and it is reported as a
-first-class column on the leaderboard, not folded into plain accuracy.
+**Neither `12` nor `28` is a valid label**, and `harness/schema.py` rejects both.
 
-### ⚠ Caution on Schedule VII (28 %)
+This is the benchmark's primary probe of stale parametric knowledge, and the
+two dates make it sharper than a single cutoff would: a model emitting `12` is
+reciting a table that died in September 2025, while one emitting `28` is
+eighteen months stale in a different way. Both are reported as the
+**stale-slab rate**, a first-class leaderboard column rather than something
+folded into plain accuracy.
 
-Secondary commentary places tobacco, pan masala, aerated beverages and certain
-cement in Schedule VII at 14 % CGST / 28 % GST. There is a known transitional
-question here: several demerit items were widely reported as remaining at
-28 % + compensation cess until the cess loan obligations were discharged,
-moving to the 40 % Schedule III rate thereafter.
+### Where the demerit goods went
 
-**Consequence for labelling:** any product falling in the tobacco / pan masala /
-aerated-beverage / cement families is treated as **out of scope for v1.0** and
-excluded from the golden set, unless and until the transitional position is
-confirmed against the primary text and any subsequent amending notification.
-An unstable ground truth is worse than a smaller dataset.
+Resolved — this was an open question in the draft of this file, and the
+amending notification settles it:
+
+| Goods | From 1 Feb 2026 |
+|---|---|
+| Pan masala (2106 90 20), unmanufactured tobacco (2401), cigars and cigarettes (2402), other manufactured tobacco (2403 other than biris), tobacco for inhalation (2404) | **Schedule III — 40 %** |
+| **Biris** (2403 19 21, 2403 19 29) | **Schedule II — 18 %** |
+
+Compensation cess on tobacco was simultaneously reduced to nil, and a separate
+excise duty introduced, so the cess no longer sits on top of the GST rate.
+
+**Consequence for labelling:** the tobacco families are no longer *unsettled*.
+They remain out of scope for v1.0 as a deliberate scope choice
+(`guideline.md` §4d), not because the rate is unknown, and that exclusion could
+now reasonably be revisited. Biris at 18 % against everything else at 40 % is
+the kind of within-family split that makes good hard examples.
 
 ---
 
@@ -116,20 +129,44 @@ individual example's label.
 
 ---
 
+## Worked verification — heading 9608
+
+A record of the method, and of the one entry checked end-to-end so far.
+
+The Gazette text of Notification 9/2025 places, at **Schedule II (9 % CGST),
+serial 626**:
+
+> 9608 — Ball point pens; felt tipped and other porous-tipped pens and markers;
+> fountain pens; stylograph pens and other pens; duplicating stylos; pen
+> holders, pencil holders and similar holders; **parts (including caps and
+> clips) of the foregoing articles**, other than those of heading 9609
+
+So heading 9608, *including its parts*, is **18 %**. Heading 9609 appears in
+the notification only inside that exclusion clause and has no rated entry of
+its own, which is consistent with pencils and crayons having moved to nil.
+
+**Consequence for the ruling in `first_pass.jsonl` on pen tips and balls:** the
+authority placed them in Schedule III of Notification 1/2017, which was 18 %,
+and they sit at 18 % today. **The rate did not move**, so that example must not
+carry the `rate-changed-2025` tag — even though "12 %" appears in the ruling,
+because that was the applicant's rejected contention.
+
 ## Verification checklist
 
-Blocking items — all must be cleared before `golden.jsonl` is tagged v1.0.
-
-- [ ] Download the Gazette PDFs of Notification 9/2025 and 10/2025 into
-      `data/reference/primary/` and record their SHA-256 hashes.
-- [ ] Confirm Schedule VII's scope and the tobacco / aerated-beverage
-      transitional position; either bring those families in scope or record
-      the exclusion in `../guideline.md` §7.
-- [ ] Confirm no 6 % CGST schedule exists (i.e. `12` really is unavailable).
-- [ ] Check for amending notifications issued **after** 17 September 2025 that
-      alter any entry relied upon. Record the date this check was last run.
-- [ ] Re-verify every rate asserted in the five worked examples of
+- [x] Obtain the Gazette text of Notification 9/2025 and read the schedule
+      structure from it rather than from commentary.
+- [x] Confirm no 6 % CGST schedule exists — `12` really is unavailable.
+- [x] Resolve Schedule VII and the tobacco transitional position.
+      **Omitted from 1 Feb 2026 by Notification 19/2025**; tobacco to
+      Schedule III (40 %), biris to Schedule II (18 %).
+- [x] Check for amending notifications after 17 September 2025.
+      Found 19/2025 (31 Dec 2025, in force 1 Feb 2026).
+- [ ] Re-verify the rates asserted in the five worked examples of
       `../guideline.md` against the primary text.
+- [ ] Confirm the position on aerated beverages and cement specifically —
+      19/2025 covers tobacco and pan masala but was not read for those.
+- [ ] Archive the Gazette PDFs into `primary/` with their SHA-256 hashes,
+      rather than relying on a third-party mirror.
 
-**Last checked against primary sources:** _not yet — draft built from the
-notification structure only._
+**Last checked against primary sources:** 2026-09-04, against the Gazette text
+of Notification 9/2025 and 19/2025.

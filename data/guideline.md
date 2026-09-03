@@ -44,8 +44,11 @@ Three rules, and they are absolute:
 2. **Never label from a search engine result or an LLM.** Blogs disagree with
    each other and with the Gazette. If it is not in the reference file or the
    primary notification, it is not a label — it is a guess.
-3. **`12` is not a valid label.** The 12 % slab was abolished. If you find
-   yourself reaching for it, you have slipped into the pre-2025 table.
+3. **Neither `12` nor `28` is a valid label.** Both slabs were abolished —
+   12 % on 22 September 2025, 28 % on 1 February 2026 when Notification
+   19/2025 omitted Schedule VII. If you find yourself reaching for either, you
+   have slipped into a superseded table. The labelling tool has no key for
+   them.
 
 ### 2a. Examples drawn from advance rulings — read this before labelling one
 
@@ -164,8 +167,12 @@ make clear whether the item is the good itself or a part of it →
 Do **not** label products in these families; they are dropped at collection time
 by `harness.schema.out_of_scope_term`.
 
-**Excluded because the rate is unsettled** — the transitional position of
-Schedule VII / 40 % is not confirmed (see `reference/rate_schedule.md`):
+**Excluded as a v1.0 scope choice.** Tobacco and pan masala are no longer
+*unsettled* — Notification 19/2025 puts them in Schedule III (40 %) and biris
+in Schedule II (18 %) from 1 February 2026. They stay out of v1.0 because the
+collectors were built around that exclusion, not because the rate is unknown,
+and the decision could reasonably be revisited. Aerated drinks and cement have
+not been checked against 19/2025 and remain genuinely unconfirmed.
 
 - tobacco, cigarettes, bidis, pan masala, gutkha
 - aerated, carbonated and energy drinks

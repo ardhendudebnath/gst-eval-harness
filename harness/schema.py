@@ -17,8 +17,9 @@ from typing import Any, Iterable, Iterator
 # Label space. See data/reference/rate_schedule.md.
 # --------------------------------------------------------------------------
 
-#: Combined GST rates available under Notification 9/2025 + 10/2025.
-VALID_SLABS: tuple[str, ...] = ("0", "0.25", "1.5", "3", "5", "18", "28", "40")
+#: Combined GST rates available under Notification 9/2025 (as amended by
+#: 19/2025) plus the 10/2025 exemptions. Verified against the Gazette text.
+VALID_SLABS: tuple[str, ...] = ("0", "0.25", "1.5", "3", "5", "18", "40")
 
 #: Sentinel for "the description does not support any slab".
 UNANSWERABLE = "UNANSWERABLE"
@@ -29,10 +30,23 @@ UNANSWERABLE = "UNANSWERABLE"
 #: Conflating them would let model ignorance masquerade as a dataset label.
 UNCERTAIN = "UNCERTAIN"
 
-#: Abolished on 22 Sep 2025 — no successor schedule in Notification 9/2025.
-#: A model emitting this is reciting a rate table that no longer exists, which
-#: the harness scores separately as the stale-slab rate.
-ABOLISHED_SLABS: frozenset[str] = frozenset({"12"})
+#: Slabs that no longer exist. A model emitting one is reciting a rate table
+#: that has been superseded, which the harness scores separately as the
+#: stale-slab rate.
+#:
+#:   12%  abolished 22 Sep 2025 — the 6% CGST schedule of Notification 1/2017
+#:        has no successor in 9/2025.
+#:   28%  abolished  1 Feb 2026 — Notification 19/2025-CT(Rate) omits
+#:        "the Schedule VII – 14%, and the entries relating thereto".
+#:        Tobacco and pan masala moved to Schedule III (40%), biris to
+#:        Schedule II (18%).
+#:
+#: Both dates matter: a model can be stale by six months or by eighteen, and
+#: the two are distinguishable in its output.
+ABOLISHED_SLABS: frozenset[str] = frozenset({"12", "28"})
+
+#: When each abolished slab ceased to exist, for reporting.
+SLAB_ABOLISHED_ON: dict[str, str] = {"12": "2025-09-22", "28": "2026-02-01"}
 
 DIFFICULTIES: frozenset[str] = frozenset(
     {"typical", "hard", "long_context", "adversarial", "out_of_scope"}
@@ -239,8 +253,8 @@ def validate_example(ex: Example, *, quarantine: bool = False) -> list[str]:
     # --- slab ------------------------------------------------------------
     if ex.slab in ABOLISHED_SLABS:
         errs.append(
-            f"slab {ex.slab!r} was abolished on 22 Sep 2025 and cannot be a "
-            "gold label (see data/reference/rate_schedule.md)"
+            f"slab {ex.slab!r} was abolished on {SLAB_ABOLISHED_ON[ex.slab]} and "
+            "cannot be a gold label (see data/reference/rate_schedule.md)"
         )
     elif ex.slab == UNCERTAIN and not quarantine:
         errs.append(

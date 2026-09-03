@@ -41,6 +41,8 @@ GOLDEN = Path("data/golden.jsonl")
 RAW_DIR = Path("data/raw")
 BATCH_SIZE = 50
 
+#: 12% and 28% are deliberately absent — both are abolished and cannot be a
+#: gold label, so the key that would enter one does not exist.
 SLAB_KEYS: dict[str, str] = {
     "a": "0",
     "b": "0.25",
@@ -48,7 +50,6 @@ SLAB_KEYS: dict[str, str] = {
     "d": "3",
     "e": "5",
     "f": "18",
-    "g": "28",
     "h": "40",
 }
 
@@ -238,8 +239,9 @@ def _print_hints(meta: dict, record: dict | None = None) -> None:
 def label_one(record: dict, ex_id: str) -> Example | None:
     """Collect one judgement. Returns None if skipped."""
     print("\n  slab:  [a] 0%    [b] 0.25%  [c] 1.5%  [d] 3%")
-    print("         [e] 5%    [f] 18%    [g] 28%   [h] 40%")
+    print("         [e] 5%    [f] 18%    [h] 40%")
     print("         [u] UNANSWERABLE     [s] skip  [:q] save & quit")
+    print("         (12% abolished 22 Sep 2025; 28% abolished 1 Feb 2026)")
     choice = _menu("  > ", SLAB_KEYS, extra={"u": UNANSWERABLE, "s": "__skip__"})
     if choice == "__skip__":
         return None

@@ -28,6 +28,22 @@ def test_abolished_slab_is_rejected():
     assert any("abolished" in p for p in problems)
 
 
+def test_twenty_eight_is_also_abolished():
+    # Notification 19/2025 omits Schedule VII from 1 Feb 2026.
+    problems = validate_example(make(slab="28"))
+    assert any("abolished" in p for p in problems)
+
+
+def test_each_abolished_slab_reports_its_own_date():
+    assert any("2025-09-22" in p for p in validate_example(make(slab="12")))
+    assert any("2026-02-01" in p for p in validate_example(make(slab="28")))
+
+
+def test_forty_percent_is_valid():
+    # Schedule III, where the demerit goods went.
+    assert validate_example(make(slab="40")) == []
+
+
 def test_unknown_slab_is_rejected():
     assert any("not in" in p for p in validate_example(make(slab="7")))
 
