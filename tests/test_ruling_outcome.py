@@ -123,3 +123,32 @@ def test_negative_determination_is_still_returned():
 
 def test_returns_none_when_there_is_no_ruling_at_all():
     assert extract_outcome("An unrelated document with no ruling in it.") is None
+
+
+# --- redaction ------------------------------------------------------------
+
+
+def test_quote_is_redacted():
+    # The operative ruling names the applicant and, in one real order, quoted a
+    # live GSTIN. This passage never passes through the collector's pipeline,
+    # so it must be redacted where it is produced.
+    text = PREAMBLE + (
+        " R U L I N G The products supplied by M/s. Examplco Filaments Limited "
+        "(GSTIN 24ABCDE1234F1Z5) are appropriately classifiable under Heading 3307."
+        + SIGN_OFF
+    )
+    out = extract_outcome(text)
+    assert out is not None
+    assert "24ABCDE1234F1Z5" not in out.quote
+    assert "Examplco Filaments" not in out.quote
+
+
+def test_redaction_keeps_the_determination_intact():
+    text = PREAMBLE + (
+        " R U L I N G The products supplied by M/s. Examplco Filaments Limited "
+        "(GSTIN 24ABCDE1234F1Z5) are appropriately classifiable under Heading 3307."
+        + SIGN_OFF
+    )
+    out = extract_outcome(text)
+    assert "3307" in out.headings
+    assert "classifiable" in out.quote

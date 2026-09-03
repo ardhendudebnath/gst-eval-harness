@@ -509,6 +509,86 @@ def run_relabel(n: int, seed: int | None) -> int:
     return 0
 
 
+def run_review_first_pass(quarantine: Path) -> int:
+    """Review model first-pass suggestions into the golden set.
+
+    Every row must be judged individually. A suggestion the annotator accepts
+    is rewritten as `human-reviewed` and its `model_notes` are dropped; the
+    quarantine file is left untouched, so the record of what the model proposed
+    survives for the disclosure in the README.
+    """
+    pending = [e for e in read_jsonl(quarantine)]
+    if not pending:
+        print(f"\n  nothing in {quarantine}\n", file=sys.stderr)
+        return 1
+
+    labelled = list(read_jsonl(GOLDEN))
+    done = {e.source_id for e in labelled if e.source_id}
+    todo = [e for e in pending if e.source_id not in done]
+
+    print(f"\n{RULE}")
+    print(f"  Reviewing {len(todo)} model suggestion(s) of {len(pending)}.")
+    print("  A suggestion is a starting point. The slab is YOUR judgement:")
+    print("  derive it from Notification 9/2025, not from anything shown here.")
+    print(RULE)
+
+    written = 0
+    try:
+        for i, sug in enumerate(todo, 1):
+            record = {
+                "input": sug.input,
+                "source": sug.source,
+                "source_id": sug.source_id,
+                "collected_at": sug.collected_at,
+                "collection_meta": sug.collection_meta,
+            }
+            present(record, sug.id, i, (i - 1) % BATCH_SIZE + 1)
+
+            notes = sug.model_notes or {}
+            print("  --- model first pass (unreviewed) ---")
+            print(f"     proposed heading: {sug.hsn4 or '(none)'}  "
+                  f"[confidence: {notes.get('hsn_confidence', '?')}]")
+            print(f"       basis: {notes.get('hsn_basis', '')}")
+            print(f"     proposed slab:    {sug.slab}  "
+                  f"[confidence: {notes.get('slab_confidence', '?')}]")
+            print(f"       basis: {notes.get('slab_basis', '')}")
+            if notes.get("rate_moved"):
+                print("     rate moved: yes — the source slab was abolished")
+            if notes.get("conditional"):
+                print("     NOTE: the authority's determination is conditional")
+            print(RULE)
+
+            ex = label_one(record, sug.id)
+            if ex is None:
+                continue
+
+            ex.labelled_by = "human-reviewed"
+            ex.labeller_notes = (
+                (ex.labeller_notes + "; " if ex.labeller_notes else "")
+                + "reviewed from model first pass"
+            )
+            problems = validate_example(ex)
+            if problems:
+                print("\n  ! this row does not validate:")
+                for p in problems:
+                    print(f"      {p}")
+                if not _ask("  keep it anyway? [y/N]  > ", allow_empty=True).lower().startswith("y"):
+                    print("  discarded.")
+                    continue
+
+            append_jsonl(GOLDEN, [ex])
+            labelled.append(ex)
+            written += 1
+            print(f"  saved {ex.id} (human-reviewed)")
+    except Quit:
+        pass
+
+    print(f"\n  Reviewed {written} row(s) into {GOLDEN}.")
+    print(f"  {quarantine} is unchanged — it is the record of what was suggested.\n")
+    show_progress(labelled, 400)
+    return 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--target", type=int, default=400, help="target dataset size")
@@ -530,8 +610,18 @@ def main() -> int:
     )
     ap.add_argument("--relabel", type=int, metavar="N", default=None)
     ap.add_argument("--seed", type=int, default=None)
+    ap.add_argument(
+        "--review-first-pass",
+        nargs="?",
+        const="data/first_pass.jsonl",
+        default=None,
+        metavar="FILE",
+        help="review model first-pass suggestions into the golden set",
+    )
     args = ap.parse_args()
 
+    if args.review_first_pass:
+        return run_review_first_pass(Path(args.review_first_pass))
     if args.relabel:
         return run_relabel(args.relabel, args.seed)
     return run_label(

@@ -27,6 +27,8 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 
+from harness.collect.normalise import normalise
+
 #: Headings that introduce the operative ruling. Spaced-out forms like
 #: "R U L I N G" are common in these PDFs.
 _OPERATIVE = re.compile(
@@ -126,7 +128,12 @@ def find_operative_ruling(text: str) -> str | None:
             continue
         if not _DETERMINATION.search(tail):
             continue
-        return _normalise_ws(tail)[:MAX_QUOTE_CHARS]
+        # Redact before returning. This passage comes straight out of the PDF
+        # and has not been through the collector's pipeline, so without this it
+        # carries party detail the rest of the corpus strips — an operative
+        # ruling names the applicant and quoted one live GSTIN verbatim.
+        redacted, _ = normalise(_normalise_ws(tail), is_ruling=True)
+        return redacted[:MAX_QUOTE_CHARS]
     return None
 
 

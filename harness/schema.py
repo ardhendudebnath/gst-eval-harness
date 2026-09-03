@@ -23,6 +23,12 @@ VALID_SLABS: tuple[str, ...] = ("0", "0.25", "1.5", "3", "5", "18", "28", "40")
 #: Sentinel for "the description does not support any slab".
 UNANSWERABLE = "UNANSWERABLE"
 
+#: Quarantine-only sentinel for "the model could not derive a slab it could
+#: defend". Deliberately distinct from UNANSWERABLE, which is a positive
+#: finding about the *description*; this is an admission about the *model*.
+#: Conflating them would let model ignorance masquerade as a dataset label.
+UNCERTAIN = "UNCERTAIN"
+
 #: Abolished on 22 Sep 2025 — no successor schedule in Notification 9/2025.
 #: A model emitting this is reciting a rate table that no longer exists, which
 #: the harness scores separately as the stale-slab rate.
@@ -52,6 +58,23 @@ UNANSWERABLE_REASONS: frozenset[str] = frozenset(
 )
 
 SOURCES: frozenset[str] = frozenset({"off", "aar", "ogd", "gem"})
+
+#: Who made the judgement. The plan permits model assistance for a first pass
+#: only if every example is human-reviewed and the assistance is disclosed, so
+#: provenance is a field rather than a convention.
+LABELLERS: frozenset[str] = frozenset(
+    {
+        "human",           # labelled directly by the annotator
+        "model-first-pass",  # model suggestion, NOT reviewed — quarantined
+        "human-reviewed",  # model suggestion the annotator accepted or corrected
+    }
+)
+
+#: Never permitted in the golden set. This is the guarantee that an unreviewed
+#: model suggestion cannot become an example by accident — concatenating the
+#: quarantine file into golden.jsonl fails validation loudly instead of
+#: silently destroying the dataset's provenance claim.
+QUARANTINED_LABELLERS: frozenset[str] = frozenset({"model-first-pass"})
 
 _ID_RE = re.compile(r"^gst-\d{4}$")
 _HSN4_RE = re.compile(r"^\d{4}$")
@@ -138,8 +161,12 @@ class Example:
     collected_at: str = ""
     labelled_at: str = ""
     labeller_notes: str = ""
+    labelled_by: str = "human"
     deprecated_by: str | None = None
     collection_meta: dict[str, Any] = field(default_factory=dict)
+    #: Only on quarantined rows: why the model suggested this, and how much it
+    #: trusted each field. Dropped once a human reviews the row.
+    model_notes: dict[str, Any] = field(default_factory=dict)
 
     @classmethod
     def from_json(cls, obj: dict[str, Any]) -> "Example":
@@ -161,10 +188,13 @@ class Example:
             "collected_at": self.collected_at,
             "labelled_at": self.labelled_at,
             "labeller_notes": self.labeller_notes,
+            "labelled_by": self.labelled_by,
             "collection_meta": self.collection_meta,
         }
         if self.deprecated_by:
             out["deprecated_by"] = self.deprecated_by
+        if self.model_notes:
+            out["model_notes"] = self.model_notes
         return out
 
     @property
@@ -183,9 +213,22 @@ class Example:
 # --------------------------------------------------------------------------
 
 
-def validate_example(ex: Example) -> list[str]:
-    """Return a list of human-readable problems; empty means valid."""
+def validate_example(ex: Example, *, quarantine: bool = False) -> list[str]:
+    """Return a list of human-readable problems; empty means valid.
+
+    `quarantine=True` validates a row in the model first-pass file, where an
+    unreviewed model label is expected. In the golden set it is an error.
+    """
     errs: list[str] = []
+
+    if ex.labelled_by not in LABELLERS:
+        errs.append(f"labelled_by {ex.labelled_by!r} not in {sorted(LABELLERS)}")
+    elif not quarantine and ex.labelled_by in QUARANTINED_LABELLERS:
+        errs.append(
+            f"labelled_by is {ex.labelled_by!r}: an unreviewed model suggestion "
+            "cannot be a golden example. Review it with "
+            "`python -m harness.label.cli --review-first-pass`."
+        )
 
     if not _ID_RE.match(ex.id):
         errs.append(f"id {ex.id!r} does not match 'gst-NNNN'")
@@ -199,10 +242,20 @@ def validate_example(ex: Example) -> list[str]:
             f"slab {ex.slab!r} was abolished on 22 Sep 2025 and cannot be a "
             "gold label (see data/reference/rate_schedule.md)"
         )
-    elif ex.slab != UNANSWERABLE and ex.slab not in VALID_SLABS:
+    elif ex.slab == UNCERTAIN and not quarantine:
+        errs.append(
+            f"slab {UNCERTAIN!r} means the model could not derive one; it is "
+            "only valid in the first-pass quarantine file, never in the golden set"
+        )
+    elif ex.slab not in (UNANSWERABLE, UNCERTAIN) and ex.slab not in VALID_SLABS:
         errs.append(
             f"slab {ex.slab!r} not in {VALID_SLABS} or {UNANSWERABLE!r}"
         )
+
+    # A quarantined row that could not be derived is exempt from the coherence
+    # checks below — there is no slab yet for anything to agree with.
+    if quarantine and ex.slab == UNCERTAIN:
+        return errs
 
     # --- answerable must agree with slab ---------------------------------
     if ex.answerable and ex.slab == UNANSWERABLE:

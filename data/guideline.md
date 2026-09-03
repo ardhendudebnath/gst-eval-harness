@@ -336,9 +336,27 @@ the same shortcut gets the next hamper wrong.
    batches rather than pressing on.
 4. **Record the self-agreement number in the README.** It is the ceiling against
    which every model is judged, and stating it publicly is the point.
-5. **No LLM assistance in labelling.** Not for a first pass, not for
-   tie-breaking. The entire value of this dataset is that a human made the
-   judgements against a primary legal text.
+5. **Model assistance is quarantined and disclosed, never silent.**
+   Every judgement in `golden.jsonl` is a human's. A model first pass may be
+   run as a research aid, under three conditions that the code enforces rather
+   than merely recommends:
+
+   - it writes only to `data/first_pass.jsonl`, never to the golden set;
+   - every row is marked `labelled_by: "model-first-pass"`, which
+     `validate_example` rejects in the golden set, so the files cannot be
+     merged by accident;
+   - a suggestion becomes an example only after `--review-first-pass`, where
+     you make the judgement yourself and the row is rewritten
+     `human-reviewed`.
+
+   **The first pass never proposes a slab.** It offers the HSN heading, read
+   from the authority's operative ruling, and stops. A model's priors are the
+   pre-September-2025 rate table — the exact error this benchmark exists to
+   measure — so a suggested slab would anchor you on precisely the examples
+   where the model is least trustworthy and the finding matters most.
+
+   Treat a suggested heading as you would `hsn_candidates` (§2a): a research
+   hint to verify, never an answer to accept.
 
 ---
 

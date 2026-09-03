@@ -75,9 +75,24 @@ If that turns out to be false, this section will say so.
   | Open Food Facts (India) | `typical` | Real packaged-goods listings, short and messy, ODbL-licensed |
   | GST Advance Rulings | `hard`, `adversarial`, `long_context` | Genuine classification disputes across the whole tariff — "does a quartz slab that is 92% crushed quartz and 8% resin fall under 6802 or 6810?" — with the applicant's rejected contention left in as a distractor |
 
-- **Labelled by hand, against the primary notification.** No model assistance at
-  any stage, including first passes and tie-breaking — see
-  [`data/guideline.md`](data/guideline.md) §7.5.
+- **Labelled by hand, against the primary notification.** Every judgement in
+  `golden.jsonl` was made by a human. Each row records `labelled_by`, and the
+  validator refuses any row that has not been.
+
+- **Model assistance, disclosed.** A model first pass was run over the rulings
+  that quote the abolished 12% slab. It proposes **no slab at all** — deriving
+  one needs Notification 9/2025, and a model's priors are the pre-2025 table,
+  which is the very error this benchmark measures. It proposes only the HSN
+  heading, read out of the authority's own operative ruling in the same
+  document, and it is right about that for 20 of 32.
+
+  Those suggestions live in `data/first_pass.jsonl`, never in the golden set.
+  They are marked `labelled_by: "model-first-pass"`, which
+  `harness/schema.py` rejects outright — concatenating the two files fails
+  validation rather than silently laundering an unreviewed label. A suggestion
+  becomes an example only after a human reviews it, at which point it is
+  rewritten as `human-reviewed`, and the quarantine file is left intact as the
+  record of what was proposed.
 - Examples are **never edited in place**. A correction is appended under a new
   id and the old row carries `deprecated_by`.
 
