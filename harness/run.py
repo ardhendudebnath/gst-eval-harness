@@ -61,7 +61,12 @@ def run_one(key: str, dataset: list[Example], *, mode: str, sleep: float) -> Run
         print(f"  {key}: skipped — {exc}")
         return None
 
-    sha, n_rows = dataset_fingerprint()
+    # Fingerprint the file the dataset was actually loaded from. Relying on the
+    # default here would read a second module-level constant for the same path
+    # — they agree today, but a run that scored one file and stamped the
+    # provenance of another would be silently wrong about the thing the
+    # fingerprint exists to prove.
+    sha, n_rows = dataset_fingerprint(GOLDEN)
     started = datetime.now(timezone.utc).isoformat(timespec="seconds")
     completions, scores, rows = [], [], []
 
