@@ -114,11 +114,24 @@ Cheapest method that works, escalating only where forced:
 |---|---|---|
 | `slab` | **Exact match** | Closed label set. Free, fast, unarguable. |
 | `hsn4` | **Exact match**, plus 2-digit chapter as partial credit | Structured. |
-| `answerable` | **Exact match**, reported as abstention precision/recall | Binary. |
+| `answerable` | **Exact match**, reported as abstention precision/recall/F1 | Binary. |
 | `justification` | **LLM-as-judge** | Genuinely open-ended — the only place a judge is warranted. |
 
 A benchmark that judges everything with an LLM has reached for the fashionable
-tool. Three of the four fields here never touch a judge.
+tool. Three of the four fields here never touch a judge, and they are
+implemented in `harness/scorers/exact.py` — no model is involved in any of them.
+
+**Stale-slab rate is scored separately**, not folded into accuracy, and is
+broken down by which abolished rate was quoted. "Wrong" and "reciting a
+schedule that no longer exists" are different failures, and only the second is
+the finding.
+
+**Failed and unparseable responses score as wrong**, never as skipped.
+Dropping them would inflate accuracy for whichever model errors most.
+
+**One prompt for every model** (`harness/prompt.py`, versioned). A separately
+reported second pass gives each model a lightly tuned prompt; the gap between
+the two passes is itself a result.
 
 ### Judge calibration
 

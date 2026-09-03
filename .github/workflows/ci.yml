@@ -32,6 +32,8 @@ jobs:
           import harness.schema, harness.validate, harness.label.cli
           import harness.calibration.kappa, harness.calibration.self_agreement
           import harness.collect.normalise, harness.collect.openfoodfacts
+          import harness.prompt, harness.scorers.exact, harness.report.cost
+          import harness.runners
           print('core is dependency-free')
           "
 

@@ -1,0 +1,151 @@
+"""Runner plumbing and cost accounting.
+
+No test here makes a network call. What is asserted is the accounting: prices
+carry a date, an unpriced model produces no number, and a run with no correct
+answers does not divide by zero.
+"""
+
+import pytest
+
+from harness.report.cost import build as build_cost
+from harness.runners import MODELS, build, get, priced
+from harness.runners.base import Completion, RunnerError
+from harness.runners.providers.openai_compat import parse_response
+from harness.runners.registry import FX_READ_ON, PRICES_READ_ON
+
+
+def comp(tin=1000, tout=200, ms=500, **kw) -> Completion:
+    return Completion(
+        text="SLAB: 18", model="m", provider="p",
+        tokens_in=tin, tokens_out=tout, latency_ms=ms, **kw
+    )
+
+
+# --- registry -------------------------------------------------------------
+
+
+def test_every_tier_the_plan_asks_for_is_present():
+    tiers = {m.tier for m in MODELS.values()}
+    assert {"frontier", "mid", "small", "open-weight"} <= tiers
+
+
+def test_no_model_id_carries_an_invented_date_suffix():
+    import re
+
+    for m in MODELS.values():
+        if m.model_id:
+            assert not re.search(r"-20\d{6}$", m.model_id), m.model_id
+
+
+def test_nothing_is_marked_verified_before_it_has_been_called():
+    # The plan: never name a model you have not actually called.
+    assert not any(m.verified for m in MODELS.values())
+
+
+def test_prices_and_fx_are_dated():
+    assert PRICES_READ_ON and FX_READ_ON
+
+
+def test_open_weight_slot_is_unpriced_until_a_price_is_read():
+    assert not priced(get("open-weight"))
+
+
+def test_unknown_key_raises():
+    with pytest.raises(KeyError):
+        get("no-such-model")
+
+
+def test_cost_scales_with_tokens():
+    spec = get("opus-5")
+    assert spec.cost_usd(1_000_000, 0) == pytest.approx(5.00)
+    assert spec.cost_usd(0, 1_000_000) == pytest.approx(25.00)
+
+
+# --- cost report ----------------------------------------------------------
+
+
+def test_cost_per_correct_answer():
+    spec = get("opus-5")
+    # 1M in + 1M out = $30 across 10 completions, 6 correct.
+    cs = [comp(tin=100_000, tout=100_000) for _ in range(10)]
+    r = build_cost(spec, cs, correct=6)
+    assert r.usd_total == pytest.approx(30.0)
+    assert r.usd_per_correct == pytest.approx(5.0)
+    assert r.inr_per_correct == pytest.approx(5.0 * 88.0)
+
+
+def test_unpriced_model_reports_no_cost_and_says_why():
+    r = build_cost(get("open-weight"), [comp()], correct=1)
+    assert r.usd_total is None and r.usd_per_correct is None
+    assert r.unpriced_reason
+
+
+def test_zero_correct_does_not_divide_by_zero():
+    r = build_cost(get("opus-5"), [comp()], correct=0)
+    assert r.usd_total is not None
+    assert r.usd_per_correct is None
+    assert "undefined" in r.unpriced_reason
+
+
+def test_report_carries_the_price_date():
+    assert build_cost(get("opus-5"), [comp()], correct=1).as_row()["prices_read_on"]
+
+
+def test_latency_percentiles_are_observed_values():
+    cs = [comp(ms=v) for v in [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]]
+    r = build_cost(get("opus-5"), cs, correct=1)
+    assert r.p50_latency_ms in (50, 60)
+    assert r.p95_latency_ms == 100  # nearest-rank, never interpolated
+
+
+def test_failed_calls_still_count_their_tokens():
+    cs = [comp(), comp(tin=50, tout=0, error="http_500: boom")]
+    r = build_cost(get("opus-5"), cs, correct=1)
+    assert r.calls == 2
+    assert r.tokens_in == 1050
+
+
+# --- openai-compatible response parsing -----------------------------------
+
+
+def test_parses_a_chat_completions_body():
+    c = parse_response(
+        {
+            "id": "chatcmpl-1",
+            "model": "some/open-model",
+            "choices": [{"message": {"content": "SLAB: 5"}, "finish_reason": "stop"}],
+            "usage": {"prompt_tokens": 120, "completion_tokens": 8},
+        },
+        "requested-model", "openrouter",
+    )
+    assert c.text == "SLAB: 5"
+    assert c.model == "some/open-model"  # what actually served it
+    assert c.tokens_in == 120 and c.tokens_out == 8
+    assert c.ok
+
+
+def test_empty_choices_is_an_error_not_a_blank_answer():
+    c = parse_response({"usage": {}}, "m", "openrouter")
+    assert not c.ok and "empty_response" in c.error
+
+
+def test_missing_usage_does_not_crash():
+    c = parse_response(
+        {"choices": [{"message": {"content": "hi"}}]}, "m", "openrouter"
+    )
+    assert c.tokens_in == 0
+
+
+# --- construction ---------------------------------------------------------
+
+
+def test_open_weight_without_a_model_id_refuses_clearly(monkeypatch):
+    monkeypatch.delenv("OPENROUTER_MODEL", raising=False)
+    monkeypatch.setenv("OPENROUTER_API_KEY", "x")
+    with pytest.raises(RunnerError, match="OPENROUTER_MODEL"):
+        build("open-weight")
+
+
+def test_completion_ok_flag():
+    assert comp().ok
+    assert not comp(error="boom").ok
