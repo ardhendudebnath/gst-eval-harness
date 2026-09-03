@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from harness.collect.aar import CACHE, reextract
+from harness.collect.aar import CACHE, cached_pdf_for, reextract
 
 RECORD = {
     "source": "aar",
@@ -96,3 +96,19 @@ def test_index_metadata_survives_reextraction():
 
 def test_cache_path_is_where_the_collector_writes():
     assert CACHE == Path("data/cache/aar")
+
+
+def test_cached_pdf_for_resolves_from_source_id():
+    assert cached_pdf_for(RECORD) == CACHE / "does-not-exist.pdf"
+
+
+def test_cached_pdf_for_falls_back_to_the_ruling_url():
+    rec = {"collection_meta": {"ruling_url": "https://x/sites/default/files/AAR/abc.pdf"}}
+    assert cached_pdf_for(rec) == CACHE / "abc.pdf"
+
+
+def test_absent_cache_is_distinguishable_from_rejection():
+    # This is what stops `rescreen --reextract` deleting the whole pool on a
+    # fresh clone, where data/cache/ is git-ignored and therefore empty.
+    assert not cached_pdf_for(RECORD).exists()
+    assert reextract(RECORD, 1200) is None

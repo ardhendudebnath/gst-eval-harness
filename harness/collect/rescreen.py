@@ -20,7 +20,13 @@ import sys
 from collections import Counter
 from pathlib import Path
 
-from harness.collect.aar import is_about_services, is_withdrawn, reextract
+from harness.collect.aar import (
+    cached_pdf_for,
+    is_about_services,
+    is_withdrawn,
+    reextract,
+    scope_text,
+)
 from harness.collect.normalise import in_length_bounds, normalise
 from harness.schema import out_of_scope_term, read_jsonl
 
@@ -39,20 +45,22 @@ def _dedupe_key(text: str) -> str:
 
 
 def _haystack(rec: dict) -> str:
-    """Everything a scope rule should be able to see.
+    """The text a scope rule should judge the record's *subject* from.
 
-    Includes the catalogue category and the ruling brief, because the excerpt
-    itself often never names the family: a listing reading "Thums up, 250 ml"
-    says nothing about carbonation, and a ruling excerpt about a manufacturing
-    process may only be identifiable as tobacco from its brief.
+    Two different shapes. A listing reading "Thums up, 250 ml" says nothing
+    about carbonation, so its catalogue category has to be included. A ruling
+    excerpt runs to 1200 words, so the whole of it must NOT be included — see
+    `scope_text`: matching an incidental mention deep in a long ruling discards
+    a good example.
     """
     meta = rec.get("collection_meta", {})
+    if rec.get("source") == "aar":
+        return scope_text(rec.get("input", ""), str(meta.get("ruling_brief") or ""))
     return " ".join(
         [
             rec.get("input", ""),
             str(meta.get("categories") or ""),
             str(meta.get("labels") or ""),
-            str(meta.get("ruling_brief") or ""),
         ]
     )
 
@@ -90,6 +98,7 @@ def main() -> int:
     protected = 0
     redacted = 0
     reextracted = 0
+    no_cache = 0
 
     for rec in records:
         # Never drop a record that already backs a labelled example.
@@ -121,13 +130,21 @@ def main() -> int:
         # applied to the text that will actually be shipped.
         if rec.get("source") == "aar":
             if args.reextract:
-                rebuilt = reextract(rec, args.reextract)
-                if rebuilt is None:
-                    dropped["reextract_failed"] += 1
-                    continue
-                if rebuilt["input"] != rec["input"]:
-                    reextracted += 1
-                rec = rebuilt
+                if not cached_pdf_for(rec).exists():
+                    # No cached PDF is not a failure. data/cache/ is git-ignored,
+                    # so a fresh clone has none, and dropping on that basis would
+                    # delete the entire pool. The existing excerpt stays as it is.
+                    no_cache += 1
+                else:
+                    rebuilt = reextract(rec, args.reextract)
+                    if rebuilt is None:
+                        # PDF is present but the content no longer qualifies —
+                        # a scan, a withdrawn application, or no facts section.
+                        dropped["reextract_rejected"] += 1
+                        continue
+                    if rebuilt["input"] != rec["input"]:
+                        reextracted += 1
+                    rec = rebuilt
 
             # Re-run redaction. Filters alone cannot fix a record collected
             # before a redaction pattern existed — the name is already on disk,
@@ -157,6 +174,11 @@ def main() -> int:
         print(f"  families: {dict(families.most_common())}")
     if redacted:
         print(f"  redacted: {redacted} record(s) further cleaned by current patterns")
+    if no_cache:
+        print(
+            f"  no cache: {no_cache} record(s) left as-is (run `make collect-aar` "
+            "to repopulate data/cache/ before re-cutting)"
+        )
     if reextracted:
         print(f"  re-cut:   {reextracted} excerpt(s) rebuilt at {args.reextract} words")
         words = [len(r["input"].split()) for r in kept if r.get("source") == "aar"]

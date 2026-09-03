@@ -74,6 +74,36 @@ def test_government_order_citation_is_not_treated_as_a_name():
     assert "strip_person_name" not in applied
 
 
+def test_name_identified_only_by_a_following_role_is_stripped():
+    # Real case: OCR merged and corrupted the honorific ("Sri" -> "Srl"), so
+    # nothing marks the start of the name except the role after it.
+    out, applied = clean("heard Srlnivasa Examplename, Advocate, for the applicant.")
+    assert "Examplename" not in out
+    assert "strip_role_name" in applied
+
+
+@pytest.mark.parametrize(
+    "role", ["Advocate", "Advocates", "Chartered Accountant", "Consultant", "FCA"]
+)
+def test_common_role_markers_are_recognised(role):
+    out, _ = clean(f"appeared Examplename Secondname, {role}, on behalf of the applicant")
+    assert "Examplename" not in out
+
+
+def test_role_pattern_leaves_ordinary_comma_phrases_alone():
+    # The lookahead requires a professional role, not just any comma.
+    out, applied = clean("Quartz Slabs, Artificial Stone, are manufactured by the applicant.")
+    assert "Quartz Slabs" in out
+    assert "Artificial Stone" in out
+    assert "strip_role_name" not in applied
+
+
+def test_role_pattern_does_not_eat_the_government_order_citation():
+    out, _ = clean("and G.O.Ms No. 110, Revenue (CT-II) Department, Dt. 29-06-2017")
+    assert "G.O.Ms No. 110" in out
+    assert "Revenue (CT-II) Department" in out
+
+
 def test_goods_text_survives_name_redaction():
     text = (
         "Sri. Examplename, Advocate appeared. The applicant manufactures PVC Carpet "

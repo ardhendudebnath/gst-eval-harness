@@ -99,6 +99,17 @@ _ALIAS_RE = re.compile(
     r"[A-Z][\w.\-]{1,30}"
 )
 
+# A name identified by the role that follows it, with no honorific to key on.
+# OCR is why this is needed: one advocate's name came through as "Srlnivasa
+# Rao, Advocate" — the honorific "Sri" was merged into the given name and
+# corrupted, so nothing marks the start of the name except the role after it.
+_ROLE_NAME_RE = re.compile(
+    r"\b[A-Z][\w.\-]{1,24}(?:\s+[A-Z][\w.\-]{1,24}){0,3}"
+    r"(?=\s*,\s*(?:Advocates?|Chartered\s+Accountants?|C\.?A\.?\b|F\.?C\.?A\.?\b"
+    r"|Consultants?|Tax\s+Consultants?|Authoris(?:ed)?\s+Representative"
+    r"|Authoriz(?:ed)?\s+Representative|Prop\b))"
+)
+
 # "doing business at <address>" and "(Prop. : ), No. 18-100, <street>, <town>".
 _BUSINESS_ADDR_RE = re.compile(
     r"\bdoing\s+business\s+at\b[^.]{0,160}", re.I
@@ -183,6 +194,7 @@ def normalise(text: str, *, is_ruling: bool = False) -> tuple[str, list[str]]:
             ("arn", _ARN_RE),
             ("applicant", _APPLICANT_RE),
             ("person_name", _PERSON_NAME_RE),
+            ("role_name", _ROLE_NAME_RE),
             ("proprietor", _PROPRIETOR_RE),
             ("alias", _ALIAS_RE),
             ("business_address", _BUSINESS_ADDR_RE),

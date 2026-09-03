@@ -460,7 +460,7 @@ def collect(
                 if len(cleaned.split()) < MIN_EXCERPT_WORDS:
                     stats["too_short"] += 1
                     continue
-                if term := out_of_scope_term(cleaned + " " + row["brief"]):
+                if term := out_of_scope_term(scope_text(cleaned, row["brief"])):
                     stats["out_of_scope"] += 1
                     continue
 
@@ -507,17 +507,40 @@ def collect(
     return written
 
 
+#: Words of the excerpt that count as "what this ruling is about" for scope
+#: screening. Raising the excerpt cap to 1200 words made whole-excerpt
+#: screening wrong: a ruling about industrial machinery that mentions a cement
+#: plant as a customer on page four is not a ruling about cement, but a
+#: whole-text match discards it. A ruling that *is* about an excluded family
+#: says so in its brief and its opening facts.
+SCOPE_HEAD_WORDS = 200
+
+
+def scope_text(excerpt: str, brief: str = "") -> str:
+    """The part of a ruling that determines its subject, for scope screening."""
+    return f"{brief} {' '.join(excerpt.split()[:SCOPE_HEAD_WORDS])}"
+
+
+def cached_pdf_for(record: dict) -> Path:
+    """Where this record's source PDF lives, whether or not it is present."""
+    href = record.get("collection_meta", {}).get("ruling_url", "")
+    return CACHE / (record.get("source_id") or Path(href).name)
+
+
 def reextract(record: dict, max_words: int) -> dict | None:
     """Rebuild one collected record's excerpt from its cached PDF.
 
     The word cap is a policy choice, not a property of the source, so changing
     it must not mean re-crawling: the PDF is already on disk and the index
-    metadata is already in the record. Returns None when the cached PDF is
-    missing or no longer yields a usable excerpt.
+    metadata is already in the record.
+
+    Returns None when the record should not survive — the PDF is a scan, the
+    application was withdrawn, or no facts section can be found. Callers must
+    check `cached_pdf_for()` first and leave the record alone when the PDF is
+    simply absent: `data/cache/` is git-ignored, so on a fresh clone every PDF
+    is missing and treating that as failure would delete the whole pool.
     """
-    href = record.get("collection_meta", {}).get("ruling_url", "")
-    name = record.get("source_id") or Path(href).name
-    cached = CACHE / name
+    cached = cached_pdf_for(record)
     if not cached.exists():
         return None
 
