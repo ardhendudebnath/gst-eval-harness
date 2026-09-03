@@ -135,10 +135,39 @@ the two passes is itself a result.
 
 ### Judge calibration
 
-Planned for week 5, on 100 examples, reported whatever the result:
-Cohen's kappa, the full confusion matrix, and **every disagreement categorised
-by cause**. A low kappa that is diagnosed is a better result than a high one
-that is not, so it will be published either way.
+The judge scores one field — `justification` — and asks one question: **did the
+model reach its answer by a route that would generalise?** That is not "was the
+answer right". The rubric fails a right answer reached by a route that gets the
+next example wrong, fails reasoning resting on a superseded notification, and
+explicitly protects sound reasoning that is tersely or oddly worded.
+
+```bash
+python -m harness.calibration.judge_calibration --verdicts <file>
+```
+
+The report gives Cohen's κ, the confusion matrix, the **direction** of error
+(too lenient vs too strict — different problems with different fixes), and
+**every disagreement listed in full** with the goods, the gold answer, the
+explanation and both verdicts. Categories are *suggested*, never assigned: a
+model grading its own failure modes is circular, so the categorisation is the
+annotator's and it is the finding.
+
+κ is reported whatever it comes out at, and the report says so in its own words
+when the judge is unusable. κ is computed by the same function as the human
+self-agreement check, so the judge is held to exactly the measure the annotator
+was — a test pins that they are literally the same function.
+
+| κ | Reading |
+|---|---|
+| < 0.40 | Judge is unusable. Fix the rubric. |
+| 0.40–0.60 | Moderate. Usable with caveats, stated. |
+| 0.60–0.80 | Substantial. A good result. |
+| > 0.80 | Strong — check the task has not been made trivially easy. |
+
+**The rubric is v1 and provisional**, written before any disagreement data
+existed — which is the wrong order, and the calibration report exists to
+correct it. `RUBRIC_VERSION` is stamped on every verdict so a κ figure can
+always be traced to the rubric that produced it.
 
 | kappa | Reading |
 |---|---|
@@ -192,6 +221,9 @@ Written honestly, and expanded as the work proceeds.
 
 - **Single annotator.** Self-agreement bounds this dataset, but it cannot detect
   a mistake made consistently. A second annotator would; there isn't one.
+- **The judge may share a family with a benchmarked model.** Where it does, a
+  self-preference effect cannot be ruled out from κ alone. The judge model is
+  recorded on every run so the overlap is visible rather than implicit.
 - **Ground truth has a shelf life.** GST notifications are amended. Labels are
   correct as of the date in `data/reference/rate_schedule.md` and no longer.
 - **Alcohol is the only excluded family.** Alcoholic liquor for human
