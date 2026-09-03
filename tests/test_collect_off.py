@@ -61,15 +61,27 @@ def test_packaging_handles_off_language_prefix_and_case():
 # --- scope screening ------------------------------------------------------
 
 
-def test_aerated_drink_is_caught_via_category_not_description():
+def test_out_of_scope_family_is_caught_via_category_not_description():
+    # A listing can name nothing excluded while its category does.
+    product = {"product_name": "Classic 100s", "categories": "Cigarettes, Tobacco"}
+    assert out_of_scope_term("Classic 100s, pack of 20") is None
+    assert _out_of_scope("Classic 100s, pack of 20", product) is not None
+
+
+def test_aerated_drinks_are_now_in_scope():
+    # Excluded until the Gazette showed Schedule VII never held them. They sit
+    # in Schedule III at 40%, having moved off the now-abolished 28% slab,
+    # which makes them unusually sharp stale-slab examples.
     product = {
         "product_name": "Thums up",
         "categories": "Carbonated waters, Colas, Sweetened beverages",
     }
-    # The description alone is innocent...
-    assert out_of_scope_term("Thums up, 250 ml") is None
-    # ...but screening the metadata catches it.
-    assert _out_of_scope("Thums up, 250 ml", product) is not None
+    assert _out_of_scope("Thums up, 250 ml", product) is None
+
+
+def test_cement_is_now_in_scope():
+    # Schedule II, 18%, down from 28%.
+    assert out_of_scope_term("Ambuja Cement OPC 53 grade, 50 kg bag") is None
 
 
 def test_alcohol_is_out_of_scope():
@@ -84,14 +96,7 @@ def test_word_boundary_prevents_false_positives():
 
 @pytest.mark.parametrize(
     "text",
-    [
-        "Colas, Sweetened beverages",
-        "Soft drinks",
-        "Energy drinks",
-        "Cigarettes",
-        "Beers",
-        "Bidis",
-    ],
+    ["Cigarettes", "Beers", "Bidis", "Cigars", "Wines"],
 )
 def test_plural_category_names_are_caught(text):
     # Catalogue categories are written in the plural, and a bare \b anchor

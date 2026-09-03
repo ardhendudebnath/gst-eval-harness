@@ -3,10 +3,12 @@
 **Can a language model tell you what GST rate applies to a product — under the
 rules that are actually in force?**
 
-On **22 September 2025** India's GST slabs were restructured. Notification
-9/2025–CT(Rate) superseded the 2017 schedule, the **12 % slab was abolished**,
-and a 40 % demerit rate was introduced. Every model in this benchmark was
-trained on a web that is still overwhelmingly describing the old table.
+India's GST slabs were restructured twice in under two years. Notification
+9/2025–CT(Rate) superseded the 2017 schedule on **22 September 2025**,
+abolishing the **12 % slab** and introducing a 40 % demerit rate; Notification
+19/2025 then omitted Schedule VII on **1 February 2026**, abolishing **28 %**
+as well. Every model in this benchmark was trained on a web that is still
+overwhelmingly describing the old table.
 
 This repository is an open, human-labelled benchmark for classifying real Indian
 product descriptions into the current GST slabs — and for measuring how often
@@ -37,9 +39,13 @@ _Pending. Will be written only once the numbers exist._
 The hypothesis under test — chosen before any model was run, and recorded here
 so it cannot be retrofitted:
 
-> Frontier models will classify goods into the **pre-September-2025** slab
-> structure, emitting the abolished 12 % rate on a measurable share of items,
-> and will do so with no drop in stated confidence.
+> Frontier models will classify goods into a **superseded** slab structure,
+> emitting one of the two abolished rates — 12 % or 28 % — on a measurable
+> share of items, and will do so with no drop in stated confidence.
+
+Two abolition dates make the probe sharper than one. A model emitting `12` is
+reciting a table that died in September 2025; one emitting `28` is stale in a
+different way, and the leaderboard reports them separately.
 
 If that turns out to be false, this section will say so.
 
@@ -80,7 +86,8 @@ If that turns out to be false, this section will say so.
   validator refuses any row that has not been.
 
 - **Model assistance, disclosed.** A model first pass was run over the rulings
-  that quote the abolished 12% slab. It proposes **no slab at all** — deriving
+  whose operative holding was the abolished 12% slab. It proposes **no slab at
+  all** — deriving
   one needs Notification 9/2025, and a model's priors are the pre-2025 table,
   which is the very error this benchmark measures. It proposes only the HSN
   heading, read out of the authority's own operative ruling in the same
@@ -174,9 +181,14 @@ Written honestly, and expanded as the work proceeds.
   a mistake made consistently. A second annotator would; there isn't one.
 - **Ground truth has a shelf life.** GST notifications are amended. Labels are
   correct as of the date in `data/reference/rate_schedule.md` and no longer.
-- **Schedule VII / 40 % transition is unsettled**, so tobacco, pan masala,
-  aerated beverages and cement are excluded from v1.0 rather than labelled with
-  a rate that may be wrong for reasons outside the annotator's control.
+- **Tobacco and alcohol are excluded**, for different reasons. Alcoholic liquor
+  is outside GST by constitutional exclusion, so it has no slab to predict and
+  is permanently out. Tobacco and pan masala are settled at 40 % (biris 18 %)
+  but carry a new excise duty introduced alongside, so the total burden is not
+  the GST slab; that exclusion is a scope choice and could be revisited.
+  Cement and aerated drinks were excluded on the mistaken premise that they sat
+  in Schedule VII — reading the Gazette showed it held only tobacco and pan
+  masala — and are now in scope.
 - **Source skew.** Open Food Facts is packaged food, concentrating that half of
   the corpus in Chapters 1–24. Advance rulings spread across the tariff and
   correct much of this, but the two sources differ in register as well as

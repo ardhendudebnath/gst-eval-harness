@@ -12,26 +12,26 @@ MACHINERY_RULING = (
     "The applicant manufactures rotary kilns and material handling conveyors "
     "for industrial plants, and seeks a ruling on their classification. "
     + ("The equipment is fabricated from steel sections. " * 60)
-    + "Such plants are operated by customers in the cement industry."
+    + "Such plants are also used by customers processing tobacco leaf."
 )
 
 
 def test_incidental_mention_deep_in_a_long_ruling_is_not_topical():
     brief = "Classification of rotary kilns and conveyors"
     # The bare text does contain the term...
-    assert out_of_scope_term(MACHINERY_RULING) == "cement"
+    assert out_of_scope_term(MACHINERY_RULING) == "tobacco"
     # ...but it is not what the ruling is about, so screening must not fire.
     assert out_of_scope_term(scope_text(MACHINERY_RULING, brief)) is None
 
 
 def test_topical_mention_in_the_brief_still_fires():
-    brief = "Classification of and rate of tax on cement"
+    brief = "Classification of and rate of tax on chewing tobacco"
     assert out_of_scope_term(scope_text("The applicant manufactures a product.", brief))
 
 
 def test_topical_mention_in_the_opening_facts_still_fires():
-    excerpt = "The applicant is engaged in the manufacture of cement and clinker at its plant."
-    assert out_of_scope_term(scope_text(excerpt, "Classification query")) == "cement"
+    excerpt = "The applicant is engaged in the manufacture of tobacco and gutkha at its plant."
+    assert out_of_scope_term(scope_text(excerpt, "Classification query")) == "tobacco"
 
 
 def test_scope_text_only_reads_the_opening():

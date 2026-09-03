@@ -183,11 +183,18 @@ exclusion. That is worth revisiting: every one of them moved off the
 now-abolished 28 % slab, which makes them sharp stale-slab probes, and biris
 against the rest of the tobacco family is a good within-family split.
 
-Until that decision is taken, drop:
+**Cement and aerated drinks are now IN SCOPE.** They were excluded on a
+premise that turned out to be false — Schedule VII never contained them — and
+they are among the best examples available. Label them normally.
 
-- tobacco, cigarettes, bidis, pan masala, gutkha
-- aerated, carbonated and energy drinks
-- cement
+Still dropped:
+
+- **tobacco, cigarettes, bidis, pan masala, gutkha** — settled at 40 % (biris
+  18 %), but a new excise duty was introduced alongside, so the total burden is
+  not the GST slab. A scope decision, not a rate one.
+- **alcoholic liquor for human consumption** — outside GST by constitutional
+  exclusion and taxed under state excise. There is no slab to predict, so this
+  exclusion is permanent.
 
 **Excluded because there is no GST rate to predict** — alcoholic liquor for
 human consumption is outside GST by constitutional exclusion and is taxed under

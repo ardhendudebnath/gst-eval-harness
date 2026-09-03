@@ -89,7 +89,20 @@ def test_hsn_must_be_four_digits():
 
 
 def test_out_of_scope_family_is_flagged():
-    ex = make(input="Ambuja Cement OPC 53 grade, 50 kg bag")
+    ex = make(input="Gold Flake cigarette, pack of 20")
+    assert any("out-of-scope family" in p for p in validate_example(ex))
+
+
+def test_cement_is_in_scope():
+    # Schedule II at 18%, verified against the Gazette; it was never in
+    # Schedule VII, which is why it was wrongly excluded.
+    assert validate_example(make(input="Ambuja Cement OPC 53 grade, 50 kg bag")) == []
+
+
+def test_alcohol_stays_out_of_scope_permanently():
+    # Constitutionally outside GST, so there is no slab to predict. Unlike the
+    # others this is not a scope choice that could be revisited.
+    ex = make(input="Kingfisher beer 650 ml bottle")
     assert any("out-of-scope family" in p for p in validate_example(ex))
 
 

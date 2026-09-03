@@ -94,16 +94,26 @@ _ID_RE = re.compile(r"^gst-\d{4}$")
 _HSN4_RE = re.compile(r"^\d{4}$")
 _REASON_RE = re.compile(r"reason=([a-z-]+)")
 
-# Families excluded from v1.0 (guideline §4d). Two distinct reasons:
+# Families excluded from the dataset (guideline §4d).
 #
-#   * unsettled rate — the Schedule VII / 40% transitional position for demerit
-#     goods is not confirmed, so a label here could be wrong for reasons outside
-#     the annotator's control;
-#   * outside GST entirely — alcoholic liquor for human consumption is excluded
-#     from GST by the Constitution and taxed under state excise, so it has no
-#     slab to predict.
+# Cement and the aerated-drink families used to be here, excluded on the
+# assumption that they sat in Schedule VII awaiting a transitional decision.
+# Reading the Gazette showed Schedule VII held only pan masala and tobacco, so
+# that was never true: cement is Schedule II (18%) and aerated drinks are
+# Schedule III (40%), both settled. They are now IN SCOPE, and are among the
+# sharpest examples available — each moved off the now-abolished 28% slab, so a
+# model reciting the old table answers 28%, which is itself no longer valid.
+#
+# Two reasons for exclusion remain:
+#
+#   * tobacco and pan masala — settled at 40% (biris 18%) from 1 Feb 2026, but
+#     carrying a new excise duty introduced alongside, so the total burden is
+#     not the GST slab. Held back pending a scope decision, not a rate one.
+#   * alcoholic liquor for human consumption — outside GST by constitutional
+#     exclusion and taxed under state excise. There is no slab to predict, so
+#     this exclusion is permanent rather than provisional.
 OUT_OF_SCOPE_TERMS: tuple[str, ...] = (
-    # unsettled rate
+    # settled at 40% / 18%, held back pending a scope decision
     "tobacco",
     "cigarette",
     "cigar",
@@ -111,16 +121,7 @@ OUT_OF_SCOPE_TERMS: tuple[str, ...] = (
     "beedi",
     "pan masala",
     "gutkha",
-    "aerated",
-    "carbonated",
-    "soft drink",
-    "energy drink",
-    "cola",
-    # Bare "soda" is deliberately absent: baking soda (sodium bicarbonate) is a
-    # perfectly in-scope good. Aerated drinks are caught by the terms above.
-    "soda water",
-    "cement",
-    # outside GST
+    # outside GST entirely — permanent
     "beer",
     "wine",
     "whisky",
@@ -132,12 +133,11 @@ OUT_OF_SCOPE_TERMS: tuple[str, ...] = (
     "alcoholic",
 )
 
-# Word-boundary matching, so "rumali roti" is not rejected for containing "rum"
-# and "chocolate" is not rejected for "cola".
+# Word-boundary matching, so "rumali roti" is not rejected for containing "rum".
 #
 # The trailing (?:e?s)? matters more than it looks: catalogue categories are
-# written in the plural ("Colas", "Cigarettes", "Sweetened beverages"), and a
-# bare \b anchor silently fails against every one of them.
+# written in the plural ("Cigarettes", "Beers"), and a bare \b anchor silently
+# fails against every one of them.
 _OUT_OF_SCOPE_RE = re.compile(
     r"\b(?:" + "|".join(re.escape(t) for t in OUT_OF_SCOPE_TERMS) + r")(?:e?s)?\b",
     re.I,
