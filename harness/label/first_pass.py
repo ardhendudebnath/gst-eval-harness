@@ -14,13 +14,18 @@ What the first pass can and cannot ground
 document, and `ruling_outcome` reads it out. HSN is the Customs Tariff, which
 GST 2.0 did not touch, so a 2018 ruling's heading is still correct today.
 
-**Slab — poorly grounded, and the module says so.** Deriving it needs the entry
-in Notification 9/2025, and `data/reference/rate_schedule.md` is explicitly not
-yet verified line-by-line against the Gazette. So a slab is proposed only where
-a documented rule reaches it, and is otherwise left as `UNCERTAIN` rather than
-guessed. A guess here is worse than a blank: it would anchor the reviewer on
-exactly the examples where model priors are most likely to be the pre-2025
-table, which is the error this whole slice exists to measure.
+**Slab — looked up, never recalled.** The Gazette notifications are archived
+and hash-pinned in `data/reference/primary/`, so the slab is read out of the
+document via `schedule_lookup`. That is a lookup, not a judgement, and it is
+the one place model assistance carries almost no risk — the failure mode this
+benchmark measures is a model reciting the pre-2025 table from memory, and
+nothing here is recalled.
+
+A slab is proposed **only when the heading resolves to exactly one entry**.
+Headings that appear in several schedules — 7418 on whether an article is a
+household article of copper, 8711 on engine capacity, 2202 on added sugar,
+9608 on pens versus pencils — are left `UNCERTAIN` with every competing entry
+recorded, because choosing between them is a judgement about the goods.
 
     python -m harness.label.first_pass --stale 12
 """
@@ -34,6 +39,7 @@ from pathlib import Path
 
 from harness.collect.aar import cached_pdf_for, extract_pdf_text
 from harness.collect.ruling_outcome import extract_outcome
+from harness.collect.schedule_lookup import lookup
 from harness.schema import (
     UNCERTAIN,
     Example,
@@ -102,15 +108,46 @@ def suggest(record: dict, ex_id: str) -> Example:
             "not the holding. Whether the rate moved still needs Notification 9/2025."
         )
 
-    # The slab is not proposed. See the module docstring: the reference needed
-    # to derive it is unverified, and a guess would anchor the reviewer on
-    # precisely the examples where model priors are least trustworthy.
+    # Slab, looked up in the archived Gazette — a document read, not a rate
+    # recalled. Proposed only when the heading resolves to exactly one entry;
+    # a heading that appears in more than one schedule is left UNCERTAIN with
+    # the competing entries recorded, because choosing between them is a
+    # judgement about the goods.
+    slab = UNCERTAIN
+    slab_conf = "none"
+    slab_basis = "no heading established, so nothing to look up"
+    alternatives: list[str] = []
+
+    if hsn4:
+        found = lookup(hsn4)
+        if found is None:
+            slab_basis = "archived notifications not present; run make verify-sources"
+        elif found.slab:
+            slab = found.slab
+            slab_conf = "grounded in the archived Gazette"
+            where = (
+                f"Notification 9/2025 Schedule {found.schedule}"
+                if found.schedule
+                else "Notification 10/2025 (exempt)"
+            )
+            entry = (found.entries or [None])[0]
+            slab_basis = f"{hsn4} appears once, in {where}: " + (
+                entry.text[:180] if entry else found.exempt_entries[0][:180]
+            )
+        elif found.ambiguous:
+            alternatives = [f"Sch {e.schedule} = {e.slab}%: {e.text[:150]}" for e in found.entries]
+            alternatives += [f"EXEMPT (0%): {x[:150]}" for x in found.exempt_entries]
+            slab_basis = (
+                f"{hsn4} appears in {len(alternatives)} places in the notifications. "
+                "Choosing between them is a judgement about these goods, not a lookup."
+            )
+        else:
+            slab_basis = f"{hsn4} has no current rated or exempt entry"
+
     notes = {
-        "slab_confidence": "none",
-        "slab_basis": (
-            "not derived — Notification 9/2025 entry required, and "
-            "data/reference/rate_schedule.md is not yet verified line-by-line"
-        ),
+        "slab_confidence": slab_conf,
+        "slab_basis": slab_basis,
+        "slab_alternatives": alternatives,
         "hsn_confidence": "high" if hsn4 else "none",
         "hsn_basis": hsn_basis,
         "rate_moved": rate_moved,
@@ -122,18 +159,26 @@ def suggest(record: dict, ex_id: str) -> Example:
         "model": "claude-opus-5",
     }
 
+    if slab != UNCERTAIN:
+        justification = (
+            f"Heading {hsn4} per the authority's operative ruling; "
+            f"{slab}% per {slab_basis.split(':')[0]}."
+        )
+    elif hsn4:
+        justification = (
+            f"Heading {hsn4} per the authority's operative ruling. Slab not "
+            f"proposed: {slab_basis}"
+        )
+    else:
+        justification = "No operative ruling located; nothing grounded to suggest."
+
     return Example(
         id=ex_id,
         input=record["input"],
-        slab=UNCERTAIN,
+        slab=slab,
         hsn4=hsn4,
         answerable=True,
-        justification=(
-            f"Heading {hsn4} per the authority's operative ruling. "
-            "Slab not derived; requires Notification 9/2025."
-            if hsn4
-            else "No operative ruling located; nothing grounded to suggest."
-        ),
+        justification=justification,
         difficulty="hard",
         tags=["rate-changed-2025"] if rate_moved else [],
         source=record.get("source", ""),
@@ -174,7 +219,7 @@ def main() -> int:
 
     suggestions: list[Example] = []
     all_ids = [*labelled, *existing]
-    grounded = 0
+    headings = slabs = ambiguous = 0
     for record in queue:
         ex = suggest(record, next_id([*all_ids, *suggestions]))
         problems = validate_example(ex, quarantine=True)
@@ -182,14 +227,17 @@ def main() -> int:
             print(f"  skipping {ex.source_id}: {problems}", file=sys.stderr)
             continue
         suggestions.append(ex)
-        if ex.hsn4:
-            grounded += 1
+        headings += bool(ex.hsn4)
+        slabs += ex.slab != UNCERTAIN
+        ambiguous += bool(ex.model_notes.get("slab_alternatives"))
 
     append_jsonl(args.out, suggestions)
 
-    print(f"\n  wrote {len(suggestions)} suggestion(s) to {args.out}")
-    print(f"  heading grounded in the authority's ruling: {grounded}/{len(suggestions)}")
-    print(f"  slab proposed: 0/{len(suggestions)} — see the module docstring for why")
+    n = len(suggestions)
+    print(f"\n  wrote {n} suggestion(s) to {args.out}")
+    print(f"  heading from the authority's ruling : {headings}/{n}")
+    print(f"  slab read from the archived Gazette : {slabs}/{n}")
+    print(f"  heading spans several schedules     : {ambiguous}/{n} — left for you")
     print(
         "\n  These are NOT dataset examples. Review them with:\n"
         "      python -m harness.label.cli --review-first-pass\n"
