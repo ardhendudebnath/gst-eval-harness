@@ -29,6 +29,7 @@ from harness.schema import (
     SOURCES,
     TARGET_STRATA,
     UNANSWERABLE,
+    UNCERTAIN,
     UNANSWERABLE_REASONS,
     Example,
     append_jsonl,
@@ -541,12 +542,51 @@ def run_relabel(n: int, seed: int | None) -> int:
     return 0
 
 
+def _accept(sug: Example, notes: dict) -> Example | None:
+    """Take a grounded suggestion wholesale, asking only what it cannot know.
+
+    Difficulty is a judgement about the example's place in the dataset, not
+    about the goods, so the model has no basis for it and it is always asked.
+    The rate-changed tag is confirmed rather than assumed, because the model
+    infers it from the ruling's own stated rate — which in one real case was
+    the applicant's rejected argument, not the holding.
+    """
+    print("\n  difficulty:  [1] typical  [2] hard  [3] long_context  "
+          "[4] adversarial  [5] out_of_scope")
+    difficulty = _menu("  > ", DIFFICULTY_KEYS)
+
+    tags = [t for t in sug.tags if t != "rate-changed-2025"]
+    if notes.get("rate_moved"):
+        print(f"  model says the rate moved: {notes.get('rate_moved_basis', '')[:150]}")
+        if _ask("  tag rate-changed-2025? [y/N]  > ", allow_empty=True).lower().startswith("y"):
+            tags.append("rate-changed-2025")
+
+    ex = Example(
+        id=sug.id,
+        input=sug.input,
+        slab=sug.slab,
+        hsn4=sug.hsn4,
+        answerable=True,
+        justification=sug.justification,
+        difficulty=difficulty,
+        tags=tags,
+        source=sug.source,
+        source_id=sug.source_id,
+        collected_at=sug.collected_at,
+        labelled_at=datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        labeller_notes="accepted model first pass after review",
+        collection_meta=sug.collection_meta,
+    )
+    return ex
+
+
 def run_review_first_pass(
     quarantine: Path,
     *,
     state: str | None = None,
     exclude_state: str | None = None,
     spread_states: bool = False,
+    grounded_only: bool = False,
 ) -> int:
     """Review model first-pass suggestions into the golden set.
 
@@ -563,6 +603,12 @@ def run_review_first_pass(
     labelled = list(read_jsonl(GOLDEN))
     done = {e.source_id for e in labelled if e.source_id}
     todo = [e for e in pending if e.source_id not in done]
+
+    # Suggestions whose slab was read out of the archived Gazette are the ones
+    # a review can accept in two keystrokes. Working those first is the fastest
+    # honest route to a dataset worth running a model against.
+    if grounded_only:
+        todo = [e for e in todo if e.slab != UNCERTAIN and e.hsn4]
 
     # Same state controls as the labelling queue. Gujarat is 23 of the 31
     # rulings quoting the abolished slab, so reviewing in file order would make
@@ -614,7 +660,26 @@ def run_review_first_pass(
                 print("     NOTE: the authority's determination is conditional")
             print(RULE)
 
-            ex = label_one(record, sug.id)
+            # A suggestion whose slab was read out of the archived Gazette
+            # needs a decision, not re-typing. Accepting is still your
+            # judgement — you are looking at the entry it was read from — but
+            # it costs two keystrokes instead of seven answers.
+            grounded = sug.slab != UNCERTAIN and sug.hsn4
+            if grounded:
+                print("  [a] accept as shown   [e] label it myself   "
+                      "[s] skip   [:q] quit")
+                choice = _ask("  > ").lower()
+                if choice == "s":
+                    continue
+                if choice == "a":
+                    ex = _accept(sug, notes)
+                    if ex is None:
+                        continue
+                else:
+                    ex = label_one(record, sug.id)
+            else:
+                ex = label_one(record, sug.id)
+
             if ex is None:
                 continue
 
@@ -685,6 +750,12 @@ def main() -> int:
         metavar="FILE",
         help="review model first-pass suggestions into the golden set",
     )
+    ap.add_argument(
+        "--grounded-only",
+        action="store_true",
+        help="review only suggestions whose slab was read from the archived "
+        "Gazette — these accept in two keystrokes",
+    )
     args = ap.parse_args()
 
     if args.review_first_pass:
@@ -693,6 +764,7 @@ def main() -> int:
             state=args.state,
             exclude_state=args.exclude_state,
             spread_states=args.spread_states,
+            grounded_only=args.grounded_only,
         )
     if args.relabel:
         return run_relabel(args.relabel, args.seed)
