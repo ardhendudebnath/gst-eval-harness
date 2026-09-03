@@ -16,7 +16,7 @@ only the normalisation described in §3.
 | Key | Source | Licence | Redistributed here? |
 |---|---|---|---|
 | `off` | [Open Food Facts](https://world.openfoodfacts.org/) — India subset | Database: **ODbL 1.0**; individual facts: **DbCL 1.0** | **Yes**, text inline |
-| `aar` | GST Advance Ruling (AAR / AAAR) decisions, state authorities | Government of India public documents | **Excerpt only**, ≤ 300 words, with citation |
+| `aar` | GST Advance Ruling decisions, via the [GST Council index](https://gstcouncil.gov.in/authority-for-advance-ruling) | Public orders of statutory authorities | **Excerpt only** — see §1.2 — with citation and a link to the full order |
 | `ogd` | [data.gov.in](https://data.gov.in/) product & price catalogues | **GODL-India** | **Yes**, text inline |
 | `gem` | Government e-Marketplace public product catalogue | Government of India public catalogue | **ID + fetch script only** |
 
@@ -31,16 +31,34 @@ the **`golden.jsonl` file is itself published under ODbL 1.0**. The harness
 data licences distinct is deliberate; ODbL's share-alike attaches to the
 database, not to the software that reads it.
 
-### Advance Rulings
+### 1.2 Advance Rulings
 
-AAR and AAAR decisions are published decisions of statutory authorities and are
-public documents. This repository reproduces only the **product-description
-passage** at issue in a ruling — never the full decision — together with the
-ruling reference so any reader can retrieve the original.
+Advance rulings are orders of statutory authorities constituted under
+s.96 of the CGST Act, published by the GST Council for public reference.
 
-Applicant names, GSTINs, addresses and any other party-identifying detail are
-removed at collection time (§3). The benchmark is about the goods, not the
-taxpayers, and nothing is lost by stripping them.
+This repository reproduces only the **statement-of-facts passage** describing
+the goods — never the full order, and never the authority's findings or the
+ruling itself. Two excerpt tiers:
+
+| Tier | Cap | Used for |
+|---|---|---|
+| default | 300 words | most strata |
+| `--long` | 1,200 words | the `long_context` stratum |
+
+Every example records `ruling_url`, so the complete order is one click away and
+this repository never becomes a substitute for the source.
+
+**Party-identifying detail is removed at collection time** (§3): applicant
+names in both prose (`M/s ...`) and labelled-table form, postal addresses,
+GSTINs, Application Reference Numbers, and the names of representatives who
+appeared. The benchmark is about the goods, not the taxpayers.
+
+Redaction is deliberately over-inclusive. Many of these PDFs are OCR'd, and the
+OCR damages exactly the tokens that identify people — one real GSTIN came back
+as `24ABCDE1234FlZ5`, with letter `l` substituted for digit `1`, which a strict
+GSTIN grammar does not match. The patterns therefore match on *shape* rather
+than exact grammar. Over-matching costs a few characters of goods description;
+under-matching leaks a taxpayer identifier.
 
 ---
 
@@ -58,16 +76,29 @@ taxpayers, and nothing is lost by stripping them.
 ## 3. Normalisation applied at collection
 
 Applied uniformly by `harness/collect/`, and recorded per-example in
-`collection_meta`:
+`collection_meta.transforms` — so each row states which transforms actually
+fired on it, not merely which ones exist.
 
 1. Unicode NFKC normalisation; collapse runs of whitespace.
 2. Strip marketing furniture that carries no classification signal — `Buy Now`,
    `Free Delivery`, `⭐ Best Seller`, star-rating glyphs, emoji runs.
 3. Strip URLs, e-mail addresses and phone numbers.
-4. Strip applicant-identifying detail from `aar` excerpts.
-5. Drop records shorter than 8 characters or longer than 12,000 characters.
-6. Drop the out-of-scope families listed in `guideline.md` §4d (tobacco, pan
-   masala, aerated beverages, cement, services).
+4. Strip party-identifying detail from `aar` excerpts (§1.2).
+5. Strip procedural furniture from `aar` excerpts — `Page 3 of 8`, appeal-notice
+   paragraphs, admissibility recitals. This is the exact analogue of step 2 for
+   legal text: it carries no classification signal, and leaving it in would pad
+   every input by a few hundred tokens, inflating the cost-per-correct-answer
+   figure this benchmark reports.
+6. Drop records shorter than 8 characters or longer than 12,000 characters.
+7. Drop the out-of-scope families listed in `guideline.md` §4d (tobacco, pan
+   masala, aerated beverages, cement, alcohol) and, for `aar`, drop services
+   rulings — s.97(2)(a) covers "goods **or services** or both", so the clause
+   alone does not select goods.
+
+**What is not normalised.** OCR damage in ruling text — `t he case`,
+`pro priet orship`, `lsabgol` for `Isabgol` — is left exactly as extracted.
+It is real input noise of the kind a production system meets, and repairing it
+would make the corpus partly synthetic.
 
 Original text is **not** discarded — raw pulls land in `data/raw/`, which is
 git-ignored. `make collect` reproduces it from scratch.

@@ -30,10 +30,89 @@ _FURNITURE_RE = re.compile(
 _RATING_RE = re.compile(r"[★☆⭐✩✪✫✬✭✮✯]+|\(\s*\d+(?:\.\d+)?\s*/\s*5\s*\)")
 
 # Applicant-identifying detail in advance rulings (DATA_LICENCE.md §3.4).
-_GSTIN_RE = re.compile(r"\b\d{2}[A-Z]{5}\d{4}[A-Z][A-Z\d]Z[A-Z\d]\b")
+#
+# Ruling PDFs are frequently OCR'd, and the OCR mangles exactly these tokens:
+# a real GSTIN came back as "24ABCDE1234FlZ5" (letter l for digit 1), which the
+# strict 15-character GSTIN grammar does not match. Matching the shape instead
+# — two digits then thirteen alphanumerics — survives that damage. Over-matching
+# here is harmless; leaking a taxpayer identifier is not.
+_GSTIN_RE = re.compile(r"\b\d{2}[A-Za-z0-9]{13}\b")
+
+# Terminates on punctuation including brackets, because applicant names are
+# routinely followed by "(for short-'applicant')" rather than a comma.
 _APPLICANT_RE = re.compile(
-    r"\b(?:M/s\.?|Messrs\.?)\s+[A-Z][\w&.,'\- ]{2,80}?(?=\s*(?:,|\.|having|is|has|the applicant|$))",
+    r"\b(?:M/s\.?|Messrs\.?)\s*[A-Z][\w&.'\- ]{2,80}?"
+    r"(?=\s*(?:[,.()]|having\b|is\b|has\b|the applicant\b|$))",
     re.I,
+)
+
+# Several authorities (West Bengal most consistently) open a ruling with a
+# labelled table rather than prose, so the applicant is never prefixed "M/s":
+#
+#     Name of the applicant  Eastern Housing Development ...  Address  4/2B, Example
+#     Street, Kolkata- 700001  GSTIN  ...  Case Number 07 of 2019  ARN AD19...
+#
+# Each field is stripped by looking ahead to the next field label.
+_NEXT_FIELD = (
+    r"(?=\s*(?:Address\b|GSTIN\b|Case\s+No|ARN\b|Date\s+of\b|Order\s+(?:number|no)\b"
+    r"|Applicant|Present\s+for\b|\d+\.\s|$))"
+)
+_APPLICANT_FIELD_RE = re.compile(
+    r"\bName\s+of\s+the\s+[Aa]pplicant\s*:?\s*.{0,140}?" + _NEXT_FIELD, re.I | re.S
+)
+_ADDRESS_FIELD_RE = re.compile(
+    r"\bAddress\s*:?\s*.{0,220}?" + _NEXT_FIELD, re.I | re.S
+)
+# Application Reference Number, e.g. AD190101000001A.
+_ARN_RE = re.compile(r"\bAD\d{9,}[A-Z\d]*\b", re.I)
+# Named representatives who appeared, e.g. "heard Amit Agarwal, Dy. General Manager".
+_REPRESENTATIVE_RE = re.compile(
+    r"(?:Applicant.{0,3}s\s+representative\s+heard|Present\s+for\s+the\s+applicant)"
+    r"\s*:?\s*.{0,140}?(?=\s*(?:\d+\.\s|$))",
+    re.I | re.S,
+)
+# Trailing street address ending in a PIN code.
+_PINCODE_ADDR_RE = re.compile(r"[^.]{0,120}?\b\d{6}\b|\b\d{3}\s?\d{3}\b(?=\s*[.,])")
+
+# Procedural furniture in rulings — the exact analogue of "Buy Now / Free
+# Delivery" in a product listing, and stripped for the same reason. It carries
+# no classification signal, and leaving it in would pad every input by a few
+# hundred tokens, inflating the cost-per-correct-answer metric this benchmark
+# reports. Each pattern is tightly anchored so it cannot eat goods text.
+_RULING_FURNITURE: tuple[tuple[str, re.Pattern[str]], ...] = (
+    ("page_marker", re.compile(r"\bPage\s+\d+\s+of\s+\d+\b", re.I)),
+    (
+        "appeal_notice",
+        re.compile(
+            r"(?:Note\s*:\s*)?Any\s+appeal\s+against\s+(?:the|this)\s+[Aa]dvance\s+"
+            r"[Rr]uling.{0,400}?(?:is\s+communicated|communicated)\s*\.?",
+            re.I | re.S,
+        ),
+    ),
+    (
+        "outset_recital",
+        re.compile(
+            r"At\s+the\s+outset,?\s+we\s+would\s+like\s+to\s+make\s+it\s+clear"
+            r".{0,400}?(?:\bare\s+the\s+same\b|\bpari\s*materia\b|\.)",
+            re.I | re.S,
+        ),
+    ),
+    (
+        "admissibility_recital",
+        re.compile(
+            r"Advance\s+ruling\s+is\s+admissible\s+on\s+.{0,120}?"
+            r"section\s*97\s*\(\s*2\s*\)[^.]{0,60}\.",
+            re.I | re.S,
+        ),
+    ),
+    (
+        "pending_declaration",
+        re.compile(
+            r"The\s+[Aa]pplicant\s+declares\s+th\s?at\s+the\s+issue\s+raised"
+            r".{0,300}?admissibility\s+of\s+the\s+[Aa]pplication\s*\.",
+            re.I | re.S,
+        ),
+    ),
 )
 
 
@@ -58,7 +137,19 @@ def normalise(text: str, *, is_ruling: bool = False) -> tuple[str, list[str]]:
         out = nfkc
 
     if is_ruling:
-        for name, pattern in (("gstin", _GSTIN_RE), ("applicant", _APPLICANT_RE)):
+        # Order matters: the labelled-table fields carry their own terminators,
+        # so they are stripped before the looser prose and PIN-code patterns
+        # get a chance to eat across a field boundary.
+        for name, pattern in (
+            ("applicant_field", _APPLICANT_FIELD_RE),
+            ("address_field", _ADDRESS_FIELD_RE),
+            ("representative", _REPRESENTATIVE_RE),
+            ("gstin", _GSTIN_RE),
+            ("arn", _ARN_RE),
+            ("applicant", _APPLICANT_RE),
+            ("address", _PINCODE_ADDR_RE),
+            *_RULING_FURNITURE,
+        ):
             out, n = pattern.subn(" ", out)
             if n:
                 applied.append(f"strip_{name}")

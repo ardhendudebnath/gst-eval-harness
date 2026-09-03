@@ -10,12 +10,16 @@ readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }
 
-# The dataset tooling (collect, label, validate, self-agreement) is stdlib-only
-# on purpose: `make validate` has to work on a fresh clone before anyone runs
-# pip install. Model runners in week 4 add the optional extras below.
+# Labelling, validation and self-agreement are stdlib-only on purpose:
+# `make validate` has to work on a fresh clone before anyone runs pip install.
+# Only the AAR collector needs anything, and only because advance rulings are
+# published as PDFs.
 dependencies = []
 
 [project.optional-dependencies]
+collect = [
+    "pypdf>=5.0",
+]
 models = [
     "anthropic>=0.40",
     "openai>=1.50",

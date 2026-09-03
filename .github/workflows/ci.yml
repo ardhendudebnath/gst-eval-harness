@@ -23,10 +23,26 @@ jobs:
       - name: Install
         run: python -m pip install --upgrade pip pytest
 
-      # The dataset tooling is stdlib-only on purpose, so this must pass with
-      # nothing installed but pytest.
-      - name: Unit tests
+      # Guards the stdlib-only promise: labelling, validation and self-agreement
+      # must work on a fresh clone before anyone runs pip install. If someone
+      # adds a third-party import to one of these, this step fails.
+      - name: Core imports need no dependencies
+        run: |
+          python -c "
+          import harness.schema, harness.validate, harness.label.cli
+          import harness.calibration.kappa, harness.calibration.self_agreement
+          import harness.collect.normalise, harness.collect.openfoodfacts
+          print('core is dependency-free')
+          "
+
+      # Runs with pypdf absent, so the pypdf-dependent test skips.
+      - name: Unit tests (no extras)
         run: python -m pytest tests -q
+
+      - name: Unit tests (with collect extra)
+        run: |
+          python -m pip install pypdf
+          python -m pytest tests -q
 
       # Schema + composition checks on the golden set. Not --strict yet: the
       # dataset is still being built and will be off-target until it is frozen.

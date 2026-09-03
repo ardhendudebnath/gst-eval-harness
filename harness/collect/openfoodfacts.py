@@ -14,22 +14,19 @@ from __future__ import annotations
 
 import argparse
 import json
-import random
 import re
 import sys
 import time
-import urllib.error
 import urllib.parse
-import urllib.request
 from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
 
+from harness.collect.http import Unavailable, fetch_json
 from harness.collect.normalise import in_length_bounds, normalise
 from harness.schema import out_of_scope_term
 
 API = "https://world.openfoodfacts.org/api/v2/search"
-UA = "gst-eval-harness/0.1 (research benchmark; +https://github.com/)"
 
 FIELDS = ",".join(
     [
@@ -76,32 +73,6 @@ _PACKAGING_WORDS: frozenset[str] = frozenset(
 )
 
 _DEDUPE_RE = re.compile(r"[^a-z0-9]+")
-
-
-def _get(url: str, *, retries: int = 6) -> dict:
-    """GET with backoff.
-
-    Open Food Facts is volunteer-run and returns 503 under load often enough
-    that a short backoff loses whole runs. Overload responses get a longer,
-    jittered wait than ordinary transport errors.
-    """
-    last: Exception | None = None
-    for attempt in range(retries):
-        req = urllib.request.Request(url, headers={"User-Agent": UA})
-        try:
-            with urllib.request.urlopen(req, timeout=60) as resp:
-                return json.loads(resp.read().decode("utf-8"))
-        except urllib.error.HTTPError as exc:
-            last = exc
-            if exc.code not in (429, 500, 502, 503, 504):
-                raise
-            wait = min(60.0, 5.0 * 2**attempt) + random.uniform(0, 3)
-            print(f"  HTTP {exc.code}; retrying in {wait:.0f}s", file=sys.stderr)
-            time.sleep(wait)
-        except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as exc:
-            last = exc
-            time.sleep(2**attempt + random.random())
-    raise RuntimeError(f"giving up on {url}: {last}")
 
 
 def _clean_quantity(raw: str | None) -> str:
@@ -190,8 +161,8 @@ def collect(pages: int, page_size: int, out_path: Path) -> int:
                 }
             )
             try:
-                payload = _get(f"{API}?{qs}")
-            except (RuntimeError, urllib.error.HTTPError) as exc:
+                payload = fetch_json(f"{API}?{qs}")
+            except (Unavailable, Exception) as exc:  # noqa: BLE001
                 # Everything written so far is already on disk and the run is
                 # resumable, so a dead upstream ends the run rather than
                 # discarding it. Sustained load makes the API answer 503 and

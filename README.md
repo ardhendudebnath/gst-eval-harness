@@ -68,6 +68,13 @@ If that turns out to be false, this section will say so.
 - That last stratum is the point. Models that answer confidently when the
   description does not determine a rate fail in production, and almost no
   benchmark tests for it.
+- **Two sources, chosen for different strata:**
+
+  | Source | Supplies | Why |
+  |---|---|---|
+  | Open Food Facts (India) | `typical` | Real packaged-goods listings, short and messy, ODbL-licensed |
+  | GST Advance Rulings | `hard`, `adversarial`, `long_context` | Genuine classification disputes across the whole tariff — "does a quartz slab that is 92% crushed quartz and 8% resin fall under 6802 or 6810?" — with the applicant's rejected contention left in as a distractor |
+
 - **Labelled by hand, against the primary notification.** No model assistance at
   any stage, including first passes and tie-breaking — see
   [`data/guideline.md`](data/guideline.md) §7.5.
@@ -124,12 +131,20 @@ _Prices will be stated with the date they were read._
 
 ## Reproducing
 
-Python 3.11+. No dependencies are needed for the dataset tooling.
+Python 3.11+. Labelling, validation and self-agreement need **no dependencies** —
+they run on a fresh clone before any `pip install`.
 
 ```bash
-make collect     # rebuild the raw corpus from public sources
 make validate    # schema + composition checks on the golden set
 make test        # unit tests
+make label       # interactive labelling
+```
+
+Rebuilding the corpus needs `pypdf`, because advance rulings are published as
+PDFs:
+
+```bash
+pip install -e ".[collect]" && make collect
 ```
 
 Model runs (week 4 onward) need API keys; copy `.env.example` to `.env`.
@@ -147,14 +162,30 @@ Written honestly, and expanded as the work proceeds.
 - **Schedule VII / 40 % transition is unsettled**, so tobacco, pan masala,
   aerated beverages and cement are excluded from v1.0 rather than labelled with
   a rate that may be wrong for reasons outside the annotator's control.
-- **Source skew.** Open Food Facts is packaged food, so the corpus over-weights
-  Chapters 1–24. Advance rulings and government catalogues are being added to
-  correct this; until they are, results generalise to groceries and not to goods
-  at large.
+- **Source skew.** Open Food Facts is packaged food, concentrating that half of
+  the corpus in Chapters 1–24. Advance rulings spread across the tariff and
+  correct much of this, but the two sources differ in register as well as
+  subject: a listing is a dozen words, a ruling excerpt is several hundred. A
+  model's score is therefore partly a score on input length, and per-source
+  results are reported separately for that reason.
 - **Descriptions are reassembled** from catalogue fields (brand, name, quantity,
   packaging), which is tidier than a real marketplace listing. Concatenation
   only — no text is generated — but it is not identical to production input.
-- **Goods only.** Services are out of scope.
+- **Advance rulings are survivorship-biased.** A dispute only reaches an
+  authority when the classification was contentious, so this slice is harder
+  than the population of goods a real system meets. It is not a random sample
+  and is not presented as one.
+- **Roughly three quarters of ruling PDFs are scans** with no text layer and are
+  skipped, and files above 1.5 MB are skipped before download as probable scans.
+  Both filters bias the ruling slice toward authorities that publish digitally —
+  West Bengal, Tamil Nadu, Gujarat and Rajasthan are over-represented relative
+  to their share of rulings.
+- **Ruling excerpts are cut by pattern matching**, not by understanding. The
+  segmenter stops before the authority's findings so the answer cannot leak, and
+  refuses to emit anything when it cannot locate the facts section — but it can
+  still start a few sentences early or late.
+- **Goods only.** Services are out of scope, and are filtered out of the ruling
+  stream because CGST s.97(2)(a) covers "goods **or services** or both".
 
 ---
 

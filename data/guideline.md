@@ -47,6 +47,42 @@ Three rules, and they are absolute:
 3. **`12` is not a valid label.** The 12 % slab was abolished. If you find
    yourself reaching for it, you have slipped into the pre-2025 table.
 
+### 2a. Examples drawn from advance rulings — read this before labelling one
+
+Examples with `source: "aar"` come from published Advance Ruling orders. They
+carry metadata that is genuinely useful *and* actively dangerous, so treat the
+two halves differently:
+
+| Field | Status | Use it? |
+|---|---|---|
+| `hsn_candidates` | Codes the ruling discusses. HSN is the Customs Tariff, which GST 2.0 did not touch, so these remain valid | **Yes** — as a research hint |
+| `ruling_brief` | The Council's summary of the question, sometimes naming the outcome | **Yes** — for the heading |
+| `stale_rates_in_ruling` | Rates **as stated in the ruling** | **Never** — see below |
+| `ruling_url` | Link to the full order | Yes, when the excerpt is unclear |
+
+**The trap.** Most published rulings predate 22 September 2025. Any rate they
+state comes from the superseded schedule. A ruling that concludes "taxable at
+12 %" was correct when written and is wrong today, because the 12 % slab no
+longer exists.
+
+So: **take the heading from the ruling, derive the slab yourself.** Run the HSN
+through step 3 and step 4 of the procedure against Notification 9/2025 exactly
+as you would for any other example.
+
+**Turn the trap into a resource.** A ruling whose `stale_rates_in_ruling`
+contains `12` is, by construction, an example whose rate moved — the slab it
+sat in was abolished. These are the cheapest way to fill the
+`rate-changed-2025` slice that the headline finding depends on, so tag them and
+prioritise them.
+
+**Adversarial content is deliberate.** The excerpt stops before the authority's
+findings, but it *keeps* the applicant's own contention — and applicants argue
+for the classification that suits them, which the authority then frequently
+rejects. An excerpt reading "the applicant submits the goods merit
+classification under tariff item 1207 40 90" is not telling you the answer; it
+may be telling you the wrong answer. Label these `adversarial` and record in
+`labeller_notes` whether you agreed with the applicant.
+
 ---
 
 ## 3. The ordered procedure
