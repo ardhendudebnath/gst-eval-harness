@@ -90,3 +90,48 @@ def test_filters_that_exclude_everything_return_empty():
 def test_stale_filter_does_not_mutate_the_pool():
     select_queue(POOL, set(), stale="12")
     assert len(POOL) == 5
+
+
+# --- rate-changed candidates ----------------------------------------------
+
+CANDIDATE_POOL = [
+    {"source": "off", "source_id": f"b{i}", "input": f"Brand Biscuit {i}, 50 g",
+     "collection_meta": {}}
+    for i in range(10)
+] + [
+    {"source": "off", "source_id": "c1", "input": "Cadbury chocolate, 40 g", "collection_meta": {}},
+    {"source": "off", "source_id": "n1", "input": "Haldiram bhujia, 200 g", "collection_meta": {}},
+    {"source": "off", "source_id": "t1", "input": "Colgate toothpaste, 100 g", "collection_meta": {}},
+    {"source": "off", "source_id": "s1", "input": "Tata Salt, 1 kg", "collection_meta": {}},
+]
+
+
+def test_changed_candidates_selects_only_announced_families():
+    queue = select_queue(CANDIDATE_POOL, set(), changed_candidates=True)
+    ids = {r["source_id"] for r in queue}
+    assert "s1" not in ids  # salt is not in a moved family
+    assert {"c1", "n1", "t1"} <= ids
+
+
+def test_changed_candidates_interleaves_families():
+    # Ten biscuits sit first in file order. Without interleaving the first four
+    # would all be biscuits and the slice would skew.
+    queue = select_queue(CANDIDATE_POOL, set(), changed_candidates=True)
+    first_four = {r["source_id"] for r in queue[:4]}
+    assert len(first_four) == 4
+    assert first_four != {"b0", "b1", "b2", "b3"}
+    # One from each of the four represented families.
+    assert {"c1", "n1", "t1"} <= first_four
+
+
+def test_interleaving_keeps_every_candidate():
+    queue = select_queue(CANDIDATE_POOL, set(), changed_candidates=True)
+    assert len(queue) == 13  # all but the salt
+
+
+def test_changed_candidates_composes_with_source():
+    aar = dict(POOL[2])
+    queue = select_queue(
+        CANDIDATE_POOL + [aar], set(), source="off", changed_candidates=True
+    )
+    assert all(r["source"] == "off" for r in queue)

@@ -23,6 +23,7 @@ from collections import Counter
 from datetime import date, datetime, timezone
 from pathlib import Path
 
+from harness.collect.rate_changed import record_candidate_families
 from harness.schema import (
     SOURCES,
     TARGET_STRATA,
@@ -175,6 +176,12 @@ def _print_hints(meta: dict) -> None:
         print(f"  {key}: {text[:260]}")
         shown = True
 
+    families = record_candidate_families({"input": "", "collection_meta": meta})
+    if families:
+        print(f"  possible moved family: {', '.join(families)}  (candidate only —")
+        print("     verify against Notification 9/2025 before tagging)")
+        shown = True
+
     stale = meta.get("stale_rates_in_ruling")
     if stale:
         print()
@@ -266,6 +273,7 @@ def select_queue(
     keyword: str | None = None,
     source: str | None = None,
     stale: str | None = None,
+    changed_candidates: bool = False,
 ) -> list[dict]:
     """Records still to label, narrowed by the requested filters.
 
@@ -284,10 +292,35 @@ def select_queue(
             for r in queue
             if stale in (r.get("collection_meta", {}).get("stale_rates_in_ruling") or [])
         ]
+    if changed_candidates:
+        queue = _interleave_by_family([r for r in queue if record_candidate_families(r)])
     if keyword:
         k = keyword.lower()
         queue = [r for r in queue if k in r["input"].lower()]
     return queue
+
+
+def _interleave_by_family(records: list[dict]) -> list[dict]:
+    """Round-robin candidates across families so the slice does not skew.
+
+    The pool is dominated by a couple of families — biscuits and chocolate are
+    together about 60% of candidates — so labelling the first N in file order
+    would produce a rate-changed-2025 slice that is mostly biscuits, and a
+    headline finding that is really a claim about biscuits. Interleaving means
+    stopping early still leaves a spread.
+    """
+    buckets: dict[str, list[dict]] = {}
+    for record in records:
+        # First family only: each record belongs to one queue position.
+        buckets.setdefault(record_candidate_families(record)[0], []).append(record)
+
+    ordered: list[dict] = []
+    while buckets:
+        for family in list(buckets):
+            ordered.append(buckets[family].pop(0))
+            if not buckets[family]:
+                del buckets[family]
+    return ordered
 
 
 def run_label(
@@ -295,6 +328,7 @@ def run_label(
     keyword: str | None,
     source: str | None = None,
     stale: str | None = None,
+    changed_candidates: bool = False,
 ) -> int:
     labelled = list(read_jsonl(GOLDEN))
     done_source_ids = {e.source_id for e in labelled if e.source_id}
@@ -308,10 +342,23 @@ def run_label(
         return 1
 
     queue = select_queue(
-        pool, done_source_ids, keyword=keyword, source=source, stale=stale
+        pool,
+        done_source_ids,
+        keyword=keyword,
+        source=source,
+        stale=stale,
+        changed_candidates=changed_candidates,
     )
-    active = [f"{k}={v!r}" for k, v in
-              (("filter", keyword), ("source", source), ("stale", stale)) if v]
+    active = [
+        f"{k}={v!r}"
+        for k, v in (
+            ("filter", keyword),
+            ("source", source),
+            ("stale", stale),
+            ("changed-candidates", changed_candidates or None),
+        )
+        if v
+    ]
     if active:
         print(f"\n  {'  '.join(active)}: {len(queue)} candidates")
 
@@ -320,6 +367,16 @@ def run_label(
             "\n  These rulings quote 12%, a slab abolished on 22 Sep 2025.\n"
             "  Take the heading from the ruling; derive the slab from Notification\n"
             "  9/2025 yourself. Tag each one rate-changed-2025."
+        )
+
+    if changed_candidates:
+        print(
+            "\n  CANDIDATES ONLY — these listings merely name a family announced\n"
+            "  as moving on 22 Sep 2025 (data/reference/rate_changes_2025.md).\n"
+            "  Many will not have moved: much of this was already at 0% or 5%,\n"
+            "  and packaging conditionality (guideline §4a) decides first.\n"
+            "  Establish the heading, derive the slab, and only then decide\n"
+            "  whether to apply the rate-changed-2025 tag."
         )
 
     if not queue:
@@ -426,13 +483,22 @@ def main() -> int:
         help="only rulings quoting this rate; --stale 12 queues the abolished-slab "
         "examples that seed the rate-changed-2025 slice",
     )
+    ap.add_argument(
+        "--changed-candidates",
+        action="store_true",
+        help="listings naming a family announced as moving on 22 Sep 2025. "
+        "A search aid for filling the rate-changed-2025 slice, NOT a label — "
+        "many matches will not have moved",
+    )
     ap.add_argument("--relabel", type=int, metavar="N", default=None)
     ap.add_argument("--seed", type=int, default=None)
     args = ap.parse_args()
 
     if args.relabel:
         return run_relabel(args.relabel, args.seed)
-    return run_label(args.target, args.filter, args.source, args.stale)
+    return run_label(
+        args.target, args.filter, args.source, args.stale, args.changed_candidates
+    )
 
 
 if __name__ == "__main__":
