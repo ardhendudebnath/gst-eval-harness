@@ -73,8 +73,17 @@ _REGISTERED_OFFICE_RE = re.compile(
 # of them. A company suffix is the reliable end of a company name.
 _COMPANY_RE = re.compile(
     r"\b(?:M/s\.?|Messrs\.?)\s*[A-Z][\w&.'\- ]{2,60}?"
-    r"(?:Limited|Ltd\.?|Pvt\.?|Private|LLP|Industries|Enterprises?|Corporation"
-    r"|Corp\.?|Company|Traders?|Mills|Works|Agencies|Associates)\b",
+    # Compound forms first. Alternation is leftmost-match, and the quantifier
+    # above is lazy, so listing "Private" before "Private Limited" ends the
+    # match at "Private" and strands "Limited" in the text.
+    r"(?:Private\s+Limited|Pvt\.?\s*Ltd\.?|Public\s+Limited"
+    r"|Limited|Ltd\.?|Private|Pvt\.?|LLP|Industries|Enterprises?|Corporation"
+    r"|Corp\.?|Company|Traders?|Mills|Works|Agencies|Associates)\b"
+    # A name can carry a suffix word in the middle -- "Beta Traders Pvt Ltd."
+    # ends the lazy match at "Traders" and strands "Pvt Ltd.". Trailing
+    # corporate suffixes are absorbed. Only suffixes, never arbitrary
+    # capitalised words, so this cannot run on into the sentence after it.
+    r"(?:\s*(?:Pvt\.?|Ltd\.?|Limited|Private|LLP|Inc\.?|Co\.?)\b)*",
     re.I,
 )
 
@@ -90,8 +99,13 @@ _COMPANY_RE = re.compile(
 # reason: "M/?s" also matches the "Ms" in "G.O.Ms No. 110, Revenue (CT-II)
 # Department" and in "Notification Ms. No. ...", which are statutory citations,
 # not parties. Without it this pattern deletes the legal text it sits next to.
+#
+# Requiring whitespace *after* each token strands the last one before
+# punctuation -- "M/s Acme Foods Private Limited," would strip through
+# "Private" and leave "Limited,". Tokens are joined by single spaces instead,
+# so the run ends naturally at a comma, a period, or the first lowercase word.
 _MS_NAME_RE = re.compile(
-    r"\bM/?s\.?\s*(?!No\b|No\.)(?:[A-Z][\w.&'\-]*(?:\s+|$)){1,6}"
+    r"\bM/?s\.?\s*(?!No\b|No\.)[A-Z][\w.&'\-]*(?:\s+[A-Z][\w.&'\-]*){0,5}"
 )
 
 # Terminates on punctuation including brackets, because applicant names are

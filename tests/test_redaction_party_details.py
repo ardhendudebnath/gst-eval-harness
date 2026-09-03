@@ -80,6 +80,26 @@ def test_third_party_companies_are_stripped(name):
     assert head not in out
 
 
+@pytest.mark.parametrize("text,stranded", [
+    # "Private" is itself a suffix, so listing it before "Private Limited"
+    # ends the lazy match early and leaves the rest behind.
+    ("another player, M/s Acme Foods Private Limited, supplies atta", "Limited"),
+    # A suffix word in the middle of a name does the same thing.
+    ("supplier M/s Beta Traders Pvt Ltd. cleared the goods", "Pvt"),
+    ("M/s Gamma Mills Private Limited manufactures flour", "Limited"),
+])
+def test_a_company_name_is_not_truncated_leaving_its_suffix(text, stranded):
+    assert stranded not in clean(text)
+
+
+def test_a_lowercase_word_inside_a_company_name_is_handled():
+    """"[redacted]" — the capitalised-run pattern
+    stops at "products", so the suffix pattern has to carry this one."""
+    out = clean("from [redacted] they procure oxygen")
+    assert "Aster" not in out and "Private" not in out
+    assert "procure oxygen" in out
+
+
 def test_an_individual_named_as_applicant_is_stripped():
     out = clean("Name and applicant M/s. Rajeshbhai Manilal Shah Milkat No. "
                 "GSTIN of the applicant Date of application 06.01.2023")
