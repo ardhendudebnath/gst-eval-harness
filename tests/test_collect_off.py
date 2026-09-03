@@ -63,9 +63,16 @@ def test_packaging_handles_off_language_prefix_and_case():
 
 def test_out_of_scope_family_is_caught_via_category_not_description():
     # A listing can name nothing excluded while its category does.
-    product = {"product_name": "Classic 100s", "categories": "Cigarettes, Tobacco"}
-    assert out_of_scope_term("Classic 100s, pack of 20") is None
-    assert _out_of_scope("Classic 100s, pack of 20", product) is not None
+    product = {"product_name": "Old Monk 7 Year", "categories": "Rums, Spirits"}
+    assert out_of_scope_term("Old Monk 7 Year, 750 ml") is None
+    assert _out_of_scope("Old Monk 7 Year, 750 ml", product) is not None
+
+
+def test_tobacco_is_now_in_scope():
+    # Settled at 40%, biris 18%. The excise duty introduced alongside is a
+    # separate levy and does not change which GST slab applies.
+    assert out_of_scope_term("Gold Flake cigarette, pack of 20") is None
+    assert out_of_scope_term("Biris, bundle of 25") is None
 
 
 def test_aerated_drinks_are_now_in_scope():
@@ -96,7 +103,7 @@ def test_word_boundary_prevents_false_positives():
 
 @pytest.mark.parametrize(
     "text",
-    ["Cigarettes", "Beers", "Bidis", "Cigars", "Wines"],
+    ["Beers", "Wines", "Rums", "Liquors", "Vodkas"],
 )
 def test_plural_category_names_are_caught(text):
     # Catalogue categories are written in the plural, and a bare \b anchor

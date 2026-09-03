@@ -89,7 +89,7 @@ def test_hsn_must_be_four_digits():
 
 
 def test_out_of_scope_family_is_flagged():
-    ex = make(input="Gold Flake cigarette, pack of 20")
+    ex = make(input="Old Monk rum, 750 ml bottle")
     assert any("out-of-scope family" in p for p in validate_example(ex))
 
 
@@ -97,6 +97,22 @@ def test_cement_is_in_scope():
     # Schedule II at 18%, verified against the Gazette; it was never in
     # Schedule VII, which is why it was wrongly excluded.
     assert validate_example(make(input="Ambuja Cement OPC 53 grade, 50 kg bag")) == []
+
+
+def test_tobacco_is_in_scope():
+    # Schedule III at 40%. The separate excise duty is a different levy.
+    assert validate_example(make(input="Gold Flake cigarette, pack of 20")) == []
+
+
+def test_alcohol_is_the_only_remaining_exclusion():
+    from harness.schema import OUT_OF_SCOPE_TERMS
+
+    # Everything else was settled by reading the notification. If a
+    # non-alcohol family reappears here, it needs a documented reason.
+    assert set(OUT_OF_SCOPE_TERMS) == {
+        "beer", "wine", "whisky", "whiskey", "whiskies",
+        "vodka", "rum", "liquor", "alcoholic",
+    }
 
 
 def test_alcohol_stays_out_of_scope_permanently():

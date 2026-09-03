@@ -181,14 +181,13 @@ Written honestly, and expanded as the work proceeds.
   a mistake made consistently. A second annotator would; there isn't one.
 - **Ground truth has a shelf life.** GST notifications are amended. Labels are
   correct as of the date in `data/reference/rate_schedule.md` and no longer.
-- **Tobacco and alcohol are excluded**, for different reasons. Alcoholic liquor
-  is outside GST by constitutional exclusion, so it has no slab to predict and
-  is permanently out. Tobacco and pan masala are settled at 40 % (biris 18 %)
-  but carry a new excise duty introduced alongside, so the total burden is not
-  the GST slab; that exclusion is a scope choice and could be revisited.
-  Cement and aerated drinks were excluded on the mistaken premise that they sat
-  in Schedule VII — reading the Gazette showed it held only tobacco and pan
-  masala — and are now in scope.
+- **Alcohol is the only excluded family.** Alcoholic liquor for human
+  consumption is outside GST by constitutional exclusion, so it has no slab to
+  predict. Cement, aerated drinks, tobacco and pan masala were all excluded
+  early on the mistaken premise that Schedule VII's fate was unknown; reading
+  the Gazette settled every one, and all are now in scope. For tobacco, note
+  that the separate excise duty introduced alongside the 40 % rate is a
+  different levy and does not change which GST slab applies.
 - **Source skew.** Open Food Facts is packaged food, concentrating that half of
   the corpus in Chapters 1–24. Advance rulings spread across the tariff and
   correct much of this, but the two sources differ in register as well as

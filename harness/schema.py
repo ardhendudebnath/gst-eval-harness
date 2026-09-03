@@ -96,32 +96,24 @@ _REASON_RE = re.compile(r"reason=([a-z-]+)")
 
 # Families excluded from the dataset (guideline §4d).
 #
-# Cement and the aerated-drink families used to be here, excluded on the
-# assumption that they sat in Schedule VII awaiting a transitional decision.
-# Reading the Gazette showed Schedule VII held only pan masala and tobacco, so
-# that was never true: cement is Schedule II (18%) and aerated drinks are
-# Schedule III (40%), both settled. They are now IN SCOPE, and are among the
-# sharpest examples available — each moved off the now-abolished 28% slab, so a
-# model reciting the old table answers 28%, which is itself no longer valid.
+# Only one reason survives. Cement, aerated drinks, tobacco and pan masala were
+# all excluded on the premise that they sat in Schedule VII awaiting a
+# transitional decision; reading the Gazette settled every one of them, and all
+# are now in scope. Each moved off the 28% slab that was itself abolished on
+# 1 Feb 2026, which makes them the sharpest stale-slab probes in the corpus: a
+# model reciting the old table answers 28%, an answer that is not merely wrong
+# but names a rate that no longer exists.
 #
-# Two reasons for exclusion remain:
+# What remains is **alcoholic liquor for human consumption**, which is outside
+# GST by constitutional exclusion and taxed under state excise. There is no
+# slab to predict, so this exclusion is categorical rather than provisional —
+# it is not the same kind of decision as the others and must not be lifted by
+# analogy to them.
 #
-#   * tobacco and pan masala — settled at 40% (biris 18%) from 1 Feb 2026, but
-#     carrying a new excise duty introduced alongside, so the total burden is
-#     not the GST slab. Held back pending a scope decision, not a rate one.
-#   * alcoholic liquor for human consumption — outside GST by constitutional
-#     exclusion and taxed under state excise. There is no slab to predict, so
-#     this exclusion is permanent rather than provisional.
+# Note for tobacco: a separate excise duty was introduced alongside the 40%
+# rate. That is a different levy, not a GST slab, and does not affect the
+# answer to "which slab applies" any more than customs duty would.
 OUT_OF_SCOPE_TERMS: tuple[str, ...] = (
-    # settled at 40% / 18%, held back pending a scope decision
-    "tobacco",
-    "cigarette",
-    "cigar",
-    "bidi",
-    "beedi",
-    "pan masala",
-    "gutkha",
-    # outside GST entirely — permanent
     "beer",
     "wine",
     "whisky",

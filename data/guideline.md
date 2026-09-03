@@ -183,18 +183,37 @@ exclusion. That is worth revisiting: every one of them moved off the
 now-abolished 28 % slab, which makes them sharp stale-slab probes, and biris
 against the rest of the tobacco family is a good within-family split.
 
-**Cement and aerated drinks are now IN SCOPE.** They were excluded on a
-premise that turned out to be false — Schedule VII never contained them — and
-they are among the best examples available. Label them normally.
+**Cement, aerated drinks, tobacco and pan masala are all IN SCOPE.** Every one
+was excluded on the premise that Schedule VII's fate was unknown; the Gazette
+settled all of them. Label them normally.
 
-Still dropped:
+**Only one family is still dropped:**
 
-- **tobacco, cigarettes, bidis, pan masala, gutkha** — settled at 40 % (biris
-  18 %), but a new excise duty was introduced alongside, so the total burden is
-  not the GST slab. A scope decision, not a rate one.
 - **alcoholic liquor for human consumption** — outside GST by constitutional
-  exclusion and taxed under state excise. There is no slab to predict, so this
-  exclusion is permanent.
+  exclusion and taxed under state excise. There is no slab to predict at all,
+  so this is a categorical exclusion, not a scope choice like the others were.
+
+### 4e. Tobacco: the excise duty is not a GST slab
+
+A separate excise duty was introduced on tobacco alongside the 40 % rate, and
+compensation cess was reduced to nil. **The excise is a different levy.** The
+answer to "which GST slab applies" is the slab, exactly as it is for a good
+that also attracts customs duty. Do not add the excise in, and do not treat its
+existence as making the slab uncertain.
+
+### 4f. Biris — a within-heading split worth knowing
+
+Notification 19/2025 splits heading 2403 in two:
+
+| Tariff item | Goods | Slab |
+|---|---|---|
+| 2403 19 21, 2403 19 29 | **Biris** | **18 %** (Schedule II) |
+| 2403, other than those two | All other manufactured tobacco | **40 %** (Schedule III) |
+
+So two goods in the same heading sit two slabs apart, and both were 28 % + cess
+before. A model that has memorised "tobacco is 28 %" gets both wrong, and a
+model that has learned "tobacco is 40 %" still gets biris wrong. Tag these
+`rate-changed-2025` and treat them as `hard`.
 
 **Excluded because there is no GST rate to predict** — alcoholic liquor for
 human consumption is outside GST by constitutional exclusion and is taxed under
