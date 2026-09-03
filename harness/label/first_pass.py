@@ -46,18 +46,13 @@ from harness.schema import (
 GOLDEN = Path("data/golden.jsonl")
 QUARANTINE = Path("data/first_pass.jsonl")
 
-#: Slab rules the first pass is allowed to apply, each traceable to a document
-#: in data/reference/. Anything not reachable by one of these stays UNCERTAIN.
+#: The one thing the first pass is allowed to conclude on its own: if the rate
+#: the authority *held* was 12%, that slab no longer exists, so the rate moved.
+#: Where it moved TO still needs Notification 9/2025 and is never proposed.
 #:
-#: Deliberately tiny. Every addition is a place where a model prior can leak
-#: into the dataset, and the reference these would rest on is itself unverified.
-GROUNDED_RULES: dict[str, str] = {
-    "abolished-source-slab": (
-        "The ruling's own rate is 12%, a slab abolished on 22 Sep 2025, so the "
-        "rate certainly moved. Which slab it moved TO still needs Notification "
-        "9/2025 and is not proposed here."
-    ),
-}
+#: Deliberately narrow. The earlier version keyed on any 12% anywhere in the
+#: document and was wrong on 8 of 29 rulings, because an applicant arguing for
+#: 12% and losing does not make 12% the rate.
 
 
 def suggest(record: dict, ex_id: str) -> Example:
@@ -81,8 +76,31 @@ def suggest(record: dict, ex_id: str) -> Example:
             f"({outcome.confidence})"
         )
 
-    stale = meta.get("stale_rates_in_ruling") or []
-    rate_moved = "12" in stale
+    # The rate moved only if the rate the authority *held* was the abolished
+    # one. Scanning the whole document cannot tell a holding from a rejected
+    # contention: in the pen-tips ruling the applicant argued 12% and the
+    # authority placed the goods in Schedule III, which was 18%. Tagging on any
+    # mention of 12% was wrong on 8 of 29 rulings.
+    held = outcome.held_rate if outcome else None
+    rate_moved = held == "12"
+    if held is None:
+        moved_basis = (
+            "unknown — the operative ruling names no schedule or rate, so the "
+            "pre-2025 rate could not be established. Read the order."
+        )
+    elif rate_moved:
+        moved_basis = (
+            f"the authority held {held}%"
+            + (f" (Schedule {outcome.schedule} of Notification 1/2017)" if outcome and outcome.schedule else "")
+            + ", a slab abolished on 22 Sep 2025"
+        )
+    else:
+        moved_basis = (
+            f"the authority held {held}%"
+            + (f" (Schedule {outcome.schedule})" if outcome and outcome.schedule else "")
+            + ", not 12%. Any 12% in this ruling is the applicant's argument, "
+            "not the holding. Whether the rate moved still needs Notification 9/2025."
+        )
 
     # The slab is not proposed. See the module docstring: the reference needed
     # to derive it is unverified, and a guess would anchor the reviewer on
@@ -96,9 +114,9 @@ def suggest(record: dict, ex_id: str) -> Example:
         "hsn_confidence": "high" if hsn4 else "none",
         "hsn_basis": hsn_basis,
         "rate_moved": rate_moved,
-        "rate_moved_basis": (
-            GROUNDED_RULES["abolished-source-slab"] if rate_moved else "not established"
-        ),
+        "rate_moved_basis": moved_basis,
+        "authority_held_rate": held,
+        "authority_schedule": outcome.schedule if outcome else None,
         "conditional": bool(outcome and outcome.is_conditional),
         "quote": outcome.quote[:400] if outcome else "",
         "model": "claude-opus-5",

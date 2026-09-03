@@ -88,12 +88,15 @@ def test_uncertain_is_not_unanswerable():
     assert _suggestion().slab != UNANSWERABLE
 
 
-def test_abolished_source_slab_sets_the_rate_changed_tag():
-    # The ruling states 12%, a slab that no longer exists, so the rate moved.
-    # That much is established without deriving where it moved to.
+def test_document_mentions_of_twelve_percent_do_not_set_the_tag():
+    # This record's stale_rates_in_ruling contains "12", but that scan cannot
+    # tell the authority's holding from the applicant's rejected argument. In
+    # the real pen-tips ruling the applicant argued 12% and the authority
+    # placed the goods in Schedule III, which was 18%.
     ex = _suggestion()
-    assert "rate-changed-2025" in ex.tags
-    assert ex.model_notes["rate_moved"] is True
+    assert "12" in ex.collection_meta["stale_rates_in_ruling"]
+    assert "rate-changed-2025" not in ex.tags
+    assert ex.model_notes["rate_moved"] is False
 
 
 def test_no_rate_changed_tag_without_an_abolished_source_slab():

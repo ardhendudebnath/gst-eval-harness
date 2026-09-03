@@ -64,6 +64,20 @@ _RATE = re.compile(r"(\d{1,2}(?:\.\d+)?)\s*%")
 #: "6% CGST + 6% SGST" states half the combined rate twice.
 _SPLIT_RATE = re.compile(r"(\d{1,2}(?:\.\d+)?)\s*%\s*CGST", re.I)
 
+#: Rulings usually name a Schedule of Notification 1/2017 rather than a
+#: percentage. The mapping is fixed by that notification, and it is what tells
+#: an applicant's *argument* apart from the authority's *holding*: an applicant
+#: who claimed 12% and was placed in Schedule III did not have a 12% rate.
+_SCHEDULE = re.compile(r"Schedule\s*[-–—]?\s*(VII|VI|V|IV|III|II|I)\b", re.I)
+OLD_SCHEDULE_RATES: dict[str, str] = {
+    "I": "5",
+    "II": "12",
+    "III": "18",
+    "IV": "28",
+    "V": "3",
+    "VI": "0.25",
+}
+
 #: Question-section shapes. Rulings restate the questions before answering, so
 #: a passage full of "Whether ... ?" is usually what was asked, not what was
 #: decided — unless an answer follows it, which is the common Q/Ans layout.
@@ -92,6 +106,11 @@ class Outcome:
     combined_rate_hint: str | None = None
     conditional: bool = False
     looks_like_question: bool = False
+    #: Schedule of Notification 1/2017 named in the operative ruling, and the
+    #: pre-22-Sep-2025 combined rate it implies. This is the rate the authority
+    #: actually held, as distinct from whatever the applicant argued for.
+    schedule: str | None = None
+    held_rate: str | None = None
 
     @property
     def is_conditional(self) -> bool:
@@ -171,6 +190,17 @@ def extract_outcome(text: str) -> Outcome | None:
         _QUESTION_SHAPE.search(quote) and not _ANSWER_MARKER.search(quote)
     )
 
+    # What the authority held, from the schedule it named or a rate it stated.
+    schedule = held_rate = None
+    if sched_m := _SCHEDULE.search(quote):
+        schedule = sched_m.group(1).upper()
+        held_rate = OLD_SCHEDULE_RATES.get(schedule)
+    if held_rate is None:
+        if combined:
+            held_rate = combined
+        elif len(rates) == 1:
+            held_rate = rates[0]
+
     return Outcome(
         quote=quote,
         headings=headings,
@@ -178,4 +208,6 @@ def extract_outcome(text: str) -> Outcome | None:
         combined_rate_hint=combined,
         conditional=conditional,
         looks_like_question=looks_like_question,
+        schedule=schedule,
+        held_rate=held_rate,
     )
