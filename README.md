@@ -393,8 +393,23 @@ where you control it.
 
 Written honestly, and expanded as the work proceeds.
 
+- **Every figure currently published rests on n = 24, and the interval is
+  wider than the finding.** At that sample size a measured rate of 20 % carries
+  a 95 % confidence interval of roughly ±16 points — so "20.8 % recite an
+  abolished slab" is really "somewhere between about 5 % and 37 %". Repeating
+  the run fixes sampling noise, and `--repeats` now reports mean and range for
+  exactly that reason, but **repeats do not narrow this interval**: five runs
+  over the same 24 examples is still 24 examples. Only more labelled examples
+  will do it, which is what the 400-example target is for. Any range quoted in
+  the Results table is the spread across runs, not a confidence interval, and
+  the two should not be confused.
 - **Single annotator.** Self-agreement bounds this dataset, but it cannot detect
   a mistake made consistently. A second annotator would; there isn't one.
+- **The model does not agree with itself.** Two identical runs of the same 24
+  prompts disagreed on 4 answers (17.4 %), three of them flipping from correct
+  to wrong, and slab accuracy moved 4.2 points on sampling alone. This is
+  sampling noise of the same magnitude as the effect being measured, and it
+  means single-run numbers from this harness are indicative at best.
 - **The judge may share a family with a benchmarked model.** Where it does, a
   self-preference effect cannot be ruled out from κ alone. The judge model is
   recorded on every run so the overlap is visible rather than implicit.
