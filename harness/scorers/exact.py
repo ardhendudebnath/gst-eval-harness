@@ -17,10 +17,67 @@ measure.
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 
 from harness.prompt import Parsed
 from harness.schema import ABOLISHED_SLABS, SLAB_ABOLISHED_ON, UNANSWERABLE, Example
+
+# --------------------------------------------------------------------------
+# Abolished rates cited in the reasoning, not just given as the answer
+# --------------------------------------------------------------------------
+#
+# Scoring only the answer field understates the failure. In the first real run,
+# three of four refusals reached UNANSWERABLE *by way of* a dead rate --
+#
+#     "The goods comprise slide fasteners (12% GST) and parts/sliders (18%
+#      GST), so no unique rate can be assigned."
+#
+# -- which scored as an abstention. The model is reciting a superseded schedule
+# and then declining on the strength of it; that is the same failure wearing a
+# different hat, and it was invisible.
+
+_RATE_MENTION = re.compile(
+    r"(?<![\d.])(" + "|".join(sorted(ABOLISHED_SLABS, key=len, reverse=True)) + r")"
+    r"\s*(?:%|per\s*ce?nt\b|percent\b)",
+    re.I,
+)
+
+#: Language that shows the model knows the rate is historical. "The rate was
+#: 12% until September 2025" is correct GST history, not staleness, and
+#: counting it would manufacture the finding this metric exists to detect.
+_HISTORICAL = re.compile(
+    r"\b(?:was|were|used\s+to|previously|formerly|earlier|erstwhile|hitherto"
+    r"|prior\s+to|before|until|till|up\s*to|upto|then[-\s]existing"
+    r"|abolish\w*|omitt?\w*|remov\w*|withdraw\w*|superseded?|replac\w*"
+    r"|no\s+longer|ceased?|discontinu\w*|revised?|changed?|pre[-\s]?2025"
+    r"|since|w\.e\.f\.?|with\s+effect\s+from)\b",
+    re.I,
+)
+
+#: How far either side of the mention to look for that language.
+_WINDOW_BEFORE, _WINDOW_AFTER = 120, 90
+
+
+def find_abolished_citations(text: str) -> list[str]:
+    """Abolished rates asserted as current anywhere in `text`.
+
+    A mention wrapped in historical language is not counted. This is a
+    heuristic over free prose and it will not be perfect either way; it is
+    reported as its own metric rather than folded into the headline so the
+    judgement it makes stays visible and arguable.
+    """
+    if not text:
+        return []
+    found: list[str] = []
+    for m in _RATE_MENTION.finditer(text):
+        window = text[max(0, m.start() - _WINDOW_BEFORE): m.end() + _WINDOW_AFTER]
+        if _HISTORICAL.search(window):
+            continue
+        rate = m.group(1)
+        if rate not in found:
+            found.append(rate)
+    return found
 
 
 @dataclass(slots=True)
@@ -34,6 +91,9 @@ class RowScore:
     abstention_correct: bool
     #: The abolished rate the model quoted, if it quoted one.
     stale_slab: str | None = None
+    #: Abolished rates asserted as current anywhere in the response, including
+    #: inside a refusal. Superset of `stale_slab` when the answer is one too.
+    stale_cited: tuple[str, ...] = ()
     unparseable: bool = False
     errored: bool = False
     predicted_slab: str | None = None
@@ -43,13 +103,24 @@ class RowScore:
     def any_credit(self) -> bool:
         return self.slab_correct
 
+    @property
+    def recites_dead_schedule(self) -> bool:
+        """Answered with an abolished rate, or reasoned from one."""
+        return bool(self.stale_slab or self.stale_cited)
 
-def score_row(gold: Example, pred: Parsed, *, errored: bool = False) -> RowScore:
+
+def score_row(gold: Example, pred: Parsed, *, errored: bool = False,
+              text: str = "") -> RowScore:
     """Grade one prediction. A failed call scores as wrong, never as skipped.
 
     Dropping errored rows would inflate accuracy for whichever model errors
     most, which is exactly backwards.
+
+    `text` is the model's full response. It is scanned for abolished rates
+    asserted as current, which the answer field alone cannot show.
     """
+    cited = tuple(find_abolished_citations(text))
+
     if errored or pred.unparseable:
         return RowScore(
             id=gold.id,
@@ -57,6 +128,9 @@ def score_row(gold: Example, pred: Parsed, *, errored: bool = False) -> RowScore
             hsn_correct=False,
             chapter_correct=False,
             abstention_correct=False,
+            # An unparseable answer can still have recited a dead rate on the
+            # way to being unparseable.
+            stale_cited=cited,
             unparseable=pred.unparseable,
             errored=errored,
             gold_slab=gold.slab,
@@ -82,6 +156,7 @@ def score_row(gold: Example, pred: Parsed, *, errored: bool = False) -> RowScore
         chapter_correct=chapter_correct,
         abstention_correct=abstention_correct,
         stale_slab=stale,
+        stale_cited=cited,
         predicted_slab=pred.slab,
         gold_slab=gold.slab,
     )
@@ -98,6 +173,11 @@ class Summary:
     abstention_acc: float = 0.0
     stale_slab_rate: float = 0.0
     stale_by_slab: dict[str, int] = field(default_factory=dict)
+    #: Responses reciting an abolished rate as current anywhere, answer or
+    #: reasoning. Always >= stale_slab_rate; the gap is the refusals that got
+    #: there through a dead schedule.
+    stale_cited_rate: float = 0.0
+    stale_cited_by_slab: dict[str, int] = field(default_factory=dict)
     unparseable: int = 0
     errored: int = 0
     #: Abstention treated as a detection problem: did it decline when it should?
@@ -116,6 +196,8 @@ class Summary:
             "abstain_f1": round(self.abstain_f1, 4),
             "stale_slab_rate": round(self.stale_slab_rate, 4),
             "stale_by_slab": self.stale_by_slab,
+            "stale_cited_rate": round(self.stale_cited_rate, 4),
+            "stale_cited_by_slab": self.stale_cited_by_slab,
             "unparseable": self.unparseable,
             "errored": self.errored,
         }
@@ -146,6 +228,14 @@ def summarise(rows: list[RowScore]) -> Summary:
     for r in stale:
         counts[r.stale_slab] = counts.get(r.stale_slab, 0) + 1
     s.stale_by_slab = dict(sorted(counts.items()))
+
+    cited = [r for r in rows if r.recites_dead_schedule]
+    s.stale_cited_rate = len(cited) / n
+    cited_counts: dict[str, int] = {}
+    for r in cited:
+        for slab in {*(r.stale_cited), *([r.stale_slab] if r.stale_slab else [])}:
+            cited_counts[slab] = cited_counts.get(slab, 0) + 1
+    s.stale_cited_by_slab = dict(sorted(cited_counts.items()))
 
     # Abstention as detection: positive class = "should decline".
     tp = sum(

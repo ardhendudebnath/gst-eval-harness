@@ -77,7 +77,8 @@ def run_one(key: str, dataset: list[Example], *, mode: str, sleep: float) -> Run
             prompt_mod.build(example.input), system=prompt_mod.SYSTEM
         )
         parsed = prompt_mod.parse(completion.text)
-        score = score_row(example, parsed, errored=not completion.ok)
+        score = score_row(example, parsed, errored=not completion.ok,
+                          text=completion.text)
 
         completions.append(completion)
         scores.append(score)
@@ -88,6 +89,7 @@ def run_one(key: str, dataset: list[Example], *, mode: str, sleep: float) -> Run
                 "predicted_slab": parsed.slab,
                 "correct": score.slab_correct,
                 "stale_slab": score.stale_slab,
+                "stale_cited": list(score.stale_cited),
                 "hsn_correct": score.hsn_correct,
                 "tokens_in": completion.tokens_in,
                 "tokens_out": completion.tokens_out,
