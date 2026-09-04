@@ -84,12 +84,11 @@ def test_the_request_body_is_what_we_think_it_is(nvidia, monkeypatch):
     assert sent["headers"]["Authorization"] == "Bearer nvapi-test-not-a-real-key"
     assert sent["body"]["model"] == nvidia.model_id
     assert sent["body"]["max_tokens"] == oc.MAX_TOKENS_THINKING
-    # system_toggle: the reasoning switch must lead the conversation.
-    assert sent["body"]["messages"][0] == {
-        "role": "system", "content": "detailed thinking on"
-    }
-    assert sent["body"]["messages"][1]["content"] == "You classify."
-    assert sent["body"]["messages"][2]["content"] == "Cement?"
+    # chat_template: Nemotron 3.x takes the switch as a template kwarg, and
+    # our own system prompt stays first in the conversation.
+    assert sent["body"]["chat_template_kwargs"] == {"enable_thinking": True}
+    assert sent["body"]["messages"][0]["content"] == "You classify."
+    assert sent["body"]["messages"][1]["content"] == "Cement?"
 
 
 def test_reasoning_off_changes_the_wire_and_the_budget(nvidia, monkeypatch):
@@ -97,9 +96,31 @@ def test_reasoning_off_changes_the_wire_and_the_budget(nvidia, monkeypatch):
     monkeypatch.setattr(oc.urllib.request, "urlopen", fake_urlopen(reply(), captured))
     c = oc.OpenAICompatRunner(nvidia, thinking=False).run("Cement?")
 
-    assert captured[0]["body"]["messages"][0]["content"] == "detailed thinking off"
+    assert captured[0]["body"]["chat_template_kwargs"] == {"enable_thinking": False}
     assert captured[0]["body"]["max_tokens"] == oc.MAX_TOKENS
     assert c.extra["thinking"] is False  # recorded, so a result can't misreport it
+
+
+def test_the_system_toggle_style_still_leads_the_conversation(monkeypatch):
+    """No model in the registry uses this today — the retired
+    llama-3.3-nemotron-super-49b did — but apply_reasoning still supports it,
+    and an unsupported switch is ignored rather than rejected, so a model
+    would run with reasoning off while the result claimed it was on."""
+    from harness.runners.registry import ModelSpec
+
+    spec = ModelSpec(key="probe", model_id="vendor/toggle-model", provider="nvidia",
+                     tier="open-weight", usd_in_per_m=0.0, usd_out_per_m=0.0,
+                     reasoning_style="system_toggle")
+    monkeypatch.setenv("NVIDIA_API_KEY", "nvapi-test-not-a-real-key")
+    captured = []
+    monkeypatch.setattr(oc.urllib.request, "urlopen", fake_urlopen(reply(), captured))
+
+    oc.OpenAICompatRunner(spec).run("Cement?", system="You classify.")
+
+    assert captured[0]["body"]["messages"][0] == {
+        "role": "system", "content": "detailed thinking on"
+    }
+    assert "chat_template_kwargs" not in captured[0]["body"]
 
 
 def test_reasoning_stays_out_of_the_scored_text(nvidia, monkeypatch):

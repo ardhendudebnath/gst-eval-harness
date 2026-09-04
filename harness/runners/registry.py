@@ -97,15 +97,28 @@ MODELS: dict[str, ModelSpec] = {
     #
     # Price is zero deliberately: it must be read from the provider and dated
     # before any cost figure is published. See `priced()`.
+    #
+    # Was llama-3.3-nemotron-super-49b-v1.5 until the catalog returned
+    #   410 Gone: reached its end of life on 2026-08-26
+    # on the first live call. A benchmark that pins a hosted model id inherits
+    # that model's retirement schedule, so this is expected to happen again;
+    # the successor is verified by calling it, not by reading a docs page.
     "open-weight": ModelSpec(
         key="open-weight",
         provider="nvidia",
-        model_id="nvidia/llama-3.3-nemotron-super-49b-v1.5",
+        model_id="nvidia/nemotron-3-super-120b-a12b",
         tier="open-weight",
         usd_in_per_m=0.0,
         usd_out_per_m=0.0,
-        reasoning_style="system_toggle",
-        nim_image="nvcr.io/nim/nvidia/llama-3.3-nemotron-super-49b-v1.5:latest",
+        # Verified live on 2026-09-04: reasoning came back in its own
+        # reasoning_content field (6,231 chars) and the answer began cleanly
+        # with "SLAB:", so the chain is not reaching the scorer. The retired
+        # model used system_toggle; Nemotron 3.x does not.
+        reasoning_style="chat_template",
+        # A NIM container is published for this model, which is what the
+        # open-weight row claims. The tag follows the registry's convention
+        # and is not verified — confirm on NGC before a self-hosting run.
+        nim_image="nvcr.io/nim/nvidia/nemotron-3-super-120b-a12b:latest",
         note="has a published NIM container, so self-hostability is "
              "demonstrable; record NVIDIA's price before publishing cost",
     ),
@@ -115,12 +128,12 @@ MODELS: dict[str, ModelSpec] = {
     "open-weight-local": ModelSpec(
         key="open-weight-local",
         provider="nim",
-        model_id="nvidia/llama-3.3-nemotron-super-49b-v1.5",
+        model_id="nvidia/nemotron-3-super-120b-a12b",
         tier="open-weight",
         usd_in_per_m=0.0,
         usd_out_per_m=0.0,
-        reasoning_style="system_toggle",
-        nim_image="nvcr.io/nim/nvidia/llama-3.3-nemotron-super-49b-v1.5:latest",
+        reasoning_style="chat_template",
+        nim_image="nvcr.io/nim/nvidia/nemotron-3-super-120b-a12b:latest",
         note="self-hosted; cost is your GPU time, not a per-token price",
     ),
     # Lighter open-weight option: 30B total with 3B active runs on far less
