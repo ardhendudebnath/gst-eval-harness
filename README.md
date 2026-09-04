@@ -150,13 +150,18 @@ section will be rewritten against whatever that shows.
   `golden.jsonl` was made by a human. Each row records `labelled_by`, and the
   validator refuses any row that has not been.
 
-- **Model assistance, disclosed.** A model first pass was run over the rulings
-  whose operative holding was the abolished 12% slab. It proposes **no slab at
-  all** — deriving
-  one needs Notification 9/2025, and a model's priors are the pre-2025 table,
-  which is the very error this benchmark measures. It proposes only the HSN
-  heading, read out of the authority's own operative ruling in the same
-  document, and it is right about that for 20 of 32.
+- **Model assistance, disclosed.** A model first pass runs over the collected
+  rulings. It **never recalls a slab** — deriving one needs Notification
+  9/2025, and a model's priors are the pre-2025 table, which is the very error
+  this benchmark measures. It proposes the HSN heading, read out of the
+  authority's own operative ruling in the same document, and where that heading
+  resolves to exactly one entry in the archived Gazette it reports that entry
+  as a *lookup*, quoting the text.
+
+  Over 129 collected rulings: 63 yield a heading, 24 of those resolve to a
+  single Gazette entry, and 38 span several schedules and are left for the
+  annotator — 2202 turns on added sugar, 7418 on whether an article is a
+  household article of copper, 9608 on pens versus pencils.
 
   Those suggestions live in `data/first_pass.jsonl`, never in the golden set.
   They are marked `labelled_by: "model-first-pass"`, which
@@ -167,6 +172,39 @@ section will be rewritten against whatever that shows.
   record of what was proposed.
 - Examples are **never edited in place**. A correction is appended under a new
   id and the old row carries `deprecated_by`.
+
+#### The `rate-changed-2025` stratum
+
+This slice carries the headline finding, and not every rate change is equally
+useful for it.
+
+The **22 September 2025** moves were mostly 18 % → 5 % (hair oil, shampoo,
+toothpaste, toilet soap). Both of those rates are still live, so a model
+reciting the old one looks like an ordinary wrong answer and the stale-slab
+metric cannot see it at all.
+
+The **1 February 2026** moves are the sharp probe, because the rate they moved
+*from* was abolished. Notification 19/2025 did not merely delete Schedule VII —
+it relocated every entry in it, and split one:
+
+| Goods | Heading | To 31 Jan 2026 | From 1 Feb 2026 |
+|---|---|---|---|
+| Pan masala | 2106 90 20 | 28 % | **40 %** |
+| Unmanufactured tobacco | 2401 | 28 % | **40 %** |
+| Cigars, cheroots, cigarillos, cigarettes | 2402 | 28 % | **40 %** |
+| Other manufactured tobacco | 2403 *excl. biris* | 28 % | **40 %** |
+| **Biris** | 2403 19 21, 2403 19 29 | 28 % | **18 %** |
+| Tobacco / nicotine for inhalation | 2404 11 00, 2404 19 00 | 28 % | **40 %** |
+
+A model answering 28 % for any of these is quoting a rate that no longer
+exists. The biri split is sharper still: a model that has half-updated may put
+biris at 40 % with the rest of tobacco.
+
+All of it is derived from two hash-pinned documents in
+`data/reference/primary/` — no press notes, no recall. `AMENDED_2026` in
+`harness/collect/schedule_lookup.py` carries the transcription, and
+`tests/test_notification_19.py` matches every row of it against the archived
+PDF's own text, so the code cannot drift from the document.
 
 Ground truth authority: [`data/reference/rate_schedule.md`](data/reference/rate_schedule.md).
 Annotation protocol: [`data/guideline.md`](data/guideline.md).
@@ -190,6 +228,25 @@ implemented in `harness/scorers/exact.py` — no model is involved in any of the
 broken down by which abolished rate was quoted. "Wrong" and "reciting a
 schedule that no longer exists" are different failures, and only the second is
 the finding.
+
+**Two stale-slab numbers are reported, not one.** `stale_slab_rate` counts
+abolished rates given as the *answer*. `stale_cited_rate` also counts them
+where they appear anywhere in the response, because a model can recite a dead
+schedule and then decline on the strength of it:
+
+> "The goods comprise slide fasteners (12 % GST) and parts/sliders (18 % GST),
+> so no unique rate can be assigned."
+
+That scored as a clean abstention. It is the same failure as answering 12 %,
+wearing different clothes. The cited rate is always ≥ the answered rate, and
+the gap is exactly those refusals.
+
+Getting the history *right* is the opposite of staleness, so a mention wrapped
+in historical language — "the rate **was** 12 % **until** 22 September 2025",
+"the **erstwhile** 28 % rate **no longer** applies" — is not counted. That is a
+heuristic over free prose, it will be imperfect in both directions, and it is
+reported as its own metric rather than folded into the headline so the
+judgement it makes stays visible and arguable.
 
 **Failed and unparseable responses score as wrong**, never as skipped.
 Dropping them would inflate accuracy for whichever model errors most.
