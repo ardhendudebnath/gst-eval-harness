@@ -45,6 +45,48 @@ _SCHED_HEAD = re.compile(
     r"Schedule\s+(VII|VI|V|IV|III|II|I)\s*[-–—]{0,2}\s*([\d.]+)\s*%", re.I
 )
 
+#: Notification 19/2025, in force 1 February 2026, transcribed from the
+#: archived copy in `data/reference/primary/19-2025-CTR.pdf`.
+#:
+#: It did not merely delete Schedule VII. It moved every entry, and split one:
+#:
+#:   (a) Schedule II – 9%:  "4A. 2403 19 21, 2403 19 29 Biris"
+#:   (b) Schedule III – 20%: serials 14-19, pan masala and the rest of tobacco
+#:   (c) "the Schedule VII – 14%, and the entries relating thereto shall be
+#:        omitted"
+#:
+#: Reading 9/2025 alone therefore reports "no current rated entry" for six
+#: headings whose current rate is 40% — or 18% for biris, which is the whole
+#: point of the split and the sharpest rate-changed example in the corpus.
+#:
+#: Transcribed rather than parsed: the amending prose is three sentences of
+#: legal drafting and a regex over it would be far more fragile than this
+#: table. `tests/test_notification_19.py` checks every row below against the
+#: archived text, so the transcription cannot drift from the document.
+AMENDED_2026: dict[str, list[tuple[str, str, str]]] = {
+    # heading -> [(sub-heading or "", schedule, description)]
+    "2106": [("2106 90 20", "III", "Pan masala")],
+    "2401": [("", "III", "Unmanufactured tobacco; tobacco refuse "
+                          "[other than tobacco leaves]")],
+    "2402": [("", "III", "Cigars, cheroots, cigarillos and cigarettes, of "
+                          "tobacco or of tobacco substitutes")],
+    "2403": [
+        ("2403 19 21, 2403 19 29", "II", "Biris"),
+        ("2403 (other than 2403 19 21, 2403 19 29)", "III",
+         "Other manufactured tobacco and manufactured tobacco substitutes; "
+         "homogenised or reconstituted tobacco; tobacco extracts and essences "
+         "[other than biris]"),
+    ],
+    "2404": [
+        ("2404 11 00", "III", "Products containing tobacco or reconstituted "
+                              "tobacco and intended for inhalation without "
+                              "combustion"),
+        ("2404 19 00", "III", "Products containing tobacco or nicotine "
+                              "substitutes and intended for inhalation "
+                              "without combustion"),
+    ],
+}
+
 
 @dataclass(slots=True)
 class Entry:
@@ -64,16 +106,24 @@ class Match:
     chapter_entries: list[Entry] = field(default_factory=list)
 
     @property
-    def ambiguous(self) -> bool:
-        """More than one place it could sit — the annotator must choose.
+    def _outcomes(self) -> set[str | None]:
+        """The distinct slabs this heading could attract.
 
-        Chapter entries count. They only exist when the heading itself is
-        absent, so they never inflate a heading that has its own entry, and a
-        chapter listed at two rates is a real choice to make.
+        Counting *entries* rather than outcomes reports a heading as ambiguous
+        when every entry gives the same answer — 2404 has two sub-headings and
+        both are 40%, so which one applies changes nothing about the rate.
         """
-        return (
-            len(self.entries) + len(self.exempt_entries) + len(self.chapter_entries) > 1
-        )
+        found: set[str | None] = {e.slab for e in self.entries}
+        if self.exempt_entries:
+            found.add("0")
+        if not self.entries and not self.exempt_entries:
+            found |= {e.slab for e in self.chapter_entries}
+        return found
+
+    @property
+    def ambiguous(self) -> bool:
+        """More than one *rate* it could attract — the annotator must choose."""
+        return len(self._outcomes) > 1
 
     @property
     def chapter_only(self) -> bool:
@@ -90,18 +140,24 @@ class Match:
 
     @property
     def slab(self) -> str | None:
-        """The slab, only when exactly one entry exists."""
-        if self.ambiguous:
+        """The slab, only when every entry agrees on it.
+
+        A chapter-level entry never resolves one even when unanimous: it
+        carries exclusions, and whether these goods fall inside them is a
+        reading of the entry, not a lookup.
+        """
+        if self.ambiguous or self.chapter_only:
             return None
-        if self.exempt_entries:
-            return "0"
-        return self.entries[0].slab if self.entries else None
+        outcomes = self._outcomes
+        return next(iter(outcomes)) if len(outcomes) == 1 else None
 
     @property
     def schedule(self) -> str | None:
+        """The schedule, when the entries agree on both rate and schedule."""
         if self.ambiguous or not self.entries:
             return None
-        return self.entries[0].schedule
+        schedules = {e.schedule for e in self.entries}
+        return next(iter(schedules)) if len(schedules) == 1 else None
 
 
 @lru_cache(maxsize=4)
@@ -187,7 +243,20 @@ def lookup(heading: str) -> Match | None:
             if sched not in by_schedule or not by_schedule[sched].startswith(heading):
                 by_schedule[sched] = text
     for sched, text in by_schedule.items():
+        # Schedule VII was omitted outright on 1 February 2026. Reporting its
+        # entries as live — even at slab None — offers the annotator a rate
+        # that no longer exists, which is the exact error this project exists
+        # to measure. The replacements come from AMENDED_2026 below.
+        if sched == "VII":
+            continue
         match.entries.append(Entry(sched, SCHEDULE_SLAB.get(sched), text))
+
+    for sub, sched, description in AMENDED_2026.get(heading, []):
+        label = f"{sub or heading} {description}"
+        match.entries.append(
+            Entry(sched, SCHEDULE_SLAB.get(sched),
+                  f"[Notification 19/2025, in force 2026-02-01] {label}")
+        )
 
     # Only when the heading itself is absent. A heading that has its own entry
     # is governed by it, and dragging in the chapter would invent competition.
