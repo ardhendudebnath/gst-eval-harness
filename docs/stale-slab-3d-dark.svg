@@ -1,57 +1,60 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="650" height="587" viewBox="0 0 650 587" font-family="system-ui,-apple-system,Segoe UI,sans-serif">
-<rect width="650" height="587" fill="#1a1a19"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="802" height="630" viewBox="0 0 802 630" font-family="system-ui,-apple-system,Segoe UI,sans-serif">
+<rect width="802" height="630" fill="#1a1a19"/>
 <text x="30" y="38" font-size="20" font-weight="700" fill="#ffffff">GST slab: what the notification says vs what the model said</text>
-<text x="30" y="62" font-size="13" fill="#c3c2b7">n=24 · slab accuracy 50% · abolished slab answered 4%, recited 21% · nvidia/nemotron-3-super-120b-a12b</text>
-<polygon points="306.0,304.0 337.0,321.0 306.0,338.0 275.0,321.0" fill="none" stroke="#2c2c2a" stroke-width="1"/>
-<polygon points="275.0,321.0 306.0,338.0 275.0,355.0 244.0,338.0" fill="none" stroke="#2c2c2a" stroke-width="1"/>
-<polygon points="244.0,338.0 275.0,355.0 244.0,372.0 213.0,355.0" fill="none" stroke="#2c2c2a" stroke-width="1"/>
-<polygon points="213.0,355.0 244.0,372.0 213.0,389.0 182.0,372.0" fill="none" stroke="#2c2c2a" stroke-width="1"/>
-<polygon points="182.0,372.0 213.0,389.0 182.0,406.0 151.0,389.0" fill="none" stroke="#2c2c2a" stroke-width="1"/>
-<polygon points="151.0,389.0 182.0,406.0 151.0,423.0 120.0,406.0" fill="none" stroke="#2c2c2a" stroke-width="1"/>
-<polygon points="337.0,321.0 368.0,338.0 337.0,355.0 306.0,338.0" fill="none" stroke="#2c2c2a" stroke-width="1"/>
-<polygon points="306.0,338.0 337.0,355.0 306.0,372.0 275.0,355.0" fill="none" stroke="#2c2c2a" stroke-width="1"/>
-<polygon points="275.0,355.0 306.0,372.0 275.0,389.0 244.0,372.0" fill="none" stroke="#2c2c2a" stroke-width="1"/>
-<polygon points="244.0,372.0 275.0,389.0 244.0,406.0 213.0,389.0" fill="none" stroke="#2c2c2a" stroke-width="1"/>
-<polygon points="213.0,389.0 244.0,406.0 213.0,423.0 182.0,406.0" fill="none" stroke="#2c2c2a" stroke-width="1"/>
-<polygon points="182.0,406.0 213.0,423.0 182.0,440.0 151.0,423.0" fill="none" stroke="#2c2c2a" stroke-width="1"/>
-<polygon points="306.0,252.0 275.0,269.0 275.0,321.0 306.0,304.0" fill="#2961a4" stroke="#2961a4" stroke-width="0.5" stroke-linejoin="round"/><polygon points="275.0,269.0 306.0,286.0 306.0,338.0 275.0,321.0" fill="#3174c4" stroke="#3174c4" stroke-width="0.5" stroke-linejoin="round"/><polygon points="306.0,252.0 337.0,269.0 306.0,286.0 275.0,269.0" fill="#3987e5" stroke="#3987e5" stroke-width="0.5" stroke-linejoin="round"/>
-<polygon points="244.0,234.0 213.0,251.0 213.0,355.0 244.0,338.0" fill="#087508" stroke="#087508" stroke-width="0.5" stroke-linejoin="round"/><polygon points="213.0,251.0 244.0,268.0 244.0,372.0 213.0,355.0" fill="#0a8c0a" stroke="#0a8c0a" stroke-width="0.5" stroke-linejoin="round"/><polygon points="244.0,234.0 275.0,251.0 244.0,268.0 213.0,251.0" fill="#0ca30c" stroke="#0ca30c" stroke-width="0.5" stroke-linejoin="round"/>
-<polygon points="306.0,312.0 275.0,329.0 275.0,355.0 306.0,338.0" fill="#2961a4" stroke="#2961a4" stroke-width="0.5" stroke-linejoin="round"/><polygon points="275.0,329.0 306.0,346.0 306.0,372.0 275.0,355.0" fill="#3174c4" stroke="#3174c4" stroke-width="0.5" stroke-linejoin="round"/><polygon points="306.0,312.0 337.0,329.0 306.0,346.0 275.0,329.0" fill="#3987e5" stroke="#3987e5" stroke-width="0.5" stroke-linejoin="round"/>
-<polygon points="275.0,277.0 244.0,294.0 244.0,372.0 275.0,355.0" fill="#2961a4" stroke="#2961a4" stroke-width="0.5" stroke-linejoin="round"/><polygon points="244.0,294.0 275.0,311.0 275.0,389.0 244.0,372.0" fill="#3174c4" stroke="#3174c4" stroke-width="0.5" stroke-linejoin="round"/><polygon points="275.0,277.0 306.0,294.0 275.0,311.0 244.0,294.0" fill="#3987e5" stroke="#3987e5" stroke-width="0.5" stroke-linejoin="round"/>
-<polygon points="244.0,346.0 213.0,363.0 213.0,389.0 244.0,372.0" fill="#952a2a" stroke="#952a2a" stroke-width="0.5" stroke-linejoin="round"/><polygon points="213.0,363.0 244.0,380.0 244.0,406.0 213.0,389.0" fill="#b23232" stroke="#b23232" stroke-width="0.5" stroke-linejoin="round"/><polygon points="244.0,346.0 275.0,363.0 244.0,380.0 213.0,363.0" fill="#d03b3b" stroke="#d03b3b" stroke-width="0.5" stroke-linejoin="round"/>
-<polygon points="151.0,363.0 120.0,380.0 120.0,406.0 151.0,389.0" fill="#2961a4" stroke="#2961a4" stroke-width="0.5" stroke-linejoin="round"/><polygon points="120.0,380.0 151.0,397.0 151.0,423.0 120.0,406.0" fill="#3174c4" stroke="#3174c4" stroke-width="0.5" stroke-linejoin="round"/><polygon points="151.0,363.0 182.0,380.0 151.0,397.0 120.0,380.0" fill="#3987e5" stroke="#3987e5" stroke-width="0.5" stroke-linejoin="round"/>
-<polygon points="213.0,181.0 182.0,198.0 182.0,406.0 213.0,389.0" fill="#087508" stroke="#087508" stroke-width="0.5" stroke-linejoin="round"/><polygon points="182.0,198.0 213.0,215.0 213.0,423.0 182.0,406.0" fill="#0a8c0a" stroke="#0a8c0a" stroke-width="0.5" stroke-linejoin="round"/><polygon points="213.0,181.0 244.0,198.0 213.0,215.0 182.0,198.0" fill="#0ca30c" stroke="#0ca30c" stroke-width="0.5" stroke-linejoin="round"/>
-<polygon points="182.0,302.0 151.0,319.0 151.0,423.0 182.0,406.0" fill="#2961a4" stroke="#2961a4" stroke-width="0.5" stroke-linejoin="round"/><polygon points="151.0,319.0 182.0,336.0 182.0,440.0 151.0,423.0" fill="#3174c4" stroke="#3174c4" stroke-width="0.5" stroke-linejoin="round"/><polygon points="182.0,302.0 213.0,319.0 182.0,336.0 151.0,319.0" fill="#3987e5" stroke="#3987e5" stroke-width="0.5" stroke-linejoin="round"/>
-<text x="121.5" y="427.1" text-anchor="end" font-size="14" font-weight="600" fill="#c3c2b7">5%</text>
-<text x="152.5" y="444.1" text-anchor="end" font-size="14" font-weight="600" fill="#c3c2b7">18%</text>
-<path d="M357.5,346.5 L434.0,347.5" stroke="#383835" stroke-width="1" fill="none"/>
-<text x="442.0" y="351.5" text-anchor="start" font-size="13" font-weight="600" fill="#c3c2b7">0%</text>
-<path d="M326.5,363.5 L434.0,364.5" stroke="#383835" stroke-width="1" fill="none"/>
-<text x="442.0" y="368.5" text-anchor="start" font-size="13" font-weight="600" fill="#c3c2b7">3%</text>
-<path d="M295.5,380.5 L434.0,381.5" stroke="#383835" stroke-width="1" fill="none"/>
-<text x="442.0" y="385.5" text-anchor="start" font-size="13" font-weight="600" fill="#c3c2b7">5%</text>
-<path d="M264.5,397.5 L434.0,398.5" stroke="#383835" stroke-width="1" fill="none"/>
-<text x="442.0" y="402.5" text-anchor="start" font-size="13" font-weight="600" fill="#d03b3b">12% †</text>
-<path d="M233.5,414.5 L434.0,415.5" stroke="#383835" stroke-width="1" fill="none"/>
-<text x="442.0" y="419.5" text-anchor="start" font-size="13" font-weight="600" fill="#c3c2b7">18%</text>
-<path d="M202.5,431.5 L434.0,432.5" stroke="#383835" stroke-width="1" fill="none"/>
-<text x="442.0" y="436.5" text-anchor="start" font-size="13" font-weight="600" fill="#c3c2b7">refused</text>
-<text x="101.4" y="450.2" text-anchor="end" font-size="11" letter-spacing="0.09em" fill="#898781">GAZETTE SAYS</text>
-<text x="442.0" y="322.7" text-anchor="start" font-size="11" letter-spacing="0.09em" fill="#898781">MODEL SAID</text>
-<text x="306.0" y="260.0" text-anchor="middle" font-size="14" font-weight="700" fill="#ffffff" stroke="#1a1a19" stroke-width="3" paint-order="stroke" >2</text>
-<text x="244.0" y="242.0" text-anchor="middle" font-size="14" font-weight="700" fill="#ffffff" stroke="#1a1a19" stroke-width="3" paint-order="stroke" >4</text>
-<text x="306.0" y="320.0" text-anchor="middle" font-size="14" font-weight="700" fill="#ffffff" stroke="#1a1a19" stroke-width="3" paint-order="stroke" >1</text>
-<text x="275.0" y="285.0" text-anchor="middle" font-size="14" font-weight="700" fill="#ffffff" stroke="#1a1a19" stroke-width="3" paint-order="stroke" >3</text>
-<text x="244.0" y="354.0" text-anchor="middle" font-size="14" font-weight="700" fill="#ffffff" stroke="#1a1a19" stroke-width="3" paint-order="stroke" >1</text>
-<text x="151.0" y="371.0" text-anchor="middle" font-size="14" font-weight="700" fill="#ffffff" stroke="#1a1a19" stroke-width="3" paint-order="stroke" >1</text>
-<text x="213.0" y="189.0" text-anchor="middle" font-size="14" font-weight="700" fill="#ffffff" stroke="#1a1a19" stroke-width="3" paint-order="stroke" >8</text>
-<text x="182.0" y="310.0" text-anchor="middle" font-size="14" font-weight="700" fill="#ffffff" stroke="#1a1a19" stroke-width="3" paint-order="stroke" >4</text>
-<rect x="34" y="486" width="12" height="12" rx="2" fill="#0ca30c"/>
-<text x="53" y="496" font-size="13" fill="#c3c2b7">correct</text>
-<rect x="34" y="508" width="12" height="12" rx="2" fill="#d03b3b"/>
-<text x="53" y="518" font-size="13" fill="#c3c2b7">† abolished slab — no longer exists</text>
-<rect x="34" y="530" width="12" height="12" rx="2" fill="#3987e5"/>
-<text x="53" y="540" font-size="13" fill="#c3c2b7">wrong, but a live slab</text>
-<text x="34" y="566" font-size="12" fill="#898781">† 12% abolished 2025-09-22 · 28% abolished 2026-02-01</text>
-<text x="34" y="583" font-size="12" fill="#898781">bars show the answer only; 'recited' also counts refusals that reasoned from a dead rate</text>
+<text x="30" y="62" font-size="13" fill="#c3c2b7">n=24, 5 runs · slab accuracy 53% (46%–58%) · abolished slab recited 18% (12%–25%) · nvidia/nemotron-3-super-120b-a12b</text>
+<polygon points="306.0,330.0 337.0,347.0 306.0,364.0 275.0,347.0" fill="none" stroke="#2c2c2a" stroke-width="1"/>
+<polygon points="275.0,347.0 306.0,364.0 275.0,381.0 244.0,364.0" fill="none" stroke="#2c2c2a" stroke-width="1"/>
+<polygon points="244.0,364.0 275.0,381.0 244.0,398.0 213.0,381.0" fill="none" stroke="#2c2c2a" stroke-width="1"/>
+<polygon points="213.0,381.0 244.0,398.0 213.0,415.0 182.0,398.0" fill="none" stroke="#2c2c2a" stroke-width="1"/>
+<polygon points="182.0,398.0 213.0,415.0 182.0,432.0 151.0,415.0" fill="none" stroke="#2c2c2a" stroke-width="1"/>
+<polygon points="151.0,415.0 182.0,432.0 151.0,449.0 120.0,432.0" fill="none" stroke="#2c2c2a" stroke-width="1"/>
+<polygon points="337.0,347.0 368.0,364.0 337.0,381.0 306.0,364.0" fill="none" stroke="#2c2c2a" stroke-width="1"/>
+<polygon points="306.0,364.0 337.0,381.0 306.0,398.0 275.0,381.0" fill="none" stroke="#2c2c2a" stroke-width="1"/>
+<polygon points="275.0,381.0 306.0,398.0 275.0,415.0 244.0,398.0" fill="none" stroke="#2c2c2a" stroke-width="1"/>
+<polygon points="244.0,398.0 275.0,415.0 244.0,432.0 213.0,415.0" fill="none" stroke="#2c2c2a" stroke-width="1"/>
+<polygon points="213.0,415.0 244.0,432.0 213.0,449.0 182.0,432.0" fill="none" stroke="#2c2c2a" stroke-width="1"/>
+<polygon points="182.0,432.0 213.0,449.0 182.0,466.0 151.0,449.0" fill="none" stroke="#2c2c2a" stroke-width="1"/>
+<polygon points="306.0,278.0 275.0,295.0 275.0,347.0 306.0,330.0" fill="#2961a4" stroke="#2961a4" stroke-width="0.5" stroke-linejoin="round"/><polygon points="275.0,295.0 306.0,312.0 306.0,364.0 275.0,347.0" fill="#3174c4" stroke="#3174c4" stroke-width="0.5" stroke-linejoin="round"/><polygon points="306.0,278.0 337.0,295.0 306.0,312.0 275.0,295.0" fill="#3987e5" stroke="#3987e5" stroke-width="0.5" stroke-linejoin="round"/>
+<polygon points="244.0,286.0 213.0,303.0 213.0,381.0 244.0,364.0" fill="#087508" stroke="#087508" stroke-width="0.5" stroke-linejoin="round"/><polygon points="213.0,303.0 244.0,320.0 244.0,398.0 213.0,381.0" fill="#0a8c0a" stroke="#0a8c0a" stroke-width="0.5" stroke-linejoin="round"/><polygon points="244.0,286.0 275.0,303.0 244.0,320.0 213.0,303.0" fill="#0ca30c" stroke="#0ca30c" stroke-width="0.5" stroke-linejoin="round"/>
+<polygon points="306.0,338.0 275.0,355.0 275.0,381.0 306.0,364.0" fill="#2961a4" stroke="#2961a4" stroke-width="0.5" stroke-linejoin="round"/><polygon points="275.0,355.0 306.0,372.0 306.0,398.0 275.0,381.0" fill="#3174c4" stroke="#3174c4" stroke-width="0.5" stroke-linejoin="round"/><polygon points="306.0,338.0 337.0,355.0 306.0,372.0 275.0,355.0" fill="#3987e5" stroke="#3987e5" stroke-width="0.5" stroke-linejoin="round"/>
+<polygon points="275.0,329.0 244.0,346.0 244.0,398.0 275.0,381.0" fill="#2961a4" stroke="#2961a4" stroke-width="0.5" stroke-linejoin="round"/><polygon points="244.0,346.0 275.0,363.0 275.0,415.0 244.0,398.0" fill="#3174c4" stroke="#3174c4" stroke-width="0.5" stroke-linejoin="round"/><polygon points="275.0,329.0 306.0,346.0 275.0,363.0 244.0,346.0" fill="#3987e5" stroke="#3987e5" stroke-width="0.5" stroke-linejoin="round"/>
+<polygon points="182.0,372.0 151.0,389.0 151.0,415.0 182.0,398.0" fill="#2961a4" stroke="#2961a4" stroke-width="0.5" stroke-linejoin="round"/><polygon points="151.0,389.0 182.0,406.0 182.0,432.0 151.0,415.0" fill="#3174c4" stroke="#3174c4" stroke-width="0.5" stroke-linejoin="round"/><polygon points="182.0,372.0 213.0,389.0 182.0,406.0 151.0,389.0" fill="#3987e5" stroke="#3987e5" stroke-width="0.5" stroke-linejoin="round"/>
+<polygon points="244.0,372.0 213.0,389.0 213.0,415.0 244.0,398.0" fill="#952a2a" stroke="#952a2a" stroke-width="0.5" stroke-linejoin="round"/><polygon points="213.0,389.0 244.0,406.0 244.0,432.0 213.0,415.0" fill="#b23232" stroke="#b23232" stroke-width="0.5" stroke-linejoin="round"/><polygon points="244.0,372.0 275.0,389.0 244.0,406.0 213.0,389.0" fill="#d03b3b" stroke="#d03b3b" stroke-width="0.5" stroke-linejoin="round"/>
+<polygon points="151.0,389.0 120.0,406.0 120.0,432.0 151.0,415.0" fill="#2961a4" stroke="#2961a4" stroke-width="0.5" stroke-linejoin="round"/><polygon points="120.0,406.0 151.0,423.0 151.0,449.0 120.0,432.0" fill="#3174c4" stroke="#3174c4" stroke-width="0.5" stroke-linejoin="round"/><polygon points="151.0,389.0 182.0,406.0 151.0,423.0 120.0,406.0" fill="#3987e5" stroke="#3987e5" stroke-width="0.5" stroke-linejoin="round"/>
+<polygon points="213.0,181.0 182.0,198.0 182.0,432.0 213.0,415.0" fill="#087508" stroke="#087508" stroke-width="0.5" stroke-linejoin="round"/><polygon points="182.0,198.0 213.0,215.0 213.0,449.0 182.0,432.0" fill="#0a8c0a" stroke="#0a8c0a" stroke-width="0.5" stroke-linejoin="round"/><polygon points="213.0,181.0 244.0,198.0 213.0,215.0 182.0,198.0" fill="#0ca30c" stroke="#0ca30c" stroke-width="0.5" stroke-linejoin="round"/>
+<polygon points="182.0,328.0 151.0,345.0 151.0,449.0 182.0,432.0" fill="#2961a4" stroke="#2961a4" stroke-width="0.5" stroke-linejoin="round"/><polygon points="151.0,345.0 182.0,362.0 182.0,466.0 151.0,449.0" fill="#3174c4" stroke="#3174c4" stroke-width="0.5" stroke-linejoin="round"/><polygon points="182.0,328.0 213.0,345.0 182.0,362.0 151.0,345.0" fill="#3987e5" stroke="#3987e5" stroke-width="0.5" stroke-linejoin="round"/>
+<text x="121.5" y="453.1" text-anchor="end" font-size="14" font-weight="600" fill="#c3c2b7">5%</text>
+<text x="152.5" y="470.1" text-anchor="end" font-size="14" font-weight="600" fill="#c3c2b7">18%</text>
+<path d="M357.5,372.5 L434.0,373.5" stroke="#383835" stroke-width="1" fill="none"/>
+<text x="442.0" y="377.5" text-anchor="start" font-size="13" font-weight="600" fill="#c3c2b7">0%</text>
+<path d="M326.5,389.5 L434.0,390.5" stroke="#383835" stroke-width="1" fill="none"/>
+<text x="442.0" y="394.5" text-anchor="start" font-size="13" font-weight="600" fill="#c3c2b7">3%</text>
+<path d="M295.5,406.5 L434.0,407.5" stroke="#383835" stroke-width="1" fill="none"/>
+<text x="442.0" y="411.5" text-anchor="start" font-size="13" font-weight="600" fill="#c3c2b7">5%</text>
+<path d="M264.5,423.5 L434.0,424.5" stroke="#383835" stroke-width="1" fill="none"/>
+<text x="442.0" y="428.5" text-anchor="start" font-size="13" font-weight="600" fill="#d03b3b">12% †</text>
+<path d="M233.5,440.5 L434.0,441.5" stroke="#383835" stroke-width="1" fill="none"/>
+<text x="442.0" y="445.5" text-anchor="start" font-size="13" font-weight="600" fill="#c3c2b7">18%</text>
+<path d="M202.5,457.5 L434.0,458.5" stroke="#383835" stroke-width="1" fill="none"/>
+<text x="442.0" y="462.5" text-anchor="start" font-size="13" font-weight="600" fill="#c3c2b7">refused</text>
+<text x="101.4" y="476.2" text-anchor="end" font-size="11" letter-spacing="0.09em" fill="#898781">GAZETTE SAYS</text>
+<text x="442.0" y="348.7" text-anchor="start" font-size="11" letter-spacing="0.09em" fill="#898781">MODEL SAID</text>
+<text x="306.0" y="286.0" text-anchor="middle" font-size="14" font-weight="700" fill="#ffffff" stroke="#1a1a19" stroke-width="3" paint-order="stroke" >2</text>
+<text x="244.0" y="294.0" text-anchor="middle" font-size="14" font-weight="700" fill="#ffffff" stroke="#1a1a19" stroke-width="3" paint-order="stroke" >3</text>
+<text x="306.0" y="346.0" text-anchor="middle" font-size="14" font-weight="700" fill="#ffffff" stroke="#1a1a19" stroke-width="3" paint-order="stroke" >1</text>
+<text x="275.0" y="337.0" text-anchor="middle" font-size="14" font-weight="700" fill="#ffffff" stroke="#1a1a19" stroke-width="3" paint-order="stroke" >2</text>
+<text x="182.0" y="380.0" text-anchor="middle" font-size="14" font-weight="700" fill="#ffffff" stroke="#1a1a19" stroke-width="3" paint-order="stroke" >1</text>
+<text x="244.0" y="380.0" text-anchor="middle" font-size="14" font-weight="700" fill="#ffffff" stroke="#1a1a19" stroke-width="3" paint-order="stroke" >1</text>
+<text x="151.0" y="397.0" text-anchor="middle" font-size="14" font-weight="700" fill="#ffffff" stroke="#1a1a19" stroke-width="3" paint-order="stroke" >1</text>
+<text x="213.0" y="189.0" text-anchor="middle" font-size="14" font-weight="700" fill="#ffffff" stroke="#1a1a19" stroke-width="3" paint-order="stroke" >9</text>
+<text x="182.0" y="336.0" text-anchor="middle" font-size="14" font-weight="700" fill="#ffffff" stroke="#1a1a19" stroke-width="3" paint-order="stroke" >4</text>
+<rect x="34" y="512" width="12" height="12" rx="2" fill="#0ca30c"/>
+<text x="53" y="522" font-size="13" fill="#c3c2b7">correct</text>
+<rect x="34" y="534" width="12" height="12" rx="2" fill="#d03b3b"/>
+<text x="53" y="544" font-size="13" fill="#c3c2b7">† abolished slab — no longer exists</text>
+<rect x="34" y="556" width="12" height="12" rx="2" fill="#3987e5"/>
+<text x="53" y="566" font-size="13" fill="#c3c2b7">wrong, but a live slab</text>
+<text x="34" y="592" font-size="12" fill="#898781">† 12% abolished 2025-09-22 · 28% abolished 2026-02-01</text>
+<text x="34" y="609" font-size="12" fill="#898781">bars show the answer only; 'recited' also counts refusals that reasoned from a dead rate</text>
+<text x="34" y="626" font-size="12" fill="#898781">bars are one run of 5; the model gave the same answer every run for only 15 of 24 examples</text>
 </svg>

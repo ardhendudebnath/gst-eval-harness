@@ -125,6 +125,14 @@ def test_the_title_fits_the_canvas(svg):
     assert w >= 30 + len(title) * 10.5 - 1
 
 
+def test_the_subtitle_fits_the_canvas(svg):
+    """It grows when repeats add a range, and it was clipped once because the
+    width was sized to the title and footnotes but not to this."""
+    w, _ = viewbox(svg)
+    subtitle = re.search(r'font-size="13"[^>]*>([^<]+)<', svg).group(1)
+    assert w >= 30 + len(subtitle) * 6.6 - 1
+
+
 def test_a_missing_results_file_is_reported_not_raised(tmp_path, monkeypatch, capsys):
     monkeypatch.setattr("sys.argv", ["isometric", "--from", str(tmp_path / "nope.json")])
     assert iso.main() == 1

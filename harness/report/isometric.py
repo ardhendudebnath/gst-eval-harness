@@ -122,6 +122,7 @@ def render(matrix: dict[tuple[str, str], int], gold_slabs: list[str],
     # Footnotes wrap rather than widen: one long line drives the canvas out to
     # a width the chart does not use, stranding it in the corner.
     width = max(org[0] + n_i * CELL_W / 2 + 250, 30 + len(title) * 10.5,
+                30 + len(subtitle) * 6.6,
                 *(30 + len(line) * 6.4 for line in footnote or ("",)))
     # 130 covers the legend and one footnote line; each extra line needs room
     # of its own or it is drawn past the bottom edge.
@@ -256,19 +257,42 @@ def build(path: Path, out_dir: Path) -> tuple[Path, Path]:
 
     summary = data["summary"]
     n = summary["n"]
-    subtitle = (f"n={n} · slab accuracy {summary['slab_acc']:.0%} · "
-                f"abolished slab answered {summary['stale_slab_rate']:.0%}, "
-                f"recited {summary.get('stale_cited_rate', 0):.0%} · "
-                f"{data['model_id']}")
+    agg = data.get("aggregate")
+    if agg:
+        # With repeats, quote the mean and the spread. A point estimate from a
+        # model that answers the same prompt differently 37% of the time
+        # implies a precision the data does not have.
+        m = agg["metrics"]
+        subtitle = (
+            f"n={n}, {agg['runs']} runs · slab accuracy "
+            f"{m['slab_acc']['mean']:.0%} ({m['slab_acc']['min']:.0%}–"
+            f"{m['slab_acc']['max']:.0%}) · abolished slab recited "
+            f"{m['stale_cited_rate']['mean']:.0%} "
+            f"({m['stale_cited_rate']['min']:.0%}–"
+            f"{m['stale_cited_rate']['max']:.0%}) · {data['model_id']}"
+        )
+    else:
+        subtitle = (f"n={n} · slab accuracy {summary['slab_acc']:.0%} · "
+                    f"abolished slab answered {summary['stale_slab_rate']:.0%}, "
+                    f"recited {summary.get('stale_cited_rate', 0):.0%} · "
+                    f"{data['model_id']}")
     # The bars can only show the answer. A dead rate reached by way of a
     # refusal is invisible here, and that is most of them, so the number says
     # so rather than letting the geometry imply otherwise.
-    footnote = (
+    footnote = [
         "† " + " · ".join(f"{s}% abolished {SLAB_ABOLISHED_ON[s]}"
                           for s in sorted(ABOLISHED_SLABS)),
         "bars show the answer only; 'recited' also counts refusals that "
         "reasoned from a dead rate",
-    )
+    ]
+    if agg:
+        sa = agg["self_agreement"]
+        footnote.append(
+            f"bars are one run of {agg['runs']}; the model gave the same answer "
+            f"every run for only {sa['answered_identically_every_run']} of "
+            f"{sa['examples']} examples"
+        )
+    footnote = tuple(footnote)
 
     out_dir.mkdir(parents=True, exist_ok=True)
     written = []

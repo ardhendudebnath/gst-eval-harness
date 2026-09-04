@@ -1,0 +1,730 @@
+{
+  "NOT_THE_GOLDEN_SET": "NOT THE GOLDEN SET. The reference is data/first_pass.jsonl slabs read from the archived Gazette, not human-reviewed labels. data/golden.jsonl does not exist. HSN headings were extracted automatically and are unaudited. The leaderboard does not read this file. See harness/probe.py.",
+  "model_key": "open-weight",
+  "model_id": "nvidia/nemotron-3-super-120b-a12b",
+  "prompt_version": "v1",
+  "started_at": "2026-09-04T17:23:20+00:00",
+  "finished_at": "2026-09-04T18:14:45+00:00",
+  "summary": {
+    "n": 24,
+    "slab_acc": 0.5,
+    "hsn_acc": 0.5833,
+    "chapter_acc": 0.625,
+    "abstention_acc": 0.7917,
+    "abstain_f1": 0.0,
+    "stale_slab_rate": 0.0417,
+    "stale_by_slab": {
+      "12": 1
+    },
+    "stale_cited_rate": 0.1667,
+    "stale_cited_by_slab": {
+      "12": 4
+    },
+    "unparseable": 0,
+    "errored": 0
+  },
+  "rows": [
+    {
+      "id": "gst-0002",
+      "hsn4": "6810",
+      "gazette_slab": "18",
+      "predicted_slab": "18",
+      "correct": true,
+      "stale_slab": null,
+      "stale_cited": [],
+      "predicted_hsn": "6810",
+      "hsn_correct": true,
+      "state": "Rajasthan",
+      "tokens_in": 902,
+      "tokens_out": 903,
+      "reasoning_chars": 2846,
+      "error": null,
+      "response": "SLAB: 18\nHSN: 6810\nANSWERABLE: yes\nWHY: Heading 6810 covers articles of artificial stone and the GST rate for that heading is 18%."
+    },
+    {
+      "id": "gst-0005",
+      "hsn4": "7311",
+      "gazette_slab": "18",
+      "predicted_slab": "18",
+      "correct": true,
+      "stale_slab": null,
+      "stale_cited": [],
+      "predicted_hsn": "7311",
+      "hsn_correct": true,
+      "state": "Gujarat",
+      "tokens_in": 1163,
+      "tokens_out": 1206,
+      "reasoning_chars": 3662,
+      "error": null,
+      "response": "SLAB: 18\nHSN: 7311\nANSWERABLE: yes\nWHY: Heading 7311 covers containers for compressed or liquefied gas of iron or steel, which attracts 18% GST under the GST rate schedule."
+    },
+    {
+      "id": "gst-0010",
+      "hsn4": "9101",
+      "gazette_slab": "18",
+      "predicted_slab": "3",
+      "correct": false,
+      "stale_slab": null,
+      "stale_cited": [],
+      "predicted_hsn": "7113",
+      "hsn_correct": false,
+      "state": "Gujarat",
+      "tokens_in": 2000,
+      "tokens_out": 715,
+      "reasoning_chars": 2053,
+      "error": null,
+      "response": "SLAB: 3\nHSN: 7113\nANSWERABLE: yes\nWHY: Heading 7113 (articles of jewellery) and entry 13 of Schedule V to Notification No. 1/2017-Central Tax (Rate) fixes the rate at 1.5% CGST + 1.5% SGST."
+    },
+    {
+      "id": "gst-0011",
+      "hsn4": "8544",
+      "gazette_slab": "18",
+      "predicted_slab": "18",
+      "correct": true,
+      "stale_slab": null,
+      "stale_cited": [],
+      "predicted_hsn": null,
+      "hsn_correct": false,
+      "state": "Tamil Nadu",
+      "tokens_in": 2076,
+      "tokens_out": 759,
+      "reasoning_chars": 2138,
+      "error": null,
+      "response": "SLAB: 18 HSN: 8544 ANSWERABLE: yes WHY: Heading 8544 (insulated wire/cable with connectors) attracts 9% CGST under Serial No. 395 of Schedule III of Notification No. 1/2017, resulting in a combined GST rate of 18%."
+    },
+    {
+      "id": "gst-0012",
+      "hsn4": "8514",
+      "gazette_slab": "18",
+      "predicted_slab": "UNANSWERABLE",
+      "correct": false,
+      "stale_slab": null,
+      "stale_cited": [],
+      "predicted_hsn": "8419",
+      "hsn_correct": false,
+      "state": "Telangana",
+      "tokens_in": 1935,
+      "tokens_out": 613,
+      "reasoning_chars": 1824,
+      "error": null,
+      "response": "SLAB: UNANSWERABLE\nHSN: 8419\nANSWERABLE: no\nWHY: Heading 8419 is covered by notification No.41/2017‑Central Tax(rate) which classifies lyophilizers under that heading, fixing the GST rate at 9%."
+    },
+    {
+      "id": "gst-0014",
+      "hsn4": "7325",
+      "gazette_slab": "18",
+      "predicted_slab": "18",
+      "correct": true,
+      "stale_slab": null,
+      "stale_cited": [],
+      "predicted_hsn": "7325",
+      "hsn_correct": true,
+      "state": "Gujarat",
+      "tokens_in": 1357,
+      "tokens_out": 595,
+      "reasoning_chars": 1835,
+      "error": null,
+      "response": "SLAB: 18\nHSN: 7325\nANSWERABLE: yes\nWHY: Heading 7325 (Other cast articles of iron or steel) attracts 18% GST as per GST rate schedule."
+    },
+    {
+      "id": "gst-0035",
+      "hsn4": "5903",
+      "gazette_slab": "5",
+      "predicted_slab": "5",
+      "correct": true,
+      "stale_slab": null,
+      "stale_cited": [],
+      "predicted_hsn": "5903",
+      "hsn_correct": true,
+      "state": "Gujarat",
+      "tokens_in": 2020,
+      "tokens_out": 753,
+      "reasoning_chars": 2319,
+      "error": null,
+      "response": "SLAB: 5\nHSN: 5903\nANSWERABLE: yes\nWHY: Heading 5903 attracts GST rate of 5% as per GST rate schedule."
+    },
+    {
+      "id": "gst-0038",
+      "hsn4": "8402",
+      "gazette_slab": "18",
+      "predicted_slab": "5",
+      "correct": false,
+      "stale_slab": null,
+      "stale_cited": [],
+      "predicted_hsn": "8402",
+      "hsn_correct": true,
+      "state": "Gujarat",
+      "tokens_in": 2191,
+      "tokens_out": 507,
+      "reasoning_chars": 1328,
+      "error": null,
+      "response": "SLAB: 5\nHSN: 8402\nANSWERABLE: yes\nWHY: Heading 8402 (Steam or other vapour generating boilers) and Sl. No.234 of Schedule I to Notification No.1/2017-CT (Rate) fixing 5% GST."
+    },
+    {
+      "id": "gst-0039",
+      "hsn4": "3923",
+      "gazette_slab": "18",
+      "predicted_slab": "5",
+      "correct": false,
+      "stale_slab": null,
+      "stale_cited": [],
+      "predicted_hsn": "6305",
+      "hsn_correct": false,
+      "state": "Gujarat",
+      "tokens_in": 452,
+      "tokens_out": 1649,
+      "reasoning_chars": 5187,
+      "error": null,
+      "response": "SLAB: 5\nHSN: 6305\nANSWERABLE: yes\nWHY: Heading 6305 covers sacks and bags of a kind used for the packing of goods, and the GST schedule fixes the rate for this heading at 5%."
+    },
+    {
+      "id": "gst-0046",
+      "hsn4": "9607",
+      "gazette_slab": "5",
+      "predicted_slab": "UNANSWERABLE",
+      "correct": false,
+      "stale_slab": null,
+      "stale_cited": [
+        "12"
+      ],
+      "predicted_hsn": "9607",
+      "hsn_correct": true,
+      "state": "Gujarat",
+      "tokens_in": 1060,
+      "tokens_out": 636,
+      "reasoning_chars": 2008,
+      "error": null,
+      "response": "SLAB: UNANSWERABLE\nHSN: 9607\nANSWERABLE: no\nWHY: Heading 9607 covers slide fasteners and parts, taxed at 12% for finished fasteners and 18% for parts per notifications, so rate depends on product type not specified."
+    },
+    {
+      "id": "gst-0048",
+      "hsn4": "6815",
+      "gazette_slab": "18",
+      "predicted_slab": "UNANSWERABLE",
+      "correct": false,
+      "stale_slab": null,
+      "stale_cited": [
+        "12"
+      ],
+      "predicted_hsn": "6815",
+      "hsn_correct": true,
+      "state": "Gujarat",
+      "tokens_in": 474,
+      "tokens_out": 1849,
+      "reasoning_chars": 5979,
+      "error": null,
+      "response": "SLAB: UNANSWERABLE\nHSN: 6815\nANSWERABLE: no\nWHY: The description does not specify whether the rate sought is for Fly Ash Bricks (5%) or Fly Ash Blocks (12%) under HSN heading 6815 (tariff item 6815 90 90)."
+    },
+    {
+      "id": "gst-0051",
+      "hsn4": "9011",
+      "gazette_slab": "18",
+      "predicted_slab": "12",
+      "correct": false,
+      "stale_slab": "12",
+      "stale_cited": [
+        "12"
+      ],
+      "predicted_hsn": "9018",
+      "hsn_correct": false,
+      "state": "Gujarat",
+      "tokens_in": 2046,
+      "tokens_out": 2530,
+      "reasoning_chars": 8489,
+      "error": null,
+      "response": "SLAB: 12\nHSN: 9018\nANSWERABLE: yes\nWHY: Heading 9018 covers instruments and appliances used in medical sciences and the schedule entry fixes the GST rate at 12%."
+    },
+    {
+      "id": "gst-0062",
+      "hsn4": "8501",
+      "gazette_slab": "18",
+      "predicted_slab": "UNANSWERABLE",
+      "correct": false,
+      "stale_slab": null,
+      "stale_cited": [],
+      "predicted_hsn": null,
+      "hsn_correct": false,
+      "state": "Gujarat",
+      "tokens_in": 1636,
+      "tokens_out": 943,
+      "reasoning_chars": 3634,
+      "error": null,
+      "response": "SLAB: UNANSWERABLE\nHSN: NONE\nANSWERABLE: no\nWHY: No specific HSN heading entry applies to a geared motor, so the GST rate cannot be fixed from the description."
+    },
+    {
+      "id": "gst-0068",
+      "hsn4": "9306",
+      "gazette_slab": "18",
+      "predicted_slab": "18",
+      "correct": true,
+      "stale_slab": null,
+      "stale_cited": [],
+      "predicted_hsn": "9306",
+      "hsn_correct": true,
+      "state": "Andhra Pradesh",
+      "tokens_in": 1553,
+      "tokens_out": 1304,
+      "reasoning_chars": 3790,
+      "error": null,
+      "response": "SLAB: 18\nHSN: 9306\nANSWERABLE: yes\nWHY: Heading 9306 covers arms and ammunition and Schedule I entry 311 fixes the rate at 18% GST."
+    },
+    {
+      "id": "gst-0070",
+      "hsn4": "5603",
+      "gazette_slab": "5",
+      "predicted_slab": "0",
+      "correct": false,
+      "stale_slab": null,
+      "stale_cited": [],
+      "predicted_hsn": "6305",
+      "hsn_correct": false,
+      "state": "Gujarat",
+      "tokens_in": 1618,
+      "tokens_out": 737,
+      "reasoning_chars": 2245,
+      "error": null,
+      "response": "SLAB: 0\nHSN: 6305\nANSWERABLE: yes\nWHY: Heading 6305 (sacks and bags of textile materials) is exempt under Notification No.01/2017‑CT(Rate), giving a 0% GST rate."
+    },
+    {
+      "id": "gst-0071",
+      "hsn4": "5603",
+      "gazette_slab": "5",
+      "predicted_slab": "0",
+      "correct": false,
+      "stale_slab": null,
+      "stale_cited": [],
+      "predicted_hsn": "6305",
+      "hsn_correct": false,
+      "state": "Gujarat",
+      "tokens_in": 1444,
+      "tokens_out": 1048,
+      "reasoning_chars": 3481,
+      "error": null,
+      "response": "SLAB: 0\nHSN: 6305\nANSWERABLE: yes\nWHY: Heading 6305 (Sacks and bags of textile material) is the applicable heading per the Advance Ruling and Commissioner clarification, which grants exemption under Notification No.01/2017-Central Tax(Rate)."
+    },
+    {
+      "id": "gst-0086",
+      "hsn4": "4911",
+      "gazette_slab": "18",
+      "predicted_slab": "UNANSWERABLE",
+      "correct": false,
+      "stale_slab": null,
+      "stale_cited": [
+        "12"
+      ],
+      "predicted_hsn": "4911",
+      "hsn_correct": true,
+      "state": "Telangana",
+      "tokens_in": 1996,
+      "tokens_out": 1976,
+      "reasoning_chars": 6857,
+      "error": null,
+      "response": "SLAB: UNANSWERABLE\nHSN: 4911\nANSWERABLE: no\nWHY: HSN 4911 attracts GST @12% per the rate schedule, which is not one of the permitted slab values."
+    },
+    {
+      "id": "gst-0087",
+      "hsn4": "9617",
+      "gazette_slab": "18",
+      "predicted_slab": "18",
+      "correct": true,
+      "stale_slab": null,
+      "stale_cited": [],
+      "predicted_hsn": "7613",
+      "hsn_correct": false,
+      "state": "Gujarat",
+      "tokens_in": 858,
+      "tokens_out": 1380,
+      "reasoning_chars": 4450,
+      "error": null,
+      "response": "SLAB: 18\nHSN: 7613\nANSWERABLE: yes\nWHY: Heading 7613 (Aluminum containers for compressed or liquefied gas) applies and the GST rate for this heading is 18%."
+    },
+    {
+      "id": "gst-0088",
+      "hsn4": "3004",
+      "gazette_slab": "5",
+      "predicted_slab": "18",
+      "correct": false,
+      "stale_slab": null,
+      "stale_cited": [],
+      "predicted_hsn": "3304",
+      "hsn_correct": false,
+      "state": "West Bengal",
+      "tokens_in": 2036,
+      "tokens_out": 1155,
+      "reasoning_chars": 3642,
+      "error": null,
+      "response": "SLAB: 18\nHSN: 3304\nANSWERABLE: yes\nWHY: Heading 3304 covers skin‑care preparations and is taxed at 18% under the GST rate schedule."
+    },
+    {
+      "id": "gst-0091",
+      "hsn4": "7306",
+      "gazette_slab": "18",
+      "predicted_slab": "18",
+      "correct": true,
+      "stale_slab": null,
+      "stale_cited": [],
+      "predicted_hsn": "7306",
+      "hsn_correct": true,
+      "state": "Andhra Pradesh",
+      "tokens_in": 1552,
+      "tokens_out": 651,
+      "reasoning_chars": 1900,
+      "error": null,
+      "response": "SLAB: 18\nHSN: 7306\nANSWERABLE: yes\nWHY: HSN heading 7306 (other tubes, pipes and hollow profiles of iron or steel) is taxed at 18% under Notification No. 1/2017‑Integrated Tax (Rate)."
+    },
+    {
+      "id": "gst-0113",
+      "hsn4": "5911",
+      "gazette_slab": "5",
+      "predicted_slab": "5",
+      "correct": true,
+      "stale_slab": null,
+      "stale_cited": [],
+      "predicted_hsn": "5911",
+      "hsn_correct": true,
+      "state": "Gujarat",
+      "tokens_in": 1366,
+      "tokens_out": 987,
+      "reasoning_chars": 2864,
+      "error": null,
+      "response": "SLAB: 5\nHSN: 5911\nANSWERABLE: yes\nWHY: Heading 5911 covers geotextiles and the schedule entry 5911 90 32 fixes the GST rate at 5%."
+    },
+    {
+      "id": "gst-0124",
+      "hsn4": "8471",
+      "gazette_slab": "18",
+      "predicted_slab": "18",
+      "correct": true,
+      "stale_slab": null,
+      "stale_cited": [],
+      "predicted_hsn": "8471",
+      "hsn_correct": true,
+      "state": "Telangana",
+      "tokens_in": 1566,
+      "tokens_out": 409,
+      "reasoning_chars": 1205,
+      "error": null,
+      "response": "SLAB: 18\nHSN: 8471\nANSWERABLE: yes\nWHY: Heading 8471 (automatic data processing machines) attracts 18% GST under the GST rate schedule."
+    },
+    {
+      "id": "gst-0126",
+      "hsn4": "8530",
+      "gazette_slab": "18",
+      "predicted_slab": "18",
+      "correct": true,
+      "stale_slab": null,
+      "stale_cited": [],
+      "predicted_hsn": "8530",
+      "hsn_correct": true,
+      "state": "Telangana",
+      "tokens_in": 1744,
+      "tokens_out": 1079,
+      "reasoning_chars": 3292,
+      "error": null,
+      "response": "SLAB: 18\nHSN: 8530\nANSWERABLE: yes\nWHY: Heading 8530 (Electrical signalling, safety or traffic control equipment) is taxed at 18% under the GST rate schedule."
+    },
+    {
+      "id": "gst-0128",
+      "hsn4": "5903",
+      "gazette_slab": "5",
+      "predicted_slab": "5",
+      "correct": true,
+      "stale_slab": null,
+      "stale_cited": [],
+      "predicted_hsn": "5903",
+      "hsn_correct": true,
+      "state": "Gujarat",
+      "tokens_in": 1217,
+      "tokens_out": 1358,
+      "reasoning_chars": 4811,
+      "error": null,
+      "response": "SLAB: 5\nHSN: 5903\nANSWERABLE: yes\nWHY: Heading 5903 covers textile fabrics impregnated, coated, covered or laminated with plastics; GST rate for heading 5903 is 5% as per GST rate schedule."
+    }
+  ],
+  "aggregate": {
+    "runs": 5,
+    "metrics": {
+      "slab_acc": {
+        "mean": 0.5333,
+        "min": 0.4583,
+        "max": 0.5833,
+        "range": 0.125,
+        "runs": [
+          0.5833,
+          0.5417,
+          0.4583,
+          0.5833,
+          0.5
+        ]
+      },
+      "hsn_acc": {
+        "mean": 0.5931,
+        "min": 0.5652,
+        "max": 0.625,
+        "range": 0.0598,
+        "runs": [
+          0.625,
+          0.5652,
+          0.6087,
+          0.5833,
+          0.5833
+        ]
+      },
+      "stale_slab_rate": {
+        "mean": 0.05,
+        "min": 0.0,
+        "max": 0.0833,
+        "range": 0.0833,
+        "runs": [
+          0.0833,
+          0.0,
+          0.0833,
+          0.0417,
+          0.0417
+        ]
+      },
+      "stale_cited_rate": {
+        "mean": 0.1833,
+        "min": 0.125,
+        "max": 0.25,
+        "range": 0.125,
+        "runs": [
+          0.2083,
+          0.125,
+          0.25,
+          0.1667,
+          0.1667
+        ]
+      },
+      "abstention_acc": {
+        "mean": 0.775,
+        "min": 0.7083,
+        "max": 0.8333,
+        "range": 0.125,
+        "runs": [
+          0.8333,
+          0.7083,
+          0.7083,
+          0.8333,
+          0.7917
+        ]
+      }
+    },
+    "self_agreement": {
+      "examples": 24,
+      "answered_identically_every_run": 15,
+      "unstable": 9,
+      "rate": 0.625,
+      "detail": [
+        {
+          "id": "gst-0005",
+          "gazette": "18",
+          "answers": [
+            "18",
+            "18",
+            "UNANSWERABLE",
+            "18",
+            "18"
+          ]
+        },
+        {
+          "id": "gst-0012",
+          "gazette": "18",
+          "answers": [
+            "18",
+            "UNANSWERABLE",
+            "9",
+            "18",
+            "UNANSWERABLE"
+          ]
+        },
+        {
+          "id": "gst-0051",
+          "gazette": "18",
+          "answers": [
+            "12",
+            "UNANSWERABLE",
+            "12",
+            "12",
+            "12"
+          ]
+        },
+        {
+          "id": "gst-0068",
+          "gazette": "18",
+          "answers": [
+            "18",
+            "0",
+            "28",
+            "18",
+            "18"
+          ]
+        },
+        {
+          "id": "gst-0070",
+          "gazette": "5",
+          "answers": [
+            "0",
+            "5",
+            "5",
+            "0",
+            "0"
+          ]
+        },
+        {
+          "id": "gst-0071",
+          "gazette": "5",
+          "answers": [
+            "5",
+            "5",
+            null,
+            "0",
+            "0"
+          ]
+        },
+        {
+          "id": "gst-0086",
+          "gazette": "18",
+          "answers": [
+            "12",
+            "18",
+            "UNANSWERABLE",
+            "UNANSWERABLE",
+            "UNANSWERABLE"
+          ]
+        },
+        {
+          "id": "gst-0088",
+          "gazette": "5",
+          "answers": [
+            "UNANSWERABLE",
+            "UNANSWERABLE",
+            "UNANSWERABLE",
+            "5",
+            "18"
+          ]
+        },
+        {
+          "id": "gst-0091",
+          "gazette": "18",
+          "answers": [
+            "18",
+            null,
+            "18",
+            "18",
+            "18"
+          ]
+        }
+      ]
+    },
+    "majority_vote_slab_acc": 0.5833
+  },
+  "all_runs": [
+    {
+      "run": 1,
+      "summary": {
+        "n": 24,
+        "slab_acc": 0.5833,
+        "hsn_acc": 0.625,
+        "chapter_acc": 0.6667,
+        "abstention_acc": 0.8333,
+        "abstain_f1": 0.0,
+        "stale_slab_rate": 0.0833,
+        "stale_by_slab": {
+          "12": 2
+        },
+        "stale_cited_rate": 0.2083,
+        "stale_cited_by_slab": {
+          "12": 4,
+          "28": 1
+        },
+        "unparseable": 0,
+        "errored": 0
+      }
+    },
+    {
+      "run": 2,
+      "summary": {
+        "n": 24,
+        "slab_acc": 0.5417,
+        "hsn_acc": 0.5652,
+        "chapter_acc": 0.6087,
+        "abstention_acc": 0.7083,
+        "abstain_f1": 0.0,
+        "stale_slab_rate": 0.0,
+        "stale_by_slab": {},
+        "stale_cited_rate": 0.125,
+        "stale_cited_by_slab": {
+          "12": 3
+        },
+        "unparseable": 1,
+        "errored": 1
+      }
+    },
+    {
+      "run": 3,
+      "summary": {
+        "n": 24,
+        "slab_acc": 0.4583,
+        "hsn_acc": 0.6087,
+        "chapter_acc": 0.6957,
+        "abstention_acc": 0.7083,
+        "abstain_f1": 0.0,
+        "stale_slab_rate": 0.0833,
+        "stale_by_slab": {
+          "12": 1,
+          "28": 1
+        },
+        "stale_cited_rate": 0.25,
+        "stale_cited_by_slab": {
+          "12": 4,
+          "28": 2
+        },
+        "unparseable": 1,
+        "errored": 1
+      }
+    },
+    {
+      "run": 4,
+      "summary": {
+        "n": 24,
+        "slab_acc": 0.5833,
+        "hsn_acc": 0.5833,
+        "chapter_acc": 0.625,
+        "abstention_acc": 0.8333,
+        "abstain_f1": 0.0,
+        "stale_slab_rate": 0.0417,
+        "stale_by_slab": {
+          "12": 1
+        },
+        "stale_cited_rate": 0.1667,
+        "stale_cited_by_slab": {
+          "12": 4
+        },
+        "unparseable": 0,
+        "errored": 0
+      }
+    },
+    {
+      "run": 5,
+      "summary": {
+        "n": 24,
+        "slab_acc": 0.5,
+        "hsn_acc": 0.5833,
+        "chapter_acc": 0.625,
+        "abstention_acc": 0.7917,
+        "abstain_f1": 0.0,
+        "stale_slab_rate": 0.0417,
+        "stale_by_slab": {
+          "12": 1
+        },
+        "stale_cited_rate": 0.1667,
+        "stale_cited_by_slab": {
+          "12": 4
+        },
+        "unparseable": 0,
+        "errored": 0
+      }
+    }
+  ]
+}

@@ -35,41 +35,60 @@ automatically, and nobody has checked those 24 mappings one by one.
   <source media="(prefers-color-scheme: dark)" srcset="docs/stale-slab-3d-dark.svg">
   <img alt="Isometric 3D bar chart. Floor grid of Gazette slab against the slab
   the model answered, bar height showing how many of the 24 goods fall in each
-  cell. Eight correct at 18 % and four at 5 %; five refusals; wrong-but-live
-  answers of 5 % (three), 0 % (two) and 3 % (one); and a single red bar over
-  the abolished 12 % slab. The four other responses that reasoned from an
-  abolished rate are not visible here, because they were answered as refusals."
+  cell, for one run of the five. Nine correct at 18 % and three at 5 %; five
+  refusals; wrong-but-live answers of 5 % (two), 0 % (two), 18 % (one) and 3 %
+  (one); and a single red bar over the abolished 12 % slab. Responses that
+  reasoned from an abolished rate and then refused are not visible here,
+  because the bars can only show the answer."
   src="docs/stale-slab-3d-light.svg" width="100%">
 </picture>
 
-| Model | Run date | n | Slab acc. | HSN-4 acc. | Abolished slab **answered** | Abolished slab **recited** | Errored |
-|---|---|---|---|---|---|---|---|
-| `nvidia/nemotron-3-super-120b-a12b` | 2026-09-04 | 24 | 50.0 % | 62.5 % | 4.2 % | **20.8 %** | 0 |
+`nvidia/nemotron-3-super-120b-a12b`, 24 examples, **5 runs**, 2026-09-04.
+Mean with the spread across runs — *not* a confidence interval, see Limitations:
 
-Where the 24 responses went:
+| Metric | Mean | Min | Max | Spread |
+|---|---:|---:|---:|---:|
+| Slab accuracy | 53.3 % | 45.8 % | 58.3 % | 12.5 pp |
+| HSN-4 accuracy | 59.3 % | 56.5 % | 62.5 % | 6.0 pp |
+| Abolished slab **answered** | 5.0 % | 0.0 % | 8.3 % | 8.3 pp |
+| Abolished slab **recited** | **18.3 %** | 12.5 % | 25.0 % | 12.5 pp |
+| Abstention accuracy | 77.5 % | 70.8 % | 83.3 % | 12.5 pp |
 
-| Outcome | n | |
-|---|---:|---|
-| correct | 12 | |
-| **recited an abolished slab** | **5** | 12 % ×4, 28 % ×1 — but only **one** of those five put it in the answer field; the other four reached `UNANSWERABLE` by reasoning from it |
-| wrong, but a live slab | 6 | answered 0 %, 3 % or 5 % where the notification says otherwise |
-| refused, no dead rate involved | 1 | `UNANSWERABLE` where a rate exists |
+**The model answers the same prompt the same way only 62.5 % of the time** —
+15 of 24 examples got an identical answer in all five runs. Taking the
+plurality of five runs scores 58.3 %, five points above the mean single run, so
+repetition buys something, but not much.
 
-**Read that single-run number with the variance in mind.** The same 24 prompts
-run twice against the same model on the same day disagreed with themselves on
-**4 of 23 comparable answers — 17.4 %** — and three of those four flipped from
-correct to wrong. Slab accuracy moved 54.2 % → 50.0 % between the two runs on
-nothing but sampling. The run-to-run noise is the same size as the finding, so
-no single figure in this table should be quoted to one decimal place, or
-really at all, without repeats. That is a limitation of the probe, not of the
-model.
+The instability is not noise around a settled answer. It crosses category
+boundaries:
+
+| Example | Gazette | Five answers |
+|---|---|---|
+| `gst-0068` | 18 % | `18`, `0`, **`28`**, `18`, `18` |
+| `gst-0086` | 18 % | **`12`**, `18`, refused, refused, refused |
+| `gst-0051` | 18 % | **`12`**, refused, **`12`**, **`12`**, **`12`** |
+| `gst-0012` | 18 % | `18`, refused, **`9`**, `18`, refused |
+| `gst-0088` | 5 % | refused, refused, refused, `5`, `18` |
+
+`gst-0068` produced the abolished 28 % in one run of five and the correct
+answer in three — a single run would have reported that example as either a
+clean pass or the headline failure, depending entirely on luck.
+
+`gst-0012` answering **9 %** is a different fault worth naming. The
+notification prints its schedules as **CGST halves** — `Schedule II – 9 %`,
+`Schedule III – 20 %` — and the combined GST rate is double. One response
+handled that correctly ("attracts 9 % CGST … *resulting in a combined GST rate
+of 18 %*") and another did not ("fixing the GST rate at 9 %"). That is a
+correct reading of the document under the wrong convention, and it is invisible
+to a stale-slab metric because 9 % is not an abolished slab — it was never a
+GST slab at all.
 
 Cost is **not** reported. NVIDIA's price for this model has not been read and
 dated, and the registry carries `0.0` deliberately so no figure can be
-fabricated. **Human ceiling:** still pending the self-agreement measurement —
-which the 17.4 % above makes considerably more urgent, since the model's own
-self-agreement is now known to be poor and the human ceiling is what it has to
-be judged against.
+fabricated. **Human ceiling:** still pending the self-agreement measurement,
+which the 62.5 % above makes considerably more urgent. A model that reproduces
+its own answer five times running on only 15 of 24 examples has to be judged
+against a human doing the same task twice, and that number does not exist yet.
 
 ---
 
@@ -85,19 +104,23 @@ retrofitted:
 **Partly supported, and the qualifier matters more than the number.**
 
 Measured the way the hypothesis was originally written — abolished rates given
-as the *answer* — it is 1 in 24, and 4 % does not vindicate a prediction of "a
-measurable share".
+as the *answer* — it averages **5.0 %** over five runs, and in one of those
+runs it was **zero**. That does not vindicate a prediction of "a measurable
+share".
 
-Measured the way the responses actually behave, **5 of 24 (20.8 %) reason from
-a rate that no longer exists**. Four of those five never put it in the answer
-field; they cited it and then declined. The failure is real and roughly five
-times more common than the original metric could see — but it mostly shows up
+Measured the way the responses actually behave, **18.3 % (12.5–25.0 %) reason
+from a rate that no longer exists**. Most of those never put it in the answer
+field; they cite it and then decline. The failure is real and roughly four
+times more common than the original metric could see — but it mostly surfaces
 as an abstention, which is a materially different claim from "models will
-confidently emit abolished rates", and the README should not pretend otherwise.
+confidently emit abolished rates", and this section should not pretend
+otherwise.
 
 The stated hypothesis also predicted "no drop in stated confidence". That is
 the part the evidence contradicts: reasoning from a dead schedule is precisely
-what pushes this model *toward* refusing.
+what pushes this model *toward* refusing. Abstention accuracy of 77.5 % with
+refusals concentrated on questions the notification answers plainly is the
+shape of a model that knows it is unsure — not one confidently reciting.
 
 Three things complicate the reading further, and all three point at the
 benchmark rather than the model.
@@ -122,7 +145,7 @@ of* an abolished rate scored as a clean abstention:
 
 Reading those by hand is what prompted `stale_cited_rate`, which counts an
 abolished rate asserted as current anywhere in the response. It moved the
-figure from 4.2 % to 20.8 %. Both are reported: a model that gives a wrong rate
+figure from a mean of 5.0 % to 18.3 %. Both are reported: a model that gives a wrong rate
 and one that declines for a wrong reason are different failures, and collapsing
 them would hide which is happening.
 
@@ -395,8 +418,8 @@ Written honestly, and expanded as the work proceeds.
 
 - **Every figure currently published rests on n = 24, and the interval is
   wider than the finding.** At that sample size a measured rate of 20 % carries
-  a 95 % confidence interval of roughly ±16 points — so "20.8 % recite an
-  abolished slab" is really "somewhere between about 5 % and 37 %". Repeating
+  a 95 % confidence interval of roughly ±16 points — so "18.3 % recite an
+  abolished slab" is really "somewhere between about 3 % and 34 %". Repeating
   the run fixes sampling noise, and `--repeats` now reports mean and range for
   exactly that reason, but **repeats do not narrow this interval**: five runs
   over the same 24 examples is still 24 examples. Only more labelled examples
