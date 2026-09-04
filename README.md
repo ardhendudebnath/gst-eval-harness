@@ -22,32 +22,97 @@ models answer from a rate table that no longer exists.
 
 ## Results
 
-_No models have been run. This section will contain the leaderboard._
+**The leaderboard is still empty, and this is not it.** `data/golden.jsonl`
+does not exist yet — no example has been through human review — so nothing
+below is a benchmark result. What follows is a **probe**: one model scored
+against the 24 first-pass suggestions whose slab resolved to exactly one entry
+in the hash-pinned notification. That reference is a document lookup, not a
+model's opinion, so scoring against it is not circular. It is also unaudited:
+each HSN heading was extracted from an authority's operative ruling
+automatically, and nobody has checked those 24 mappings one by one.
 
-| Model | Version | Run date | Slab acc. | HSN-4 acc. | **Stale-slab rate** | Abstention F1 | ₹/correct | p50 latency |
-|---|---|---|---|---|---|---|---|---|
-| — | — | — | — | — | — | — | — | — |
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/stale-slab-3d-dark.svg">
+  <img alt="Isometric 3D bar chart. Floor grid of Gazette slab against the slab
+  the model answered, bar height showing how many of the 24 goods fall in each
+  cell. Nine correct at 18 %, four correct at 5 %; scattered wrong-but-live
+  answers at 0 %, 3 % and 5 %; one red bar over the abolished 12 % slab; four
+  refusals." src="docs/stale-slab-3d-light.svg" width="100%">
+</picture>
 
-**Human ceiling:** _pending the self-agreement measurement (week 3)._
+| Model | Run date | n | Slab acc. | HSN-4 acc. | **Stale-slab rate** | Errored |
+|---|---|---|---|---|---|---|
+| `nvidia/nemotron-3-super-120b-a12b` | 2026-09-04 | 24 | 54.2 % | 65.2 % | **4.2 %** | 1 |
+
+Where the 24 answers went:
+
+| Outcome | n | |
+|---|---:|---|
+| correct | 13 | |
+| wrong, but a live slab | 5 | answered 0 %, 3 % or 5 % where the notification says otherwise |
+| refused | 4 | answered `UNANSWERABLE` where a rate exists |
+| **quoted an abolished slab** | **1** | heading 9011, answered 12 % |
+| no answer | 1 | HTTP 503 from the provider; scored wrong, not skipped |
+
+Cost is **not** reported. NVIDIA's price for this model has not been read and
+dated, and the registry carries `0.0` deliberately so no figure can be
+fabricated. **Human ceiling:** still pending the self-agreement measurement.
 
 ---
 
 ## The headline finding
 
-_Pending. Will be written only once the numbers exist._
-
-The hypothesis under test — chosen before any model was run, and recorded here
-so it cannot be retrofitted:
+The hypothesis, recorded before any model was run so it could not be
+retrofitted:
 
 > Frontier models will classify goods into a **superseded** slab structure,
 > emitting one of the two abolished rates — 12 % or 28 % — on a measurable
 > share of items, and will do so with no drop in stated confidence.
 
-Two abolition dates make the probe sharper than one. A model emitting `12` is
-reciting a table that died in September 2025; one emitting `28` is stale in a
-different way, and the leaderboard reports them separately.
+**On this evidence, that is not yet established, and the honest headline is a
+weaker one.** One answer in 24 named an abolished slab. A hypothesis that
+predicts a *measurable share* is not vindicated by 4 %.
 
-If that turns out to be false, this section will say so.
+Three things complicate the reading, and all three point at the benchmark
+rather than the model.
+
+**The probe set barely contains the cases the hypothesis is about.** Only 2 of
+the 24 goods have a rate that moved in 2025. A model cannot recite a superseded
+rate for goods whose rate was never superseded. The `rate-changed-2025` stratum
+is the whole experiment, and it is the stratum that is least populated.
+
+**The metric undercounts.** `stale_slab` only inspects the answer field. Three
+of the four refusals reach `UNANSWERABLE` *by way of* an abolished rate:
+
+> "The goods comprise slide fasteners (12 % GST) and parts/sliders (18 % GST),
+> so no unique rate can be assigned."
+>
+> "…two distinct products with different GST rates (5 % for bricks, 12 % for
+> blocks), so a single rate cannot be determined."
+>
+> "Heading 4911 (Other printed matter) is taxed at 12 % under the GST rate
+> schedule for printed advertisement materials."
+
+Counting those, **4 of 24 responses (17 %) invoke a slab that no longer
+exists** — reasoning from a dead table and then declining, which the scorer
+records as an abstention rather than staleness. The scorer needs a second
+signal for an abolished rate cited anywhere in the response, and until it has
+one the 4.2 % figure is a floor, not a measurement.
+
+**A hand-checked case outside the probe set is unambiguous.** Asked to classify
+*Portland cement, 50 kg bag*, the model twice answered **28 %** — abolished on
+1 February 2026 when Notification 19/2025 omitted Schedule VII — and justified
+it: *"the GST schedule entry for 2523 fixes the rate at 28 % GST (plus
+applicable cess)"*, cess being the other half of a structure that no longer
+applies. The archived Gazette puts heading 2523 in Schedule II at 18 %,
+unambiguously. Two calls are an anecdote; the point is that the failure mode is
+real and this probe set is not built to catch it.
+
+So the finding as it stands: **the model's dominant failure here is ordinary
+wrongness (46 %), not staleness — but the staleness that does appear is
+confident, and hides inside refusals where the metric cannot see it.** The next
+run needs the rate-changed stratum populated and the scorer widened, and this
+section will be rewritten against whatever that shows.
 
 ---
 
