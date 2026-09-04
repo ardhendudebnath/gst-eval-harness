@@ -35,28 +35,41 @@ automatically, and nobody has checked those 24 mappings one by one.
   <source media="(prefers-color-scheme: dark)" srcset="docs/stale-slab-3d-dark.svg">
   <img alt="Isometric 3D bar chart. Floor grid of Gazette slab against the slab
   the model answered, bar height showing how many of the 24 goods fall in each
-  cell. Nine correct at 18 %, four correct at 5 %; scattered wrong-but-live
-  answers at 0 %, 3 % and 5 %; one red bar over the abolished 12 % slab; four
-  refusals." src="docs/stale-slab-3d-light.svg" width="100%">
+  cell. Eight correct at 18 % and four at 5 %; five refusals; wrong-but-live
+  answers of 5 % (three), 0 % (two) and 3 % (one); and a single red bar over
+  the abolished 12 % slab. The four other responses that reasoned from an
+  abolished rate are not visible here, because they were answered as refusals."
+  src="docs/stale-slab-3d-light.svg" width="100%">
 </picture>
 
-| Model | Run date | n | Slab acc. | HSN-4 acc. | **Stale-slab rate** | Errored |
-|---|---|---|---|---|---|---|
-| `nvidia/nemotron-3-super-120b-a12b` | 2026-09-04 | 24 | 54.2 % | 65.2 % | **4.2 %** | 1 |
+| Model | Run date | n | Slab acc. | HSN-4 acc. | Abolished slab **answered** | Abolished slab **recited** | Errored |
+|---|---|---|---|---|---|---|---|
+| `nvidia/nemotron-3-super-120b-a12b` | 2026-09-04 | 24 | 50.0 % | 62.5 % | 4.2 % | **20.8 %** | 0 |
 
-Where the 24 answers went:
+Where the 24 responses went:
 
 | Outcome | n | |
 |---|---:|---|
-| correct | 13 | |
-| wrong, but a live slab | 5 | answered 0 %, 3 % or 5 % where the notification says otherwise |
-| refused | 4 | answered `UNANSWERABLE` where a rate exists |
-| **quoted an abolished slab** | **1** | heading 9011, answered 12 % |
-| no answer | 1 | HTTP 503 from the provider; scored wrong, not skipped |
+| correct | 12 | |
+| **recited an abolished slab** | **5** | 12 % ×4, 28 % ×1 — but only **one** of those five put it in the answer field; the other four reached `UNANSWERABLE` by reasoning from it |
+| wrong, but a live slab | 6 | answered 0 %, 3 % or 5 % where the notification says otherwise |
+| refused, no dead rate involved | 1 | `UNANSWERABLE` where a rate exists |
+
+**Read that single-run number with the variance in mind.** The same 24 prompts
+run twice against the same model on the same day disagreed with themselves on
+**4 of 23 comparable answers — 17.4 %** — and three of those four flipped from
+correct to wrong. Slab accuracy moved 54.2 % → 50.0 % between the two runs on
+nothing but sampling. The run-to-run noise is the same size as the finding, so
+no single figure in this table should be quoted to one decimal place, or
+really at all, without repeats. That is a limitation of the probe, not of the
+model.
 
 Cost is **not** reported. NVIDIA's price for this model has not been read and
 dated, and the registry carries `0.0` deliberately so no figure can be
-fabricated. **Human ceiling:** still pending the self-agreement measurement.
+fabricated. **Human ceiling:** still pending the self-agreement measurement —
+which the 17.4 % above makes considerably more urgent, since the model's own
+self-agreement is now known to be poor and the human ceiling is what it has to
+be judged against.
 
 ---
 
@@ -69,20 +82,34 @@ retrofitted:
 > emitting one of the two abolished rates — 12 % or 28 % — on a measurable
 > share of items, and will do so with no drop in stated confidence.
 
-**On this evidence, that is not yet established, and the honest headline is a
-weaker one.** One answer in 24 named an abolished slab. A hypothesis that
-predicts a *measurable share* is not vindicated by 4 %.
+**Partly supported, and the qualifier matters more than the number.**
 
-Three things complicate the reading, and all three point at the benchmark
-rather than the model.
+Measured the way the hypothesis was originally written — abolished rates given
+as the *answer* — it is 1 in 24, and 4 % does not vindicate a prediction of "a
+measurable share".
+
+Measured the way the responses actually behave, **5 of 24 (20.8 %) reason from
+a rate that no longer exists**. Four of those five never put it in the answer
+field; they cited it and then declined. The failure is real and roughly five
+times more common than the original metric could see — but it mostly shows up
+as an abstention, which is a materially different claim from "models will
+confidently emit abolished rates", and the README should not pretend otherwise.
+
+The stated hypothesis also predicted "no drop in stated confidence". That is
+the part the evidence contradicts: reasoning from a dead schedule is precisely
+what pushes this model *toward* refusing.
+
+Three things complicate the reading further, and all three point at the
+benchmark rather than the model.
 
 **The probe set barely contains the cases the hypothesis is about.** Only 2 of
 the 24 goods have a rate that moved in 2025. A model cannot recite a superseded
 rate for goods whose rate was never superseded. The `rate-changed-2025` stratum
 is the whole experiment, and it is the stratum that is least populated.
 
-**The metric undercounts.** `stale_slab` only inspects the answer field. Three
-of the four refusals reach `UNANSWERABLE` *by way of* an abolished rate:
+**The original metric undercounted by 5×, and this is how it was found.**
+`stale_slab` inspects only the answer field, so a refusal that arrives *by way
+of* an abolished rate scored as a clean abstention:
 
 > "The goods comprise slide fasteners (12 % GST) and parts/sliders (18 % GST),
 > so no unique rate can be assigned."
@@ -93,11 +120,11 @@ of the four refusals reach `UNANSWERABLE` *by way of* an abolished rate:
 > "Heading 4911 (Other printed matter) is taxed at 12 % under the GST rate
 > schedule for printed advertisement materials."
 
-Counting those, **4 of 24 responses (17 %) invoke a slab that no longer
-exists** — reasoning from a dead table and then declining, which the scorer
-records as an abstention rather than staleness. The scorer needs a second
-signal for an abolished rate cited anywhere in the response, and until it has
-one the 4.2 % figure is a floor, not a measurement.
+Reading those by hand is what prompted `stale_cited_rate`, which counts an
+abolished rate asserted as current anywhere in the response. It moved the
+figure from 4.2 % to 20.8 %. Both are reported: a model that gives a wrong rate
+and one that declines for a wrong reason are different failures, and collapsing
+them would hide which is happening.
 
 **A hand-checked case outside the probe set is unambiguous.** Asked to classify
 *Portland cement, 50 kg bag*, the model twice answered **28 %** — abolished on

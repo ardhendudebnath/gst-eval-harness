@@ -110,7 +110,7 @@ def _bar(org, i: int, j: int, height: float, colour: str) -> str:
 
 def render(matrix: dict[tuple[str, str], int], gold_slabs: list[str],
            pred_slabs: list[str], theme: dict, *, title: str, subtitle: str,
-           footnote: str = "") -> str:
+           footnote: tuple[str, ...] = ()) -> str:
     """matrix[(gold, predicted)] -> count."""
     n_i, n_j = len(gold_slabs), len(pred_slabs)
     tallest = max(matrix.values(), default=1)
@@ -119,9 +119,13 @@ def render(matrix: dict[tuple[str, str], int], gold_slabs: list[str],
 
     # Wide enough for the geometry, but never narrower than the title needs.
     # An earlier version sized to the bars alone and clipped the subtitle.
+    # Footnotes wrap rather than widen: one long line drives the canvas out to
+    # a width the chart does not use, stranding it in the corner.
     width = max(org[0] + n_i * CELL_W / 2 + 250, 30 + len(title) * 10.5,
-                30 + len(footnote) * 6.6)
-    height = org[1] + (n_i + n_j) * CELL_D / 2 + 130
+                *(30 + len(line) * 6.4 for line in footnote or ("",)))
+    # 130 covers the legend and one footnote line; each extra line needs room
+    # of its own or it is drawn past the bottom edge.
+    height = org[1] + (n_i + n_j) * CELL_D / 2 + 130 + max(0, len(footnote) - 1) * 17
 
     out: list[str] = [
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{width:.0f}" '
@@ -206,7 +210,10 @@ def render(matrix: dict[tuple[str, str], int], gold_slabs: list[str],
 
     # Legend. Status colour never carries meaning alone, so each swatch is
     # labelled, and the abolished rows are daggered on the axis as well.
-    ly = height - 74
+    # The legend and footnote hang off the bottom edge, so extra footnote
+    # lines have to lift the whole block, not just grow the canvas underneath
+    # it — growing the canvas alone moves the block down with it.
+    ly = height - 74 - max(0, len(footnote) - 1) * 17
     for k, (colour, label) in enumerate((
         (theme["good"], "correct"),
         (theme["critical"], "† abolished slab — no longer exists"),
@@ -218,9 +225,9 @@ def render(matrix: dict[tuple[str, str], int], gold_slabs: list[str],
         out.append(f'<text x="53" y="{yy:.0f}" font-size="13" '
                    f'fill="{theme["ink2"]}">{_esc(label)}</text>')
 
-    if footnote:
-        out.append(f'<text x="34" y="{ly + 3 * 22 + 4:.0f}" font-size="12" '
-                   f'fill="{theme["muted"]}">{_esc(footnote)}</text>')
+    for k, line in enumerate(footnote):
+        out.append(f'<text x="34" y="{ly + 3 * 22 + 4 + k * 17:.0f}" font-size="12" '
+                   f'fill="{theme["muted"]}">{_esc(line)}</text>')
 
     out.append("</svg>")
     return "\n".join(out)
@@ -247,12 +254,20 @@ def build(path: Path, out_dir: Path) -> tuple[Path, Path]:
     gold_slabs = order({r[gold_key] for r in rows})
     pred_slabs = order({(r.get("predicted_slab") or "unparsed") for r in rows})
 
-    n = data["summary"]["n"]
-    stale = data["summary"]["stale_slab_rate"]
-    subtitle = (f"n={n} · slab accuracy {data['summary']['slab_acc']:.0%} · "
-                f"stale-slab rate {stale:.0%} · {data['model_id']}")
-    footnote = "† " + " · ".join(
-        f"{s}% abolished {SLAB_ABOLISHED_ON[s]}" for s in sorted(ABOLISHED_SLABS)
+    summary = data["summary"]
+    n = summary["n"]
+    subtitle = (f"n={n} · slab accuracy {summary['slab_acc']:.0%} · "
+                f"abolished slab answered {summary['stale_slab_rate']:.0%}, "
+                f"recited {summary.get('stale_cited_rate', 0):.0%} · "
+                f"{data['model_id']}")
+    # The bars can only show the answer. A dead rate reached by way of a
+    # refusal is invisible here, and that is most of them, so the number says
+    # so rather than letting the geometry imply otherwise.
+    footnote = (
+        "† " + " · ".join(f"{s}% abolished {SLAB_ABOLISHED_ON[s]}"
+                          for s in sorted(ABOLISHED_SLABS)),
+        "bars show the answer only; 'recited' also counts refusals that "
+        "reasoned from a dead rate",
     )
 
     out_dir.mkdir(parents=True, exist_ok=True)
