@@ -43,13 +43,23 @@ _GSTIN_RE = re.compile(r"\b\d{2}[A-Za-z0-9]{13}\b")
 #: them — which is how "[redacted], 16, Anand Colony,
 #: Rampura" survived every party pattern and reached the published file.
 #:
-#: The (?!No) guard lives here rather than in each caller. Admitting bare "Ms"
-#: means "G.O.Ms No. 110" and "Notification Ms. No. rr(2)/crR/..." are suddenly
-#: in range, and those are statutory citations. Two patterns that never needed
-#: the guard before — they required the slash, so they could not reach "Ms" —
-#: began eating them the moment this fragment was shared. Trailing whitespace
-#: is part of the fragment so the guard sits where the name would start.
-_MS = r"(?:M\s*/\s*s|Ms)\.?\s*(?!No\b|No\.)"
+#: **The slash is required.** An earlier version admitted a bare "Ms", and the
+#: patterns that use this fragment carry re.I, so "MS" matched — and MS is mild
+#: steel. "The applicant manufactures MS Rod, MS Flat and MS Bracket of heading
+#: 7214" was redacted down to "The applicant manufactures", destroying the
+#: goods description that is the entire content of the example. MS Rod, MS
+#: Flat, MS Bracket, MS Square rod and MS Dummy Coin all appear in this corpus
+#: as goods.
+#:
+#: Nothing is lost by requiring the slash. The honorific "Ms. Sharma" is
+#: matched by _PERSON_NAME_RE, which is deliberately case-sensitive and so
+#: never sees "MS"; and a company written "Ms Acme" without a slash is not a
+#: form these documents use.
+#:
+#: The (?!No) guard stays because OCR splits "M/s" in ways that can still reach
+#: "G.O. Ms No. 110" and "Notification Ms. No. rr(2)/crR/...", which are
+#: statutory citations, not parties.
+_MS = r"M\s*/\s*s\.?\s*(?!No\b|No\.)"
 
 # Permanent Account Number: five letters, four digits, one letter. Found in the
 # corpus as "having PAN-ABCDE1234F and registered office at ...", which nothing
