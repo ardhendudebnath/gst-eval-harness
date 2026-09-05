@@ -266,6 +266,38 @@ def is_about_services(row: dict, excerpt: str = "") -> bool:
     return bool(_SERVICE_WEAK.search(_STATUTE_NAME.sub(" ", brief)))
 
 
+#: Immovable property. Land and buildings are neither goods nor services for
+#: this benchmark — Schedule III puts the sale of land and completed buildings
+#: outside GST altogether, and there is no tariff heading to classify. A ruling
+#: asking whether a leasehold transfer is a supply is not a classification
+#: question at all, and one reached the corpus: TN/26/AAR/2021 carried category
+#: 97(2)(a), so the clause test passed it, and the services screen has no
+#: vocabulary for land.
+#:
+#: Checked in the **brief only**, deliberately. Measured over 129 rulings: the
+#: brief matches 3, all of them genuinely about immovable property and none
+#: grounded; widening to the facts adds 3 more, one of which is a real goods
+#: ruling — "whether the printed advertisement materials are classifiable as
+#: supply of goods" — that merely mentions land in passing.
+_IMMOVABLE = re.compile(
+    r"transfer\s+of\s+leasehold"
+    r"|leasehold\s+rights?"
+    r"|immovable\s+propert"
+    r"|residential\s+(?:flats?|units?|apartments?)"
+    r"|completion\s+certificate"
+    r"|development\s+rights?"
+    r"|sale\s+of\s+land"
+    r"|allotment\s+of\s+land"
+    r"|share\s+of\s+(?:the\s+)?land",
+    re.I,
+)
+
+
+def is_about_immovable_property(row: dict) -> bool:
+    """True when the question is about land or buildings rather than goods."""
+    return bool(_IMMOVABLE.search(row.get("brief", "")))
+
+
 def is_classification(row: dict) -> bool:
     """True when the row is a classification-of-**goods** ruling.
 
@@ -275,7 +307,7 @@ def is_classification(row: dict) -> bool:
         column, or failing that, classification language in the brief; and
       * it is about goods rather than services, since s.97(2)(a) covers both.
     """
-    if is_about_services(row):
+    if is_about_services(row) or is_about_immovable_property(row):
         return False
     if _CLAUSE_A.search(row.get("category", "")):
         return True

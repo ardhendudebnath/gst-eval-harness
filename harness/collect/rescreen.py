@@ -22,6 +22,7 @@ from pathlib import Path
 
 from harness.collect.aar import (
     cached_pdf_for,
+    is_about_immovable_property,
     is_about_services,
     is_withdrawn,
     reextract,
@@ -120,6 +121,13 @@ def main() -> int:
             brief = rec.get("collection_meta", {}).get("ruling_brief", "")
             if is_about_services({"brief": brief}, rec.get("input", "")):
                 dropped["services"] += 1
+                continue
+            # Land and buildings are neither goods nor services here: there is
+            # no heading to classify and Schedule III puts them outside GST.
+            # One such ruling carried category 97(2)(a) and passed every other
+            # filter, so this replays the screen that now catches it.
+            if is_about_immovable_property({"brief": brief}):
+                dropped["immovable_property"] += 1
                 continue
             # Withdrawn applications carry no determination and facts the
             # applicant has disowned.
