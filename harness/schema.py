@@ -81,8 +81,25 @@ LABELLERS: frozenset[str] = frozenset(
         "human",           # labelled directly by the annotator
         "model-first-pass",  # model suggestion, NOT reviewed — quarantined
         "human-reviewed",  # model suggestion the annotator accepted or corrected
+        "gazette-derived",  # a document lookup, no human judgement — see below
     }
 )
+
+#: Rows whose slab was read out of the hash-pinned notification rather than
+#: judged, and which no human has confirmed.
+#:
+#: Admissible because nothing in them is recalled. The heading comes from the
+#: authority's own operative ruling in the source document; the slab comes from
+#: `schedule_lookup`, which reads the archived Gazette and refuses to resolve
+#: any heading that appears in more than one schedule. A model's recollection
+#: of Indian GST rates is the pre-2025 table — the exact error this benchmark
+#: exists to measure — and none of it is used to produce these.
+#:
+#: What they are NOT is human judgement, and nothing may claim they are. They
+#: cannot populate the `hard` or `adversarial` strata, which exist precisely
+#: for calls a lookup cannot make, and any score computed over them belongs in
+#: its own column beside the human-labelled one, never averaged into it.
+DERIVED_LABELLERS: frozenset[str] = frozenset({"gazette-derived"})
 
 #: Never permitted in the golden set. This is the guarantee that an unreviewed
 #: model suggestion cannot become an example by accident — concatenating the

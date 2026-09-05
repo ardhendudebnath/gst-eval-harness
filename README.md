@@ -196,9 +196,35 @@ section will be rewritten against whatever that shows.
   | Open Food Facts (India) | `typical` | Real packaged-goods listings, short and messy, ODbL-licensed |
   | GST Advance Rulings | `hard`, `adversarial`, `long_context` | Genuine classification disputes across the whole tariff — "does a quartz slab that is 92% crushed quartz and 8% resin fall under 6802 or 6810?" — with the applicant's rejected contention left in as a distractor |
 
-- **Labelled by hand, against the primary notification.** Every judgement in
-  `golden.jsonl` was made by a human. Each row records `labelled_by`, and the
-  validator refuses any row that has not been.
+- **Every row records who decided it, and right now none of them is a human.**
+  `labelled_by` takes four values, and the distinction is the dataset's central
+  claim, so it is stated before any result:
+
+  | `labelled_by` | Meaning | Count |
+  |---|---|---:|
+  | `human` | judged directly by the annotator | **0** |
+  | `human-reviewed` | model suggestion the annotator accepted or corrected | **0** |
+  | `gazette-derived` | slab read from the archived notification, heading from the authority's operative ruling, **no human confirmed it** | **24** |
+  | `model-first-pass` | unreviewed suggestion — rejected by the validator, quarantined in `data/first_pass.jsonl` | — |
+
+  A `gazette-derived` row contains nothing recalled: the heading comes from the
+  ruling's own operative paragraph via `ruling_outcome`, and the slab from
+  `schedule_lookup`, which reads `data/reference/primary/` and refuses any
+  heading appearing in more than one schedule. A model's recollection of Indian
+  GST rates is the pre-2025 table — the error this benchmark measures — and
+  none of it is used to produce them. That is the entire argument for admitting
+  them, and it does not extend one inch further:
+
+  - they **cannot** fill `hard` or `adversarial`, which exist for exactly the
+    calls a lookup cannot make, and both stand at zero;
+  - they **cannot** serve as the human ceiling, which needs a human labelling
+    twice and so does not exist yet;
+  - any score over them belongs beside a human-labelled score, never averaged
+    into one.
+
+  `python -m harness.label.cli --review-first-pass` promotes a derived row to
+  `human-reviewed` when an annotator gets to it. Until then this dataset
+  measures a document lookup's agreement with a model, not a human's.
 
 - **Model assistance, disclosed.** A model first pass runs over the collected
   rulings. It **never recalls a slab** — deriving one needs Notification
