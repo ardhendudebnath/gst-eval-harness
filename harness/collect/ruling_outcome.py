@@ -52,10 +52,20 @@ _DETERMINATION = re.compile(
 )
 
 _HSN = re.compile(
-    r"\b(?:HSN|HS\s+code|heading|chapter\s+heading|tariff\s+item|sub-?heading)"
+    r"\b(?:HSN|HS\s+code|heading|chapter\s+heading|tariff\s+item|sub-?heading"
+    #: CTH — Customs Tariff Heading. These authorities write it constantly
+    #: ("classifiable under CTH 73151100"), and without it those rulings
+    #: yielded no heading at all: 8 of the 63 headingless rulings state one
+    #: this way and no other.
+    r"|C\.?\s?T\.?\s?H\.?|customs\s+tariff\s+heading)"
     r"[^0-9\n]{0,25}(\d{4}(?:\s?\d{2}){0,2})",
     re.I,
 )
+#: Deliberately absent: a bare "classifiable under <digits>". The gap above
+#: allows 25 non-digit characters, so "classifiable under Notification No.
+#: 01/2017" would capture 2017 as a tariff heading. The keyword prefixes are
+#: what stop that, and dropping the requirement would fill the corpus with
+#: notification years.
 #: The alternative in "Heading 3307 or 3401" carries no keyword of its own, and
 #: a conditional determination naming two competing headings is exactly the
 #: case worth capturing in full.
