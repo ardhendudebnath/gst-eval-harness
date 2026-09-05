@@ -22,14 +22,14 @@ models answer from a rate table that no longer exists.
 
 ## Results
 
-`data/golden.jsonl` exists and `harness.run` scores against it — but **all 24
+`data/golden.jsonl` exists and `harness.run` scores against it — but **all 28
 rows are `gazette-derived`, not human-labelled.** Their slab was read out of
 the hash-pinned notification and their heading out of each authority's
 operative ruling; no human has confirmed either. See the provenance table under
 *Dataset*. This is a working benchmark over an unaudited reference, and every
 number below inherits that.
 
-Dataset SHA `13b78aaeebab`, 24 rows, prompt `v1/shared`.
+Dataset SHA `8c32ff29e970`, 28 rows, prompt `v1/shared`.
 
 > An earlier run of this table, at SHA `8e0b639c6c6f`, was **scored against a
 > corrupted dataset** and has been withdrawn. A redaction pattern was deleting
@@ -50,32 +50,34 @@ Dataset SHA `13b78aaeebab`, 24 rows, prompt `v1/shared`.
   src="docs/stale-slab-3d-light.svg" width="100%">
 </picture>
 
-| Model | Run | Slab acc. | HSN-4 acc. | Chapter acc. | Abolished **answered** | Abolished **recited** | p50 latency | ₹/correct |
-|---|---|---:|---:|---:|---:|---:|---:|---:|
-| `nvidia/nemotron-3-super-120b-a12b` | 2026-09-05 | 58.3 % | 66.7 % | 66.7 % | **0.0 %** | **20.8 %** | 19.3 s | — |
+| Model | Run | n | Slab acc. | HSN-4 acc. | Chapter acc. | Abolished **answered** | Abolished **recited** | p50 latency | ₹/correct |
+|---|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| `nvidia/nemotron-3-super-120b-a12b` | 2026-09-05 | 28 | 64.3 % | 59.3 % | 63.0 % | 7.1 % | **10.7 %** | 20.7 s | — |
 
-**Every one of those five stale responses was a refusal.** Not one abolished
-rate appeared in an answer field — `stale_slab_rate` is zero — while a fifth of
-all responses reasoned from a dead schedule and then declined:
+Three responses reasoned from a rate that no longer exists. **Two gave it as
+the answer; one reached a refusal by way of it** — which is the distinction
+`stale_cited_rate` exists to keep:
 
 | Example | Gazette | Answered | Cited |
 |---|---|---|---|
-| `gst-0046` | 5 % | `UNANSWERABLE` | 12 % |
+| `gst-0051` | 18 % | **12 %** | 12 % |
+| `gst-0086` | 18 % | **12 %** | 12 % |
 | `gst-0048` | 18 % | `UNANSWERABLE` | 12 % |
-| `gst-0051` | 18 % | `UNANSWERABLE` | 12 % |
-| `gst-0068` | 18 % | `UNANSWERABLE` | 28 % |
-| `gst-0086` | 18 % | `UNANSWERABLE` | 12 % |
 
-A metric reading only the answer field would score this run as **perfectly
-clean on staleness** while a fifth of its reasoning ran on a schedule that no
-longer exists.
+The previous run, over 24 rows, split the other way: **every** stale response
+was a refusal and `stale_slab_rate` was zero. Two runs, two quite different
+pictures of the same failure, from a model that reproduces its own answer on
+only 62.5 % of examples. Neither run is the finding — the spread is.
 
 Cost is blank because NVIDIA's price for this model has not been read and
 dated. The registry carries `0.0` deliberately, so the column stays empty
 rather than carrying a fabricated figure.
 
-**One run is not a measurement here.** The same 24 examples run five times
-through `harness.probe` — identical inputs, identical references — give:
+**One run is not a measurement here.** Five repeats through `harness.probe`,
+identical inputs and identical references, give the spread below. Note the
+denominator: this ran over the **24 rows** the golden set held before `CTH`
+heading extraction added four more, so it is a subset of the table above and
+not a repeat of it. The point it makes about variance is unaffected.
 
 | Metric | Mean | Min | Max | Spread |
 |---|---:|---:|---:|---:|
@@ -85,9 +87,10 @@ through `harness.probe` — identical inputs, identical references — give:
 | Abolished slab **recited** | **18.3 %** | 12.5 % | 25.0 % | 12.5 pp |
 | Abstention accuracy | 77.5 % | 70.8 % | 83.3 % | 12.5 pp |
 
-The benchmark run above sits at the **top** of the accuracy range and the
-**top** of the recited range. Quote the spread, not the run. (Spread across
-runs, *not* a confidence interval — see Limitations.)
+The benchmark run above sits **above** the accuracy range and **below** the
+recited range — on four more examples, so the comparison is indicative rather
+than exact. Quote the spread, not the run. (Spread across runs, *not* a
+confidence interval — see Limitations.)
 
 Two things the run reports that the aggregate cannot:
 
@@ -251,7 +254,7 @@ section will be rewritten against whatever that shows.
   |---|---|---:|
   | `human` | judged directly by the annotator | **0** |
   | `human-reviewed` | model suggestion the annotator accepted or corrected | **0** |
-  | `gazette-derived` | slab read from the archived notification, heading from the authority's operative ruling, **no human confirmed it** | **24** |
+  | `gazette-derived` | slab read from the archived notification, heading from the authority's operative ruling, **no human confirmed it** | **28** |
   | `model-first-pass` | unreviewed suggestion — rejected by the validator, quarantined in `data/first_pass.jsonl` | — |
 
   A `gazette-derived` row contains nothing recalled: the heading comes from the
