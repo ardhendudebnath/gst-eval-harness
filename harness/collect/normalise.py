@@ -38,6 +38,19 @@ _RATING_RE = re.compile(r"[★☆⭐✩✪✫✬✭✮✯]+|\(\s*\d+(?:\.\d+)?\s
 # here is harmless; leaking a taxpayer identifier is not.
 _GSTIN_RE = re.compile(r"\b\d{2}[A-Za-z0-9]{13}\b")
 
+#: "M/s" as OCR actually renders it. Scanned ruling PDFs produce "M / s",
+#: "M /s" and "M/ s", and a pattern anchored on the tight form matches none of
+#: them — which is how "[redacted], 16, Anand Colony,
+#: Rampura" survived every party pattern and reached the published file.
+#:
+#: The (?!No) guard lives here rather than in each caller. Admitting bare "Ms"
+#: means "G.O.Ms No. 110" and "Notification Ms. No. rr(2)/crR/..." are suddenly
+#: in range, and those are statutory citations. Two patterns that never needed
+#: the guard before — they required the slash, so they could not reach "Ms" —
+#: began eating them the moment this fragment was shared. Trailing whitespace
+#: is part of the fragment so the guard sits where the name would start.
+_MS = r"(?:M\s*/\s*s|Ms)\.?\s*(?!No\b|No\.)"
+
 # Permanent Account Number: five letters, four digits, one letter. Found in the
 # corpus as "having PAN-ABCDE1234F and registered office at ...", which nothing
 # here matched. A PAN identifies a taxpayer as directly as a GSTIN does, and
@@ -72,7 +85,7 @@ _REGISTERED_OFFICE_RE = re.compile(
 # punctuation or a small set of verbs, and prose like this continues past all
 # of them. A company suffix is the reliable end of a company name.
 _COMPANY_RE = re.compile(
-    r"\b(?:M/s\.?|Messrs\.?)\s*[A-Z][\w&.'\- ]{2,60}?"
+    rf"\b(?:{_MS}|Messrs\.?\s*)[A-Z][\w&.'\- ]{{2,60}}?"
     # Compound forms first. Alternation is leftmost-match, and the quantifier
     # above is lazy, so listing "Private" before "Private Limited" ends the
     # match at "Private" and strands "Limited" in the text.
@@ -105,13 +118,13 @@ _COMPANY_RE = re.compile(
 # "Private" and leave "Limited,". Tokens are joined by single spaces instead,
 # so the run ends naturally at a comma, a period, or the first lowercase word.
 _MS_NAME_RE = re.compile(
-    r"\bM/?s\.?\s*(?!No\b|No\.)[A-Z][\w.&'\-]*(?:\s+[A-Z][\w.&'\-]*){0,5}"
+    rf"\b{_MS}[A-Z][\w.&'\-]*(?:\s+[A-Z][\w.&'\-]*){{0,5}}"
 )
 
 # Terminates on punctuation including brackets, because applicant names are
 # routinely followed by "(for short-'applicant')" rather than a comma.
 _APPLICANT_RE = re.compile(
-    r"\b(?:M/s\.?|Messrs\.?)\s*[A-Z][\w&.'\- ]{2,80}?"
+    rf"\b(?:{_MS}|Messrs\.?\s*)[A-Z][\w&.'\- ]{{2,80}}?"
     r"(?=\s*(?:[,.()]|having\b|is\b|has\b|the applicant\b|$))",
     re.I,
 )
@@ -184,10 +197,20 @@ _ROLE_NAME_RE = re.compile(
 _BUSINESS_ADDR_RE = re.compile(
     r"\bdoing\s+business\s+at\b[^.]{0,160}", re.I
 )
+#
+# "No." is optional: the address in "[redacted], 16,
+# Anand Colony, Rampura" is introduced by a bare number, and requiring the
+# prefix left it in the published file after the company name was removed.
+#
+# The street word must be preceded by a capitalised place name. Without that,
+# a bare "Block" or "Cross" matches ordinary prose — "8471, computers and
+# Block diagram" — and this pattern is greedy enough to take the sentence
+# with it.
 _STREET_ADDR_RE = re.compile(
-    r"\bNo\.\s*\d[\w\-/]*\s*,[^.]{0,120}?"
-    r"(?:Road|Street|Nagar|Lane|Colony|Layout|Cross|Block|Marg|Sarani)\b[^.]{0,60}",
-    re.I,
+    r"\b(?:No\.\s*)?\d[\w\-/]*\s*,[^.]{0,120}?"
+    r"[A-Z][\w]+\s+"
+    r"(?:Road|Street|Nagar|Lane|Colony|Layout|Cross|Block|Marg|Sarani)\b"
+    r"[^.]{0,60}"
 )
 
 # Procedural furniture in rulings — the exact analogue of "Buy Now / Free
