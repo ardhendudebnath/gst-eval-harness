@@ -48,7 +48,7 @@ footer { margin-top:28px; padding-top:14px; border-top:1px solid var(--rule);
 <p class="sub">Classifying real Indian product descriptions into the GST slabs
 actually in force. Ranked by cost per correct answer, which is not the same
 ordering as accuracy.</p>
-<p class="empty"><strong>No model has been run yet.</strong> This table is empty because the harness has never called an API — not because models scored zero. It fills in when <code>python -m harness.run --all</code> completes against a labelled golden set.</p>
+<table><thead><tr><th>Model</th><th>Tier</th><th>Slab acc.</th><th>HSN-4</th><th>Abstain F1</th><th>Stale-slab</th><th>₹ / correct</th><th>Run cost</th><th>p50</th><th>Run date</th></tr></thead><tbody><tr><td class="model"><b>open-weight</b><span class="mid">nvidia/nemotron-3-super-120b-a12b</span></td><td class="tier">open-weight</td><td>58.3%</td><td>60.9%</td><td>0.0%</td><td class="stale">4.2% <span class="dead">12%×1</span></td><td>—</td><td>—</td><td>15,942 ms</td><td class="when">2026-09-05</td></tr></tbody></table>
 <ul class="notes">
 <li><b>Stale-slab</b> is how often a model quoted a rate that no longer exists —
 12% (abolished 22 Sep 2025) or 28% (abolished 1 Feb 2026). It is reported
@@ -57,11 +57,11 @@ failure from being wrong.</li>
 <li><b>Failed and unparseable responses count as wrong</b>, not skipped.</li>
 <li><b>One prompt for every model.</b> Runs tagged <code>tuned</code> are a
 separate per-model pass and are not mixed into this table.</li>
-<li>Golden set is empty — no ceiling, and nothing to score against.</li>
+<li>Human self-agreement ceiling: not yet measured. Golden set: 24 rows.</li>
 </ul>
 <footer>
-Generated 2026-09-03 22:09 UTC · prices read 2026-06-24 · FX read 2026-09-04 ·
-dataset none (0 rows)<br>
+Generated 2026-09-05 13:43 UTC · prices read 2026-06-24 · FX read 2026-09-04 ·
+dataset 8e0b639c6c6f (24 rows)<br>
 Rates from Notification 9/2025-CT(R) as amended by 19/2025, archived and
 hash-pinned in <code>data/reference/primary/</code>.
 </footer>

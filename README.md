@@ -22,14 +22,14 @@ models answer from a rate table that no longer exists.
 
 ## Results
 
-**The leaderboard is still empty, and this is not it.** `data/golden.jsonl`
-does not exist yet — no example has been through human review — so nothing
-below is a benchmark result. What follows is a **probe**: one model scored
-against the 24 first-pass suggestions whose slab resolved to exactly one entry
-in the hash-pinned notification. That reference is a document lookup, not a
-model's opinion, so scoring against it is not circular. It is also unaudited:
-each HSN heading was extracted from an authority's operative ruling
-automatically, and nobody has checked those 24 mappings one by one.
+`data/golden.jsonl` exists and `harness.run` scores against it — but **all 24
+rows are `gazette-derived`, not human-labelled.** Their slab was read out of
+the hash-pinned notification and their heading out of each authority's
+operative ruling; no human has confirmed either. See the provenance table under
+*Dataset*. This is a working benchmark over an unaudited reference, and every
+number below inherits that.
+
+Dataset SHA `8e0b639c6c6f`, 24 rows, prompt `v1/shared`.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/stale-slab-3d-dark.svg">
@@ -43,8 +43,16 @@ automatically, and nobody has checked those 24 mappings one by one.
   src="docs/stale-slab-3d-light.svg" width="100%">
 </picture>
 
-`nvidia/nemotron-3-super-120b-a12b`, 24 examples, **5 runs**, 2026-09-04.
-Mean with the spread across runs — *not* a confidence interval, see Limitations:
+| Model | Run | Slab acc. | HSN-4 acc. | Chapter acc. | Abolished **answered** | Abolished **recited** | p50 latency | ₹/correct |
+|---|---|---:|---:|---:|---:|---:|---:|---:|
+| `nvidia/nemotron-3-super-120b-a12b` | 2026-09-05 | 58.3 % | 60.9 % | 65.2 % | 4.2 % | 12.5 % | 15.9 s | — |
+
+Cost is blank because NVIDIA's price for this model has not been read and
+dated. The registry carries `0.0` deliberately, so the column stays empty
+rather than carrying a fabricated figure.
+
+**One run is not a measurement here.** The same 24 examples run five times
+through `harness.probe` — identical inputs, identical references — give:
 
 | Metric | Mean | Min | Max | Spread |
 |---|---:|---:|---:|---:|
@@ -53,6 +61,20 @@ Mean with the spread across runs — *not* a confidence interval, see Limitation
 | Abolished slab **answered** | 5.0 % | 0.0 % | 8.3 % | 8.3 pp |
 | Abolished slab **recited** | **18.3 %** | 12.5 % | 25.0 % | 12.5 pp |
 | Abstention accuracy | 77.5 % | 70.8 % | 83.3 % | 12.5 pp |
+
+The single run above sits at the **top** of the accuracy range and the
+**bottom** of the recited range — a lucky draw on both. Quote the spread, not
+the run. (Spread across runs, *not* a confidence interval — see Limitations.)
+
+Two things the run reports that the aggregate cannot:
+
+- **Abstention F1 is `0.0`, and that is not a failure — it is an empty
+  stratum.** No gold row is `UNANSWERABLE`, because a lookup cannot decide that
+  a description is under-specified. The `unanswerable` stratum is 10 % of the
+  target and stands at zero, so the metric has no positive class to score.
+- **One call returned HTTP 503** and one response was unparseable. Both score
+  as wrong rather than being dropped, which is why 24 calls yield 14 correct
+  and not 14 of 22.
 
 **The model answers the same prompt the same way only 62.5 % of the time** —
 15 of 24 examples got an identical answer in all five runs. Taking the

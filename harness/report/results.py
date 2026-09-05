@@ -84,8 +84,11 @@ def new_run_id(model_key: str, prompt_mode: str = "shared") -> str:
     return f"{stamp}_{model_key}_{prompt_mode}"
 
 
-#: Enough to tell a run result from any other JSON that lands in `results/`.
-_RUN_MARKERS = ("run_id", "model_key", "summary")
+#: The field that says a file is one of ours. `model_key` and `summary` are not
+#: enough on their own: `harness.probe` writes both, so a probe file passed a
+#: looser check and then failed to construct, taking the leaderboard down after
+#: a paid run had already completed. Only a RunResult has a `run_id`.
+_RUN_MARKER = "run_id"
 
 
 def load_all(directory: Path = RESULTS) -> list[RunResult]:
@@ -107,7 +110,7 @@ def load_all(directory: Path = RESULTS) -> list[RunResult]:
         except json.JSONDecodeError as exc:
             raise ValueError(f"{path}: {exc}") from exc
 
-        if not isinstance(data, dict) or not any(m in data for m in _RUN_MARKERS):
+        if not isinstance(data, dict) or _RUN_MARKER not in data:
             print(f"  {path.name}: not a run result, skipped", file=sys.stderr)
             continue
 

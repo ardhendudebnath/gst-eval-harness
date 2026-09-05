@@ -108,6 +108,25 @@ def test_a_stray_json_does_not_take_the_leaderboard_down(results_dir, capsys):
     assert "list.json: not a run result, skipped" in err
 
 
+def test_a_probe_file_is_not_mistaken_for_a_run(results_dir, capsys):
+    """harness.probe writes model_key and summary into results/, so those two
+    fields cannot be the discriminator. This took the leaderboard down after a
+    paid run had already finished."""
+    a_run("opus-5").save(results_dir)
+    (results_dir / "gazette_probe.json").write_text(json.dumps({
+        "NOT_THE_GOLDEN_SET": "…",
+        "model_key": "open-weight",
+        "model_id": "vendor/m",
+        "summary": {"n": 24, "slab_acc": 0.5},
+        "rows": [],
+    }), encoding="utf-8")
+
+    runs = load_all(results_dir)
+
+    assert len(runs) == 1
+    assert "gazette_probe.json: not a run result, skipped" in capsys.readouterr().err
+
+
 def test_a_broken_run_file_still_raises(results_dir):
     """A run someone paid for must never be dropped silently."""
     a_run("opus-5").save(results_dir)
