@@ -29,7 +29,14 @@ operative ruling; no human has confirmed either. See the provenance table under
 *Dataset*. This is a working benchmark over an unaudited reference, and every
 number below inherits that.
 
-Dataset SHA `8e0b639c6c6f`, 24 rows, prompt `v1/shared`.
+Dataset SHA `13b78aaeebab`, 24 rows, prompt `v1/shared`.
+
+> An earlier run of this table, at SHA `8e0b639c6c6f`, was **scored against a
+> corrupted dataset** and has been withdrawn. A redaction pattern was deleting
+> `MS Rod`, `MS Flat` and `MS Bracket` — mild steel, not a party name — so
+> those examples had no goods description left in them. Fixed in `1c29655`,
+> data restored, re-run here. `tests/test_redaction_keeps_goods.py` now asserts
+> that a goods description survives redaction, which nothing did before.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/stale-slab-3d-dark.svg">
@@ -45,7 +52,23 @@ Dataset SHA `8e0b639c6c6f`, 24 rows, prompt `v1/shared`.
 
 | Model | Run | Slab acc. | HSN-4 acc. | Chapter acc. | Abolished **answered** | Abolished **recited** | p50 latency | ₹/correct |
 |---|---|---:|---:|---:|---:|---:|---:|---:|
-| `nvidia/nemotron-3-super-120b-a12b` | 2026-09-05 | 58.3 % | 60.9 % | 65.2 % | 4.2 % | 12.5 % | 15.9 s | — |
+| `nvidia/nemotron-3-super-120b-a12b` | 2026-09-05 | 58.3 % | 66.7 % | 66.7 % | **0.0 %** | **20.8 %** | 19.3 s | — |
+
+**Every one of those five stale responses was a refusal.** Not one abolished
+rate appeared in an answer field — `stale_slab_rate` is zero — while a fifth of
+all responses reasoned from a dead schedule and then declined:
+
+| Example | Gazette | Answered | Cited |
+|---|---|---|---|
+| `gst-0046` | 5 % | `UNANSWERABLE` | 12 % |
+| `gst-0048` | 18 % | `UNANSWERABLE` | 12 % |
+| `gst-0051` | 18 % | `UNANSWERABLE` | 12 % |
+| `gst-0068` | 18 % | `UNANSWERABLE` | 28 % |
+| `gst-0086` | 18 % | `UNANSWERABLE` | 12 % |
+
+A metric reading only the answer field would score this run as **perfectly
+clean on staleness** while a fifth of its reasoning ran on a schedule that no
+longer exists.
 
 Cost is blank because NVIDIA's price for this model has not been read and
 dated. The registry carries `0.0` deliberately, so the column stays empty
@@ -62,9 +85,9 @@ through `harness.probe` — identical inputs, identical references — give:
 | Abolished slab **recited** | **18.3 %** | 12.5 % | 25.0 % | 12.5 pp |
 | Abstention accuracy | 77.5 % | 70.8 % | 83.3 % | 12.5 pp |
 
-The single run above sits at the **top** of the accuracy range and the
-**bottom** of the recited range — a lucky draw on both. Quote the spread, not
-the run. (Spread across runs, *not* a confidence interval — see Limitations.)
+The benchmark run above sits at the **top** of the accuracy range and the
+**top** of the recited range. Quote the spread, not the run. (Spread across
+runs, *not* a confidence interval — see Limitations.)
 
 Two things the run reports that the aggregate cannot:
 
@@ -72,9 +95,11 @@ Two things the run reports that the aggregate cannot:
   stratum.** No gold row is `UNANSWERABLE`, because a lookup cannot decide that
   a description is under-specified. The `unanswerable` stratum is 10 % of the
   target and stands at zero, so the metric has no positive class to score.
-- **One call returned HTTP 503** and one response was unparseable. Both score
-  as wrong rather than being dropped, which is why 24 calls yield 14 correct
-  and not 14 of 22.
+  Which is awkward, given a fifth of this run's responses were refusals: the
+  benchmark currently cannot say whether a single one of them was *right* to
+  refuse.
+- **Nothing errored and nothing was unparseable** in this run. The previous
+  run had one of each, both scored as wrong rather than dropped.
 
 **The model answers the same prompt the same way only 62.5 % of the time** —
 15 of 24 examples got an identical answer in all five runs. Taking the
