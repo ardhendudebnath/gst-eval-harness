@@ -67,11 +67,11 @@ def test_a_registered_office_in_prose_is_stripped():
 # --- company and personal names ------------------------------------------
 
 @pytest.mark.parametrize("name", [
-    "[redacted]",
+    "M/s Zenith Boilers Limited",
     "M/s. Aster Air products Private",
-    "[redacted]",
+    "M/s. Kesari Industries",
     "M/s. Coastal Blenders and Distillers Private",
-    "[redacted]",          # no suffix — needs the general shape
+    "M/s. R.K Fibretech",          # no suffix — needs the general shape
 ])
 def test_third_party_companies_are_stripped(name):
     out = clean(f"another player in a similar line, {name} appears to have "
@@ -93,9 +93,9 @@ def test_a_company_name_is_not_truncated_leaving_its_suffix(text, stranded):
 
 
 def test_a_lowercase_word_inside_a_company_name_is_handled():
-    """"[redacted]" — the capitalised-run pattern
+    """"M/s. Aster Air products Private Limited" — the capitalised-run pattern
     stops at "products", so the suffix pattern has to carry this one."""
-    out = clean("from [redacted] they procure oxygen")
+    out = clean("from M/s. Aster Air products Private Limited they procure oxygen")
     assert "Aster" not in out and "Private" not in out
     assert "procure oxygen" in out
 
@@ -107,7 +107,7 @@ def test_an_individual_named_as_applicant_is_stripped():
 
 
 def test_the_goods_survive_a_company_strip():
-    out = clean("[redacted] manufactures polypropylene tarpaulins "
+    out = clean("M/s. Kesari Industries manufactures polypropylene tarpaulins "
                 "of heading 6306.")
     assert "tarpaulins" in out and "6306" in out
 
@@ -133,7 +133,7 @@ def test_a_notification_ms_no_citation_survives():
 def test_redaction_converges_in_one_pass():
     """Applying it twice must not keep eating text — otherwise the corpus
     depends on how many times it happened to be run."""
-    text = ("[redacted], having PAN-ABCDE1234F and registered office "
+    text = ("M/s. Kesari Industries, having PAN-ABCDE1234F and registered office "
             "at Plot No.12, Rajkot, manufactures fly ash bricks of heading 6815.")
     once = clean(text)
     assert clean(once) == once

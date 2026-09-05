@@ -7,6 +7,7 @@ the source text.
 
 from __future__ import annotations
 
+import hashlib
 import re
 import unicodedata
 
@@ -40,7 +41,7 @@ _GSTIN_RE = re.compile(r"\b\d{2}[A-Za-z0-9]{13}\b")
 
 #: "M/s" as OCR actually renders it. Scanned ruling PDFs produce "M / s",
 #: "M /s" and "M/ s", and a pattern anchored on the tight form matches none of
-#: them — which is how "[redacted], 16, Anand Colony,
+#: them — which is how "M / s Meridian Stoneworks LLP, 16, Anand Colony,
 #: Rampura" survived every party pattern and reached the published file.
 #:
 #: **The slash is required.** An earlier version admitted a bare "Ms", and the
@@ -80,7 +81,7 @@ _PAN_RE = re.compile(
 # _STREET_ADDR_RE never fired. Anchored on the phrase instead of the shape.
 #
 # Stopping at any period truncates the match to "registered office at Plot No"
-# and leaves ".418, Kadodara, Navsari" in the text, because Indian addresses are
+# and leaves ".1723, Kadodara, Navsari" in the text, because Indian addresses are
 # full of "No." and "Plot No.". A period only ends the address when it is not
 # part of a number.
 _REGISTERED_OFFICE_RE = re.compile(
@@ -110,8 +111,8 @@ _COMPANY_RE = re.compile(
     re.I,
 )
 
-# The general shape, for names with no recognisable suffix: "[redacted]
-# of Howrah" is a manufacturer named in the reasoning, and no suffix list would
+# The general shape, for names with no recognisable suffix: "M/s. R.K Fibretech
+# of Ramnagar" is a manufacturer named in the reasoning, and no suffix list would
 # have caught it. A company name is the run of capitalised tokens after M/s,
 # ending where ordinary lowercase prose resumes. Capped at six tokens so a
 # sentence that continues in title case cannot be swallowed whole.
@@ -208,7 +209,7 @@ _BUSINESS_ADDR_RE = re.compile(
     r"\bdoing\s+business\s+at\b[^.]{0,160}", re.I
 )
 #
-# "No." is optional: the address in "[redacted], 16,
+# "No." is optional: the address in "M / s Meridian Stoneworks LLP, 16,
 # Anand Colony, Rampura" is introduced by a bare number, and requiring the
 # prefix left it in the published file after the company name was removed.
 #
@@ -222,6 +223,57 @@ _STREET_ADDR_RE = re.compile(
     r"(?:Road|Street|Nagar|Lane|Colony|Layout|Cross|Block|Marg|Sarani)\b"
     r"[^.]{0,60}"
 )
+
+# Party names the general patterns cannot reach, each for its own reason.
+#
+# Kept as an explicit list because the alternative is a looser pattern, and
+# every loosening so far has cost goods text — the last one deleted "MS Rod".
+# A short list of names found by scanning the corpus is the conservative
+# option, and the reason each one survived is recorded so the list can be
+# retired if the general patterns ever improve enough:
+#
+#   trade name    the applicant markets the goods under its own name, so the
+#                 name sits inside the product description rather than beside
+#                 an "M/s". The classifying substance survives: strip the brand
+#                 and "polysulphide sealant" is still there, which is what
+#                 decides the heading.
+#   counterparty  a second company named throughout a ruling as the other side
+#                 of a transaction, never introduced by "M/s".
+#   orphan        an earlier redactor truncated "M/s. R.K Fibretech" mid-name
+#                 and left the tail, which no name pattern can now recognise.
+#
+# Stored as hashes, not text. A published blocklist that names the parties it
+# protects has defeated itself — anyone reading this file would learn exactly
+# the names the dataset went to trouble to remove. Each word in the text is
+# hashed and looked up instead, so the list is enforceable without being
+# readable.
+#
+# Lowercased before hashing, so a name is caught in whatever case it appears.
+# Single tokens only; a two-word name needs a pattern, not this.
+_KNOWN_PARTY_HASHES: frozenset[str] = frozenset({
+    "612f58a5a81eaeb83c0a05e2402cacb3e513ff06947d9bb154c22518f3fa2168",  # trade name
+    "3f40f767428a2a97b0e193ea6eac7a3db1ba7c0711af4ed0d5c972932b071612",  # product brand, same applicant
+    "43d2242f526a93c0ac2c7575109da34e7da8fb19d9fc448114e11a10e2e8c589",  # counterparty in a leasehold transfer
+    "45b72f147be46d52cd8a793ea67f31b64d940ccad87c2befa670d1851069bdf8",  # orphan left by an earlier truncation
+})
+
+#: Candidate tokens. Three characters minimum, because shorter ones collide
+#: with ordinary abbreviations and the hash set cannot be inspected to check.
+_WORD_RE = re.compile(r"\b[A-Za-z][A-Za-z0-9'\-]{2,}\b")
+
+
+def _strip_known_parties(text: str) -> tuple[str, int]:
+    hits = 0
+
+    def replace(m: re.Match[str]) -> str:
+        nonlocal hits
+        digest = hashlib.sha256(m.group(0).lower().encode("utf-8")).hexdigest()
+        if digest in _KNOWN_PARTY_HASHES:
+            hits += 1
+            return " "
+        return m.group(0)
+
+    return _WORD_RE.sub(replace, text), hits
 
 # Procedural furniture in rulings — the exact analogue of "Buy Now / Free
 # Delivery" in a product listing, and stripped for the same reason. It carries
@@ -315,6 +367,11 @@ def normalise(text: str, *, is_ruling: bool = False) -> tuple[str, list[str]]:
             out, n = pattern.subn(" ", out)
             if n:
                 applied.append(f"strip_{name}")
+
+        # Hash lookup rather than a pattern, so it runs on its own.
+        out, n = _strip_known_parties(out)
+        if n:
+            applied.append("strip_known_party")
 
     for name, pattern in (
         ("url", _URL_RE),

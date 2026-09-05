@@ -49,7 +49,7 @@ def test_ordinary_words_that_look_like_markers_survive(phrase, keep):
 
 
 def test_a_party_beside_goods_goes_but_the_goods_stay():
-    out = clean("[redacted] manufactures MS Rod and MS Flat "
+    out = clean("M/s. Kesari Industries manufactures MS Rod and MS Flat "
                 "falling under heading 7214")
     assert "Kesari" not in out
     assert "MS Rod" in out and "MS Flat" in out and "7214" in out
