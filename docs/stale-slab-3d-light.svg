@@ -1,60 +1,52 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="802" height="630" viewBox="0 0 802 630" font-family="system-ui,-apple-system,Segoe UI,sans-serif">
-<rect width="802" height="630" fill="#fcfcfb"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="796" height="691" viewBox="0 0 796 691" font-family="system-ui,-apple-system,Segoe UI,sans-serif">
+<rect width="796" height="691" fill="#fcfcfb"/>
 <text x="30" y="38" font-size="20" font-weight="700" fill="#0b0b0b">GST slab: what the notification says vs what the model said</text>
-<text x="30" y="62" font-size="13" fill="#52514e">n=24, 5 runs · slab accuracy 53% (46%–58%) · abolished slab recited 18% (12%–25%) · nvidia/nemotron-3-super-120b-a12b</text>
-<polygon points="306.0,330.0 337.0,347.0 306.0,364.0 275.0,347.0" fill="none" stroke="#e1e0d9" stroke-width="1"/>
-<polygon points="275.0,347.0 306.0,364.0 275.0,381.0 244.0,364.0" fill="none" stroke="#e1e0d9" stroke-width="1"/>
-<polygon points="244.0,364.0 275.0,381.0 244.0,398.0 213.0,381.0" fill="none" stroke="#e1e0d9" stroke-width="1"/>
-<polygon points="213.0,381.0 244.0,398.0 213.0,415.0 182.0,398.0" fill="none" stroke="#e1e0d9" stroke-width="1"/>
-<polygon points="182.0,398.0 213.0,415.0 182.0,432.0 151.0,415.0" fill="none" stroke="#e1e0d9" stroke-width="1"/>
-<polygon points="151.0,415.0 182.0,432.0 151.0,449.0 120.0,432.0" fill="none" stroke="#e1e0d9" stroke-width="1"/>
-<polygon points="337.0,347.0 368.0,364.0 337.0,381.0 306.0,364.0" fill="none" stroke="#e1e0d9" stroke-width="1"/>
-<polygon points="306.0,364.0 337.0,381.0 306.0,398.0 275.0,381.0" fill="none" stroke="#e1e0d9" stroke-width="1"/>
-<polygon points="275.0,381.0 306.0,398.0 275.0,415.0 244.0,398.0" fill="none" stroke="#e1e0d9" stroke-width="1"/>
-<polygon points="244.0,398.0 275.0,415.0 244.0,432.0 213.0,415.0" fill="none" stroke="#e1e0d9" stroke-width="1"/>
-<polygon points="213.0,415.0 244.0,432.0 213.0,449.0 182.0,432.0" fill="none" stroke="#e1e0d9" stroke-width="1"/>
-<polygon points="182.0,432.0 213.0,449.0 182.0,466.0 151.0,449.0" fill="none" stroke="#e1e0d9" stroke-width="1"/>
-<polygon points="306.0,278.0 275.0,295.0 275.0,347.0 306.0,330.0" fill="#1e569a" stroke="#1e569a" stroke-width="0.5" stroke-linejoin="round"/><polygon points="275.0,295.0 306.0,312.0 306.0,364.0 275.0,347.0" fill="#2467b8" stroke="#2467b8" stroke-width="0.5" stroke-linejoin="round"/><polygon points="306.0,278.0 337.0,295.0 306.0,312.0 275.0,295.0" fill="#2a78d6" stroke="#2a78d6" stroke-width="0.5" stroke-linejoin="round"/>
-<polygon points="244.0,286.0 213.0,303.0 213.0,381.0 244.0,364.0" fill="#087508" stroke="#087508" stroke-width="0.5" stroke-linejoin="round"/><polygon points="213.0,303.0 244.0,320.0 244.0,398.0 213.0,381.0" fill="#0a8c0a" stroke="#0a8c0a" stroke-width="0.5" stroke-linejoin="round"/><polygon points="244.0,286.0 275.0,303.0 244.0,320.0 213.0,303.0" fill="#0ca30c" stroke="#0ca30c" stroke-width="0.5" stroke-linejoin="round"/>
-<polygon points="306.0,338.0 275.0,355.0 275.0,381.0 306.0,364.0" fill="#1e569a" stroke="#1e569a" stroke-width="0.5" stroke-linejoin="round"/><polygon points="275.0,355.0 306.0,372.0 306.0,398.0 275.0,381.0" fill="#2467b8" stroke="#2467b8" stroke-width="0.5" stroke-linejoin="round"/><polygon points="306.0,338.0 337.0,355.0 306.0,372.0 275.0,355.0" fill="#2a78d6" stroke="#2a78d6" stroke-width="0.5" stroke-linejoin="round"/>
-<polygon points="275.0,329.0 244.0,346.0 244.0,398.0 275.0,381.0" fill="#1e569a" stroke="#1e569a" stroke-width="0.5" stroke-linejoin="round"/><polygon points="244.0,346.0 275.0,363.0 275.0,415.0 244.0,398.0" fill="#2467b8" stroke="#2467b8" stroke-width="0.5" stroke-linejoin="round"/><polygon points="275.0,329.0 306.0,346.0 275.0,363.0 244.0,346.0" fill="#2a78d6" stroke="#2a78d6" stroke-width="0.5" stroke-linejoin="round"/>
-<polygon points="182.0,372.0 151.0,389.0 151.0,415.0 182.0,398.0" fill="#1e569a" stroke="#1e569a" stroke-width="0.5" stroke-linejoin="round"/><polygon points="151.0,389.0 182.0,406.0 182.0,432.0 151.0,415.0" fill="#2467b8" stroke="#2467b8" stroke-width="0.5" stroke-linejoin="round"/><polygon points="182.0,372.0 213.0,389.0 182.0,406.0 151.0,389.0" fill="#2a78d6" stroke="#2a78d6" stroke-width="0.5" stroke-linejoin="round"/>
-<polygon points="244.0,372.0 213.0,389.0 213.0,415.0 244.0,398.0" fill="#952a2a" stroke="#952a2a" stroke-width="0.5" stroke-linejoin="round"/><polygon points="213.0,389.0 244.0,406.0 244.0,432.0 213.0,415.0" fill="#b23232" stroke="#b23232" stroke-width="0.5" stroke-linejoin="round"/><polygon points="244.0,372.0 275.0,389.0 244.0,406.0 213.0,389.0" fill="#d03b3b" stroke="#d03b3b" stroke-width="0.5" stroke-linejoin="round"/>
-<polygon points="151.0,389.0 120.0,406.0 120.0,432.0 151.0,415.0" fill="#1e569a" stroke="#1e569a" stroke-width="0.5" stroke-linejoin="round"/><polygon points="120.0,406.0 151.0,423.0 151.0,449.0 120.0,432.0" fill="#2467b8" stroke="#2467b8" stroke-width="0.5" stroke-linejoin="round"/><polygon points="151.0,389.0 182.0,406.0 151.0,423.0 120.0,406.0" fill="#2a78d6" stroke="#2a78d6" stroke-width="0.5" stroke-linejoin="round"/>
-<polygon points="213.0,181.0 182.0,198.0 182.0,432.0 213.0,415.0" fill="#087508" stroke="#087508" stroke-width="0.5" stroke-linejoin="round"/><polygon points="182.0,198.0 213.0,215.0 213.0,449.0 182.0,432.0" fill="#0a8c0a" stroke="#0a8c0a" stroke-width="0.5" stroke-linejoin="round"/><polygon points="213.0,181.0 244.0,198.0 213.0,215.0 182.0,198.0" fill="#0ca30c" stroke="#0ca30c" stroke-width="0.5" stroke-linejoin="round"/>
-<polygon points="182.0,328.0 151.0,345.0 151.0,449.0 182.0,432.0" fill="#1e569a" stroke="#1e569a" stroke-width="0.5" stroke-linejoin="round"/><polygon points="151.0,345.0 182.0,362.0 182.0,466.0 151.0,449.0" fill="#2467b8" stroke="#2467b8" stroke-width="0.5" stroke-linejoin="round"/><polygon points="182.0,328.0 213.0,345.0 182.0,362.0 151.0,345.0" fill="#2a78d6" stroke="#2a78d6" stroke-width="0.5" stroke-linejoin="round"/>
-<text x="121.5" y="453.1" text-anchor="end" font-size="14" font-weight="600" fill="#52514e">5%</text>
-<text x="152.5" y="470.1" text-anchor="end" font-size="14" font-weight="600" fill="#52514e">18%</text>
-<path d="M357.5,372.5 L434.0,373.5" stroke="#c3c2b7" stroke-width="1" fill="none"/>
-<text x="442.0" y="377.5" text-anchor="start" font-size="13" font-weight="600" fill="#52514e">0%</text>
-<path d="M326.5,389.5 L434.0,390.5" stroke="#c3c2b7" stroke-width="1" fill="none"/>
-<text x="442.0" y="394.5" text-anchor="start" font-size="13" font-weight="600" fill="#52514e">3%</text>
-<path d="M295.5,406.5 L434.0,407.5" stroke="#c3c2b7" stroke-width="1" fill="none"/>
-<text x="442.0" y="411.5" text-anchor="start" font-size="13" font-weight="600" fill="#52514e">5%</text>
-<path d="M264.5,423.5 L434.0,424.5" stroke="#c3c2b7" stroke-width="1" fill="none"/>
-<text x="442.0" y="428.5" text-anchor="start" font-size="13" font-weight="600" fill="#d03b3b">12% †</text>
-<path d="M233.5,440.5 L434.0,441.5" stroke="#c3c2b7" stroke-width="1" fill="none"/>
-<text x="442.0" y="445.5" text-anchor="start" font-size="13" font-weight="600" fill="#52514e">18%</text>
-<path d="M202.5,457.5 L434.0,458.5" stroke="#c3c2b7" stroke-width="1" fill="none"/>
-<text x="442.0" y="462.5" text-anchor="start" font-size="13" font-weight="600" fill="#52514e">refused</text>
-<text x="101.4" y="476.2" text-anchor="end" font-size="11" letter-spacing="0.09em" fill="#898781">GAZETTE SAYS</text>
-<text x="442.0" y="348.7" text-anchor="start" font-size="11" letter-spacing="0.09em" fill="#898781">MODEL SAID</text>
-<text x="306.0" y="286.0" text-anchor="middle" font-size="14" font-weight="700" fill="#0b0b0b" stroke="#fcfcfb" stroke-width="3" paint-order="stroke" >2</text>
-<text x="244.0" y="294.0" text-anchor="middle" font-size="14" font-weight="700" fill="#0b0b0b" stroke="#fcfcfb" stroke-width="3" paint-order="stroke" >3</text>
-<text x="306.0" y="346.0" text-anchor="middle" font-size="14" font-weight="700" fill="#0b0b0b" stroke="#fcfcfb" stroke-width="3" paint-order="stroke" >1</text>
-<text x="275.0" y="337.0" text-anchor="middle" font-size="14" font-weight="700" fill="#0b0b0b" stroke="#fcfcfb" stroke-width="3" paint-order="stroke" >2</text>
-<text x="182.0" y="380.0" text-anchor="middle" font-size="14" font-weight="700" fill="#0b0b0b" stroke="#fcfcfb" stroke-width="3" paint-order="stroke" >1</text>
-<text x="244.0" y="380.0" text-anchor="middle" font-size="14" font-weight="700" fill="#0b0b0b" stroke="#fcfcfb" stroke-width="3" paint-order="stroke" >1</text>
-<text x="151.0" y="397.0" text-anchor="middle" font-size="14" font-weight="700" fill="#0b0b0b" stroke="#fcfcfb" stroke-width="3" paint-order="stroke" >1</text>
-<text x="213.0" y="189.0" text-anchor="middle" font-size="14" font-weight="700" fill="#0b0b0b" stroke="#fcfcfb" stroke-width="3" paint-order="stroke" >9</text>
-<text x="182.0" y="336.0" text-anchor="middle" font-size="14" font-weight="700" fill="#0b0b0b" stroke="#fcfcfb" stroke-width="3" paint-order="stroke" >4</text>
-<rect x="34" y="512" width="12" height="12" rx="2" fill="#0ca30c"/>
-<text x="53" y="522" font-size="13" fill="#52514e">correct</text>
-<rect x="34" y="534" width="12" height="12" rx="2" fill="#d03b3b"/>
-<text x="53" y="544" font-size="13" fill="#52514e">† abolished slab — no longer exists</text>
-<rect x="34" y="556" width="12" height="12" rx="2" fill="#2a78d6"/>
-<text x="53" y="566" font-size="13" fill="#52514e">wrong, but a live slab</text>
-<text x="34" y="592" font-size="12" fill="#898781">† 12% abolished 2025-09-22 · 28% abolished 2026-02-01</text>
-<text x="34" y="609" font-size="12" fill="#898781">bars show the answer only; 'recited' also counts refusals that reasoned from a dead rate</text>
-<text x="34" y="626" font-size="12" fill="#898781">bars are one run of 5; the model gave the same answer every run for only 15 of 24 examples</text>
+<text x="30" y="62" font-size="13" fill="#52514e">n=28, 5 runs · slab accuracy 54% (50%–64%) · abolished slab recited 11% (7%–14%) · nvidia/nemotron-3-super-120b-a12b</text>
+<polygon points="275.0,408.0 306.0,425.0 275.0,442.0 244.0,425.0" fill="none" stroke="#e1e0d9" stroke-width="1"/>
+<polygon points="244.0,425.0 275.0,442.0 244.0,459.0 213.0,442.0" fill="none" stroke="#e1e0d9" stroke-width="1"/>
+<polygon points="213.0,442.0 244.0,459.0 213.0,476.0 182.0,459.0" fill="none" stroke="#e1e0d9" stroke-width="1"/>
+<polygon points="182.0,459.0 213.0,476.0 182.0,493.0 151.0,476.0" fill="none" stroke="#e1e0d9" stroke-width="1"/>
+<polygon points="151.0,476.0 182.0,493.0 151.0,510.0 120.0,493.0" fill="none" stroke="#e1e0d9" stroke-width="1"/>
+<polygon points="306.0,425.0 337.0,442.0 306.0,459.0 275.0,442.0" fill="none" stroke="#e1e0d9" stroke-width="1"/>
+<polygon points="275.0,442.0 306.0,459.0 275.0,476.0 244.0,459.0" fill="none" stroke="#e1e0d9" stroke-width="1"/>
+<polygon points="244.0,459.0 275.0,476.0 244.0,493.0 213.0,476.0" fill="none" stroke="#e1e0d9" stroke-width="1"/>
+<polygon points="213.0,476.0 244.0,493.0 213.0,510.0 182.0,493.0" fill="none" stroke="#e1e0d9" stroke-width="1"/>
+<polygon points="182.0,493.0 213.0,510.0 182.0,527.0 151.0,510.0" fill="none" stroke="#e1e0d9" stroke-width="1"/>
+<polygon points="244.0,269.0 213.0,286.0 213.0,442.0 244.0,425.0" fill="#087508" stroke="#087508" stroke-width="0.5" stroke-linejoin="round"/><polygon points="213.0,286.0 244.0,303.0 244.0,459.0 213.0,442.0" fill="#0a8c0a" stroke="#0a8c0a" stroke-width="0.5" stroke-linejoin="round"/><polygon points="244.0,269.0 275.0,286.0 244.0,303.0 213.0,286.0" fill="#0ca30c" stroke="#0ca30c" stroke-width="0.5" stroke-linejoin="round"/>
+<polygon points="306.0,399.0 275.0,416.0 275.0,442.0 306.0,425.0" fill="#1e569a" stroke="#1e569a" stroke-width="0.5" stroke-linejoin="round"/><polygon points="275.0,416.0 306.0,433.0 306.0,459.0 275.0,442.0" fill="#2467b8" stroke="#2467b8" stroke-width="0.5" stroke-linejoin="round"/><polygon points="306.0,399.0 337.0,416.0 306.0,433.0 275.0,416.0" fill="#2a78d6" stroke="#2a78d6" stroke-width="0.5" stroke-linejoin="round"/>
+<polygon points="275.0,390.0 244.0,407.0 244.0,459.0 275.0,442.0" fill="#1e569a" stroke="#1e569a" stroke-width="0.5" stroke-linejoin="round"/><polygon points="244.0,407.0 275.0,424.0 275.0,476.0 244.0,459.0" fill="#2467b8" stroke="#2467b8" stroke-width="0.5" stroke-linejoin="round"/><polygon points="275.0,390.0 306.0,407.0 275.0,424.0 244.0,407.0" fill="#2a78d6" stroke="#2a78d6" stroke-width="0.5" stroke-linejoin="round"/>
+<polygon points="244.0,433.0 213.0,450.0 213.0,476.0 244.0,459.0" fill="#952a2a" stroke="#952a2a" stroke-width="0.5" stroke-linejoin="round"/><polygon points="213.0,450.0 244.0,467.0 244.0,493.0 213.0,476.0" fill="#b23232" stroke="#b23232" stroke-width="0.5" stroke-linejoin="round"/><polygon points="244.0,433.0 275.0,450.0 244.0,467.0 213.0,450.0" fill="#d03b3b" stroke="#d03b3b" stroke-width="0.5" stroke-linejoin="round"/>
+<polygon points="151.0,424.0 120.0,441.0 120.0,493.0 151.0,476.0" fill="#1e569a" stroke="#1e569a" stroke-width="0.5" stroke-linejoin="round"/><polygon points="120.0,441.0 151.0,458.0 151.0,510.0 120.0,493.0" fill="#2467b8" stroke="#2467b8" stroke-width="0.5" stroke-linejoin="round"/><polygon points="151.0,424.0 182.0,441.0 151.0,458.0 120.0,441.0" fill="#2a78d6" stroke="#2a78d6" stroke-width="0.5" stroke-linejoin="round"/>
+<polygon points="213.0,164.0 182.0,181.0 182.0,493.0 213.0,476.0" fill="#087508" stroke="#087508" stroke-width="0.5" stroke-linejoin="round"/><polygon points="182.0,181.0 213.0,198.0 213.0,510.0 182.0,493.0" fill="#0a8c0a" stroke="#0a8c0a" stroke-width="0.5" stroke-linejoin="round"/><polygon points="213.0,164.0 244.0,181.0 213.0,198.0 182.0,181.0" fill="#0ca30c" stroke="#0ca30c" stroke-width="0.5" stroke-linejoin="round"/>
+<polygon points="182.0,389.0 151.0,406.0 151.0,510.0 182.0,493.0" fill="#1e569a" stroke="#1e569a" stroke-width="0.5" stroke-linejoin="round"/><polygon points="151.0,406.0 182.0,423.0 182.0,527.0 151.0,510.0" fill="#2467b8" stroke="#2467b8" stroke-width="0.5" stroke-linejoin="round"/><polygon points="182.0,389.0 213.0,406.0 182.0,423.0 151.0,406.0" fill="#2a78d6" stroke="#2a78d6" stroke-width="0.5" stroke-linejoin="round"/>
+<text x="121.5" y="514.1" text-anchor="end" font-size="14" font-weight="600" fill="#52514e">5%</text>
+<text x="152.6" y="531.1" text-anchor="end" font-size="14" font-weight="600" fill="#52514e">18%</text>
+<path d="M326.5,450.5 L403.0,451.5" stroke="#c3c2b7" stroke-width="1" fill="none"/>
+<text x="411.0" y="455.5" text-anchor="start" font-size="13" font-weight="600" fill="#52514e">3%</text>
+<path d="M295.5,467.5 L403.0,468.5" stroke="#c3c2b7" stroke-width="1" fill="none"/>
+<text x="411.0" y="472.5" text-anchor="start" font-size="13" font-weight="600" fill="#52514e">5%</text>
+<path d="M264.5,484.5 L403.0,485.5" stroke="#c3c2b7" stroke-width="1" fill="none"/>
+<text x="411.0" y="489.5" text-anchor="start" font-size="13" font-weight="600" fill="#d03b3b">12% †</text>
+<path d="M233.5,501.5 L403.0,502.5" stroke="#c3c2b7" stroke-width="1" fill="none"/>
+<text x="411.0" y="506.5" text-anchor="start" font-size="13" font-weight="600" fill="#52514e">18%</text>
+<path d="M202.5,518.5 L403.0,519.5" stroke="#c3c2b7" stroke-width="1" fill="none"/>
+<text x="411.0" y="523.5" text-anchor="start" font-size="13" font-weight="600" fill="#52514e">refused</text>
+<text x="101.4" y="537.2" text-anchor="end" font-size="11" letter-spacing="0.09em" fill="#898781">GAZETTE SAYS</text>
+<text x="411.0" y="426.7" text-anchor="start" font-size="11" letter-spacing="0.09em" fill="#898781">MODEL SAID</text>
+<text x="244.0" y="277.0" text-anchor="middle" font-size="14" font-weight="700" fill="#0b0b0b" stroke="#fcfcfb" stroke-width="3" paint-order="stroke" >6</text>
+<text x="306.0" y="407.0" text-anchor="middle" font-size="14" font-weight="700" fill="#0b0b0b" stroke="#fcfcfb" stroke-width="3" paint-order="stroke" >1</text>
+<text x="275.0" y="398.0" text-anchor="middle" font-size="14" font-weight="700" fill="#0b0b0b" stroke="#fcfcfb" stroke-width="3" paint-order="stroke" >2</text>
+<text x="244.0" y="441.0" text-anchor="middle" font-size="14" font-weight="700" fill="#0b0b0b" stroke="#fcfcfb" stroke-width="3" paint-order="stroke" >1</text>
+<text x="151.0" y="432.0" text-anchor="middle" font-size="14" font-weight="700" fill="#0b0b0b" stroke="#fcfcfb" stroke-width="3" paint-order="stroke" >2</text>
+<text x="213.0" y="172.0" text-anchor="middle" font-size="14" font-weight="700" fill="#0b0b0b" stroke="#fcfcfb" stroke-width="3" paint-order="stroke" >12</text>
+<text x="182.0" y="397.0" text-anchor="middle" font-size="14" font-weight="700" fill="#0b0b0b" stroke="#fcfcfb" stroke-width="3" paint-order="stroke" >4</text>
+<rect x="34" y="573" width="12" height="12" rx="2" fill="#0ca30c"/>
+<text x="53" y="583" font-size="13" fill="#52514e">correct</text>
+<rect x="34" y="595" width="12" height="12" rx="2" fill="#d03b3b"/>
+<text x="53" y="605" font-size="13" fill="#52514e">† abolished slab — no longer exists</text>
+<rect x="34" y="617" width="12" height="12" rx="2" fill="#2a78d6"/>
+<text x="53" y="627" font-size="13" fill="#52514e">wrong, but a live slab</text>
+<text x="34" y="653" font-size="12" fill="#898781">† 12% abolished 2025-09-22 · 28% abolished 2026-02-01</text>
+<text x="34" y="670" font-size="12" fill="#898781">bars show the answer only; 'recited' also counts refusals that reasoned from a dead rate</text>
+<text x="34" y="687" font-size="12" fill="#898781">bars are one run of 5; the model gave the same answer every run for only 15 of 28 examples</text>
 </svg>

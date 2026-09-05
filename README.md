@@ -41,12 +41,12 @@ Dataset SHA `8c32ff29e970`, 28 rows, prompt `v1/shared`.
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/stale-slab-3d-dark.svg">
   <img alt="Isometric 3D bar chart. Floor grid of Gazette slab against the slab
-  the model answered, bar height showing how many of the 24 goods fall in each
-  cell, for one run of the five. Nine correct at 18 % and three at 5 %; five
-  refusals; wrong-but-live answers of 5 % (two), 0 % (two), 18 % (one) and 3 %
-  (one); and a single red bar over the abolished 12 % slab. Responses that
-  reasoned from an abolished rate and then refused are not visible here,
-  because the bars can only show the answer."
+  the model answered, bar height showing how many of the 28 goods fall in each
+  cell, for one run of the five. Twelve correct at 18 % and six at 5 %; six
+  refusals; wrong-but-live answers of 5 % (two) and 3 % (one); and a single red
+  bar over the abolished 12 % slab. Responses that reasoned from an abolished
+  rate and then refused are not visible here, because the bars can only show
+  the answer."
   src="docs/stale-slab-3d-light.svg" width="100%">
 </picture>
 
@@ -67,30 +67,45 @@ the answer; one reached a refusal by way of it** — which is the distinction
 The previous run, over 24 rows, split the other way: **every** stale response
 was a refusal and `stale_slab_rate` was zero. Two runs, two quite different
 pictures of the same failure, from a model that reproduces its own answer on
-only 62.5 % of examples. Neither run is the finding — the spread is.
+only 53.6 % of examples. Neither run is the finding — the spread is.
 
 Cost is blank because NVIDIA's price for this model has not been read and
 dated. The registry carries `0.0` deliberately, so the column stays empty
 rather than carrying a fabricated figure.
 
-**One run is not a measurement here.** Five repeats through `harness.probe`,
-identical inputs and identical references, give the spread below. Note the
-denominator: this ran over the **24 rows** the golden set held before `CTH`
-heading extraction added four more, so it is a subset of the table above and
-not a repeat of it. The point it makes about variance is unaffected.
+**One run is not a measurement here.** The same 28 examples, five times through
+`harness.probe` with identical inputs and references:
 
 | Metric | Mean | Min | Max | Spread |
 |---|---:|---:|---:|---:|
-| Slab accuracy | 53.3 % | 45.8 % | 58.3 % | 12.5 pp |
-| HSN-4 accuracy | 59.3 % | 56.5 % | 62.5 % | 6.0 pp |
-| Abolished slab **answered** | 5.0 % | 0.0 % | 8.3 % | 8.3 pp |
-| Abolished slab **recited** | **18.3 %** | 12.5 % | 25.0 % | 12.5 pp |
-| Abstention accuracy | 77.5 % | 70.8 % | 83.3 % | 12.5 pp |
+| Slab accuracy | 54.3 % | 50.0 % | 64.3 % | 14.3 pp |
+| HSN-4 accuracy | 57.9 % | 53.6 % | 60.7 % | 7.1 pp |
+| Abolished slab **answered** | 2.1 % | 0.0 % | 3.6 % | 3.6 pp |
+| Abolished slab **recited** | **11.4 %** | 7.1 % | 14.3 % | 7.1 pp |
+| Abstention accuracy | 77.9 % | 71.4 % | 82.1 % | 10.7 pp |
 
-The benchmark run above sits **above** the accuracy range and **below** the
-recited range — on four more examples, so the comparison is indicative rather
-than exact. Quote the spread, not the run. (Spread across runs, *not* a
-confidence interval — see Limitations.)
+Per-run slab accuracy: 53.6, 50.0, 53.6, 50.0, **64.3**. The single run in the
+table above is that outlier — the best of five, and 10 points clear of the next
+best. Quote the spread, not the run. (Spread across runs, *not* a confidence
+interval — see Limitations.)
+
+**The model reproduces its own answer on 15 of 28 examples — 53.6 %.** Majority
+vote over five runs also scores 53.6 %, i.e. **exactly the mean single run**.
+On the previous 24-row set voting gained five points; here it gains nothing.
+Asking repeatedly and taking the plurality is not a usable mitigation.
+
+Three examples show what the instability looks like when it is not noise around
+a settled answer:
+
+| Example | Gazette | Five answers |
+|---|---|---|
+| `gst-0088` | 5 % | `18`, refused, **`1.5`**, `0`, refused |
+| `gst-0062` | 18 % | refused, `18`, refused, **`28`**, refused |
+| `gst-0071` | 5 % | `0`, `0`, `0`, `0`, `5` |
+
+`gst-0088` produced four different answers in five attempts, one of them
+`1.5 %` — a slab that exists but applies to rough diamonds. `gst-0062` produced
+the abolished `28 %` once and the correct answer once, out of five.
 
 Two things the run reports that the aggregate cannot:
 
@@ -101,44 +116,39 @@ Two things the run reports that the aggregate cannot:
   Which is awkward, given a fifth of this run's responses were refusals: the
   benchmark currently cannot say whether a single one of them was *right* to
   refuse.
-- **Nothing errored and nothing was unparseable** in this run. The previous
-  run had one of each, both scored as wrong rather than dropped.
+- **One call errored (HTTP 503) and one response was unparseable.** Both score
+  as wrong rather than being dropped, which is why 28 calls give 18 correct and
+  not 18 of 26.
 
-**The model answers the same prompt the same way only 62.5 % of the time** —
-15 of 24 examples got an identical answer in all five runs. Taking the
-plurality of five runs scores 58.3 %, five points above the mean single run, so
-repetition buys something, but not much.
+**Self-agreement got worse as the set grew, and that is worth a sentence,
+because I predicted the opposite.** Adding four straightforward goods —
+roller chains, desktops, tar, a plaited mat — should have been answered
+consistently and nudged the figure up. It fell from 62.5 % to 53.6 %, and one
+of the four new rows is itself unstable: `gst-0066` (tar, heading 2706) came
+back `5, 5, 5, 5, 18`. Four wrong, one right, no sign of a settled view either
+way.
 
-The instability is not noise around a settled answer. It crosses category
-boundaries:
+| | 24 rows | 28 rows |
+|---|---:|---:|
+| answers the same way every run | 62.5 % | **53.6 %** |
+| majority vote vs mean single run | +5.0 pp | **−0.7 pp** |
+| abolished slab recited (mean) | 18.3 % | 11.4 % |
 
-| Example | Gazette | Five answers |
-|---|---|---|
-| `gst-0068` | 18 % | `18`, `0`, **`28`**, `18`, `18` |
-| `gst-0086` | 18 % | **`12`**, `18`, refused, refused, refused |
-| `gst-0051` | 18 % | **`12`**, refused, **`12`**, **`12`**, **`12`** |
-| `gst-0012` | 18 % | `18`, refused, **`9`**, `18`, refused |
-| `gst-0088` | 5 % | refused, refused, refused, `5`, `18` |
-
-`gst-0068` produced the abolished 28 % in one run of five and the correct
-answer in three — a single run would have reported that example as either a
-clean pass or the headline failure, depending entirely on luck.
-
-`gst-0012` answering **9 %** is a different fault worth naming. The
-notification prints its schedules as **CGST halves** — `Schedule II – 9 %`,
-`Schedule III – 20 %` — and the combined GST rate is double. One response
-handled that correctly ("attracts 9 % CGST … *resulting in a combined GST rate
-of 18 %*") and another did not ("fixing the GST rate at 9 %"). That is a
-correct reading of the document under the wrong convention, and it is invisible
-to a stale-slab metric because 9 % is not an abolished slab — it was never a
-GST slab at all.
+`gst-0012` answering **9 %** in the earlier set is a fault worth keeping on
+record. The notification prints its schedules as **CGST halves** —
+`Schedule II – 9 %`, `Schedule III – 20 %` — and the combined GST rate is
+double. One response handled that correctly ("attracts 9 % CGST … *resulting in
+a combined GST rate of 18 %*") and another did not ("fixing the GST rate at
+9 %"). A correct reading of the document under the wrong convention, invisible
+to a stale-slab metric because 9 % was never a GST slab at all.
 
 Cost is **not** reported. NVIDIA's price for this model has not been read and
 dated, and the registry carries `0.0` deliberately so no figure can be
-fabricated. **Human ceiling:** still pending the self-agreement measurement,
-which the 62.5 % above makes considerably more urgent. A model that reproduces
-its own answer five times running on only 15 of 24 examples has to be judged
-against a human doing the same task twice, and that number does not exist yet.
+fabricated. **Human ceiling:** still pending, and the 53.6 % above makes it
+considerably more urgent. A model that reproduces its own answer five times
+running on only 15 of 28 examples has to be judged against a human doing the
+same task twice — and until that number exists, there is nothing to say whether
+53.6 % is poor or simply what this task looks like.
 
 ---
 
@@ -154,17 +164,16 @@ retrofitted:
 **Partly supported, and the qualifier matters more than the number.**
 
 Measured the way the hypothesis was originally written — abolished rates given
-as the *answer* — it averages **5.0 %** over five runs, and in one of those
-runs it was **zero**. That does not vindicate a prediction of "a measurable
-share".
+as the *answer* — it averages **2.1 %** over five runs on 28 examples, and in
+one of those runs it was **zero**. That does not vindicate a prediction of "a
+measurable share".
 
-Measured the way the responses actually behave, **18.3 % (12.5–25.0 %) reason
-from a rate that no longer exists**. Most of those never put it in the answer
-field; they cite it and then decline. The failure is real and roughly four
-times more common than the original metric could see — but it mostly surfaces
-as an abstention, which is a materially different claim from "models will
-confidently emit abolished rates", and this section should not pretend
-otherwise.
+Measured the way the responses actually behave, **11.4 % (7.1–14.3 %) reason
+from a rate that no longer exists**. Most never put it in the answer field;
+they cite it and then decline. The failure is real and roughly five times more
+common than the original metric could see — but it mostly surfaces as an
+abstention, which is a materially different claim from "models will confidently
+emit abolished rates", and this section should not pretend otherwise.
 
 The stated hypothesis also predicted "no drop in stated confidence". That is
 the part the evidence contradicts: reasoning from a dead schedule is precisely
@@ -195,9 +204,9 @@ of* an abolished rate scored as a clean abstention:
 
 Reading those by hand is what prompted `stale_cited_rate`, which counts an
 abolished rate asserted as current anywhere in the response. It moved the
-figure from a mean of 5.0 % to 18.3 %. Both are reported: a model that gives a wrong rate
-and one that declines for a wrong reason are different failures, and collapsing
-them would hide which is happening.
+figure from a mean of 2.1 % to 11.4 %. Both are reported: a model that gives a
+wrong rate and one that declines for a wrong reason are different failures, and
+collapsing them would hide which is happening.
 
 **A hand-checked case outside the probe set is unambiguous.** Asked to classify
 *Portland cement, 50 kg bag*, the model twice answered **28 %** — abolished on
@@ -492,10 +501,10 @@ where you control it.
 
 Written honestly, and expanded as the work proceeds.
 
-- **Every figure currently published rests on n = 24, and the interval is
-  wider than the finding.** At that sample size a measured rate of 20 % carries
-  a 95 % confidence interval of roughly ±16 points — so "18.3 % recite an
-  abolished slab" is really "somewhere between about 3 % and 34 %". Repeating
+- **Every figure currently published rests on n = 28, and the interval is
+  wider than the finding.** At that sample size a measured rate of 11 % carries
+  a 95 % confidence interval of roughly ±12 points — so "11.4 % recite an
+  abolished slab" is really "somewhere between about 0 % and 23 %". Repeating
   the run fixes sampling noise, and `--repeats` now reports mean and range for
   exactly that reason, but **repeats do not narrow this interval**: five runs
   over the same 24 examples is still 24 examples. Only more labelled examples
