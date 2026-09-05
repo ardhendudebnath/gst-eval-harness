@@ -34,7 +34,7 @@ Dataset SHA `13b78aaeebab`, 24 rows, prompt `v1/shared`.
 > An earlier run of this table, at SHA `8e0b639c6c6f`, was **scored against a
 > corrupted dataset** and has been withdrawn. A redaction pattern was deleting
 > `MS Rod`, `MS Flat` and `MS Bracket` — mild steel, not a party name — so
-> those examples had no goods description left in them. Fixed in `1c29655`,
+> those examples had no goods description left in them. Fixed in `6816e3c`,
 > data restored, re-run here. `tests/test_redaction_keeps_goods.py` now asserts
 > that a goods description survives redaction, which nothing did before.
 
