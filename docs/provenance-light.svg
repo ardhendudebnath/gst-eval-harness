@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="756" height="708" viewBox="0 0 756 708" font-family="system-ui,-apple-system,Segoe UI,sans-serif">
+<rect width="756" height="708" fill="#fcfcfb"/>
+<text x="30.0" y="38.0" text-anchor="start" font-size="20" font-weight="700" fill="#0b0b0b">What a label claims, and who made it</text>
+<text x="30.0" y="62.0" text-anchor="start" font-size="13" font-weight="400" fill="#52514e">height is the number of rows · the wall is harness/schema.py, which rejects an unreviewed suggestion outright</text>
+<polygon points="142.1,150.0 70.0,191.6 70.0,309.9 142.1,268.3" fill="#912929" stroke="#912929" stroke-width="0.6" stroke-linejoin="round"/><polygon points="70.0,191.6 142.1,233.2 142.1,351.5 70.0,309.9" fill="#b03232" stroke="#b03232" stroke-width="0.6" stroke-linejoin="round"/><polygon points="142.1,150.0 214.1,191.6 142.1,233.2 70.0,191.6" fill="#d03b3b" stroke="#d03b3b" stroke-width="0.6" stroke-linejoin="round"/>
+<text x="142.1" y="181.6" text-anchor="middle" font-size="19" font-weight="700" fill="#d03b3b" stroke="#fcfcfb" stroke-width="3" paint-order="stroke">126</text>
+<text x="94.8" y="355.2" text-anchor="middle" font-size="12" font-weight="600" fill="#0b0b0b">model-first-pass</text>
+<text x="94.8" y="370.2" text-anchor="middle" font-size="10" font-weight="400" fill="#898781">quarantined — the validator refuses it</text>
+<polygon points="272.6,283.1 200.6,324.7 200.6,385.3 272.6,343.7" fill="#1d5495" stroke="#1d5495" stroke-width="0.6" stroke-linejoin="round"/><polygon points="200.6,324.7 272.6,366.3 272.6,426.9 200.6,385.3" fill="#2366b5" stroke="#2366b5" stroke-width="0.6" stroke-linejoin="round"/><polygon points="272.6,283.1 344.7,324.7 272.6,366.3 200.6,324.7" fill="#2a78d6" stroke="#2a78d6" stroke-width="0.6" stroke-linejoin="round"/>
+<text x="272.6" y="314.7" text-anchor="middle" font-size="19" font-weight="700" fill="#2a78d6" stroke="#fcfcfb" stroke-width="3" paint-order="stroke">28</text>
+<text x="225.4" y="430.6" text-anchor="middle" font-size="12" font-weight="600" fill="#0b0b0b">gazette-derived</text>
+<text x="225.4" y="445.6" text-anchor="middle" font-size="10" font-weight="400" fill="#898781">document lookup, no human confirmed it</text>
+<polygon points="403.2,414.4 331.2,456.0 331.2,460.7 403.2,419.1" fill="#9d9c97" stroke="#9d9c97" stroke-width="0.6" stroke-linejoin="round"/><polygon points="331.2,456.0 403.2,497.6 403.2,502.3 331.2,460.7" fill="#bfbeb8" stroke="#bfbeb8" stroke-width="0.6" stroke-linejoin="round"/><polygon points="403.2,414.4 475.3,456.0 403.2,497.6 331.2,456.0" fill="#e1e0d9" stroke="#e1e0d9" stroke-width="0.6" stroke-linejoin="round"/>
+<text x="403.2" y="446.0" text-anchor="middle" font-size="19" font-weight="700" fill="#d03b3b" stroke="#fcfcfb" stroke-width="3" paint-order="stroke">0</text>
+<text x="356.0" y="506.0" text-anchor="middle" font-size="12" font-weight="600" fill="#0b0b0b">human-reviewed</text>
+<text x="356.0" y="521.0" text-anchor="middle" font-size="10" font-weight="400" fill="#898781">a suggestion an annotator accepted</text>
+<polygon points="533.8,489.8 461.8,531.4 461.8,536.1 533.8,494.5" fill="#9d9c97" stroke="#9d9c97" stroke-width="0.6" stroke-linejoin="round"/><polygon points="461.8,531.4 533.8,573.0 533.8,577.7 461.8,536.1" fill="#bfbeb8" stroke="#bfbeb8" stroke-width="0.6" stroke-linejoin="round"/><polygon points="533.8,489.8 605.9,531.4 533.8,573.0 461.8,531.4" fill="#e1e0d9" stroke="#e1e0d9" stroke-width="0.6" stroke-linejoin="round"/>
+<text x="533.8" y="521.4" text-anchor="middle" font-size="19" font-weight="700" fill="#d03b3b" stroke="#fcfcfb" stroke-width="3" paint-order="stroke">0</text>
+<text x="486.6" y="581.4" text-anchor="middle" font-size="12" font-weight="600" fill="#0b0b0b">human</text>
+<text x="486.6" y="596.4" text-anchor="middle" font-size="10" font-weight="400" fill="#898781">judged directly by the annotator</text>
+<polygon points="252.4,321.6 162.3,373.6 162.3,239.7 252.4,187.7" fill="none" stroke="#d03b3b" stroke-width="1.6" stroke-linejoin="round"/>
+<text x="266.4" y="175.7" text-anchor="start" font-size="11" font-weight="600" fill="#d03b3b">validator refuses</text>
+</svg>

@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1107" height="544" viewBox="0 0 1107 544" font-family="system-ui,-apple-system,Segoe UI,sans-serif">
+<rect width="1107" height="544" fill="#1a1a19"/>
+<text x="30.0" y="38.0" text-anchor="start" font-size="20" font-weight="700" fill="#ffffff">From source documents to usable examples</text>
+<text x="30.0" y="62.0" text-anchor="start" font-size="13" font-weight="400" fill="#c3c2b7">every figure read from the repository at build time · widths are square-root scaled</text>
+<polygon points="317.0,140.0 262.9,171.2 262.9,185.5 317.0,154.3" fill="#275ea0" stroke="#275ea0" stroke-width="0.6" stroke-linejoin="round"/><polygon points="262.9,171.2 555.6,340.2 555.6,354.5 262.9,185.5" fill="#3072c2" stroke="#3072c2" stroke-width="0.6" stroke-linejoin="round"/><polygon points="317.0,140.0 609.7,309.0 555.6,340.2 262.9,171.2" fill="#3987e5" stroke="#3987e5" stroke-width="0.6" stroke-linejoin="round"/>
+<polygon points="308.7,236.6 254.7,267.8 254.7,282.1 308.7,250.9" fill="#275ea0" stroke="#275ea0" stroke-width="0.6" stroke-linejoin="round"/><polygon points="254.7,267.8 388.3,345.0 388.3,359.3 254.7,282.1" fill="#3072c2" stroke="#3072c2" stroke-width="0.6" stroke-linejoin="round"/><polygon points="308.7,236.6 442.3,313.8 388.3,345.0 254.7,267.8" fill="#3987e5" stroke="#3987e5" stroke-width="0.6" stroke-linejoin="round"/>
+<polygon points="237.9,297.2 183.9,328.4 183.9,342.7 237.9,311.5" fill="#275ea0" stroke="#275ea0" stroke-width="0.6" stroke-linejoin="round"/><polygon points="183.9,328.4 283.4,385.8 283.4,400.1 183.9,342.7" fill="#3072c2" stroke="#3072c2" stroke-width="0.6" stroke-linejoin="round"/><polygon points="237.9,297.2 337.5,354.6 283.4,385.8 183.9,328.4" fill="#3987e5" stroke="#3987e5" stroke-width="0.6" stroke-linejoin="round"/>
+<polygon points="168.4,358.4 114.3,389.6 114.3,403.9 168.4,372.7" fill="#087208" stroke="#087208" stroke-width="0.6" stroke-linejoin="round"/><polygon points="114.3,389.6 177.3,426.0 177.3,440.3 114.3,403.9" fill="#0a8a0a" stroke="#0a8a0a" stroke-width="0.6" stroke-linejoin="round"/><polygon points="168.4,358.4 231.4,394.8 177.3,426.0 114.3,389.6" fill="#0ca30c" stroke="#0ca30c" stroke-width="0.6" stroke-linejoin="round"/>
+<polygon points="94.0,416.9 40.0,448.1 40.0,462.4 94.0,431.2" fill="#1e1e1d" stroke="#1e1e1d" stroke-width="0.6" stroke-linejoin="round"/><polygon points="40.0,448.1 76.0,468.9 76.0,483.2 40.0,462.4" fill="#252523" stroke="#252523" stroke-width="0.6" stroke-linejoin="round"/><polygon points="94.0,416.9 130.1,437.7 76.0,468.9 40.0,448.1" fill="#2c2c2a" stroke="#2c2c2a" stroke-width="0.6" stroke-linejoin="round"/>
+<path d="M588.7,324.6 L637.7,190.3" stroke="#383835" stroke-width="1" fill="none"/>
+<path d="M421.3,329.4 L637.7,252.3" stroke="#383835" stroke-width="1" fill="none"/>
+<path d="M316.4,370.2 L637.7,314.3" stroke="#383835" stroke-width="1" fill="none"/>
+<path d="M210.3,410.4 L637.7,376.3" stroke="#383835" stroke-width="1" fill="none"/>
+<path d="M109.0,453.3 L637.7,438.3" stroke="#383835" stroke-width="1" fill="none"/>
+<text x="647.7" y="194.3" text-anchor="end" font-size="18" font-weight="700" fill="#3987e5">605</text>
+<text x="659.7" y="189.3" text-anchor="start" font-size="13" font-weight="400" fill="#ffffff">ruling PDFs fetched and cached</text>
+<text x="659.7" y="206.3" text-anchor="start" font-size="11" font-weight="400" fill="#898781">roughly half are scans with no text layer</text>
+<text x="647.7" y="256.3" text-anchor="end" font-size="18" font-weight="700" fill="#3987e5">126</text>
+<text x="659.7" y="251.3" text-anchor="start" font-size="13" font-weight="400" fill="#ffffff">rulings kept as goods classification</text>
+<text x="659.7" y="268.3" text-anchor="start" font-size="11" font-weight="400" fill="#898781">services, immovable property, withdrawals and duplicates screened out</text>
+<text x="647.7" y="318.3" text-anchor="end" font-size="18" font-weight="700" fill="#3987e5">70</text>
+<text x="659.7" y="313.3" text-anchor="start" font-size="13" font-weight="400" fill="#ffffff">carry a heading from the authority's own holding</text>
+<text x="659.7" y="330.3" text-anchor="start" font-size="11" font-weight="400" fill="#898781">the rest state no tariff heading in the operative ruling</text>
+<text x="647.7" y="380.3" text-anchor="end" font-size="18" font-weight="700" fill="#0ca30c">28</text>
+<text x="659.7" y="375.3" text-anchor="start" font-size="13" font-weight="400" fill="#ffffff">resolve to exactly one entry in the Gazette</text>
+<text x="659.7" y="392.3" text-anchor="start" font-size="11" font-weight="400" fill="#898781">41 span several schedules — a judgement, not a lookup</text>
+<text x="647.7" y="442.3" text-anchor="end" font-size="18" font-weight="700" fill="#d03b3b">0</text>
+<text x="659.7" y="437.3" text-anchor="start" font-size="13" font-weight="400" fill="#ffffff">confirmed by a human</text>
+<text x="659.7" y="454.3" text-anchor="start" font-size="11" font-weight="400" fill="#898781">the dataset's central claim, and it is still zero</text>
+</svg>

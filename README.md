@@ -10,13 +10,29 @@ abolishing the **12 % slab** and introducing a 40 % demerit rate; Notification
 as well. Every model in this benchmark was trained on a web that is still
 overwhelmingly describing the old table.
 
-This repository is an open, human-labelled benchmark for classifying real Indian
-product descriptions into the current GST slabs — and for measuring how often
-models answer from a rate table that no longer exists.
+This repository is an open benchmark for classifying real Indian product
+descriptions into the current GST slabs — and for measuring how often models
+answer from a rate table that no longer exists.
 
-> **Status: dataset in construction (week 1 of 6).** Nothing is claimed here
-> that has not been measured. The leaderboard below is empty because no model
-> has been run yet, and it will stay empty until one has been.
+> **Status: dataset in construction.** The harness works end to end and a model
+> has been scored against it. The dataset has **28 rows and no human labels** —
+> every one is `gazette-derived`, meaning its slab was read out of the archived
+> notification and its heading out of the authority's own ruling, with nobody
+> having confirmed either. Read every number below with that in front of it.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/funnel-dark.svg">
+  <img alt="Isometric diagram of five stacked layers narrowing toward the
+  viewer. 605 ruling PDFs fetched and cached; 126 kept as goods classification
+  after screening services, immovable property, withdrawals and duplicates; 70
+  carry a heading from the authority's own holding; 28 resolve to exactly one
+  entry in the Gazette; 0 confirmed by a human."
+  src="docs/funnel-light.svg" width="100%">
+</picture>
+
+**That last layer is the project.** Everything above it is machinery, and the
+machinery works. The step from 28 to a benchmark anyone should trust is a human
+reading 28 rulings, and it has not been taken.
 
 ---
 
@@ -239,6 +255,25 @@ section will be rewritten against whatever that shows.
 
 ## Methodology
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/pipeline-dark.svg">
+  <img alt="Isometric diagram of three lanes of boxes. COLLECT: the GST Council
+  index, aar.py screening services, land and scans, and normalise.py redacting
+  party detail. DERIVE: ruling_outcome.py taking the heading from the holding,
+  schedule_lookup.py taking the slab from the Gazette, and golden.jsonl holding
+  28 rows of which 0 are human. EVALUATE: run.py sending one prompt to every
+  model, scorers/exact.py scoring slab, HSN and staleness, and leaderboard.html
+  ranked by cost per correct answer."
+  src="docs/pipeline-light.svg" width="100%">
+</picture>
+
+Nothing in the DERIVE lane forms a judgement. `ruling_outcome.py` reads the
+authority's own operative paragraph; `schedule_lookup.py` reads the archived
+notification and **refuses** any heading that appears in more than one
+schedule. A model's recollection of Indian GST rates is the pre-2025 table —
+the error this benchmark exists to measure — so none of it is used anywhere in
+that lane.
+
 ### Dataset
 
 - **Target size** 400 examples. Below ~200 the confidence intervals are too wide
@@ -254,6 +289,16 @@ section will be rewritten against whatever that shows.
   |---|---|---|
   | Open Food Facts (India) | `typical` | Real packaged-goods listings, short and messy, ODbL-licensed |
   | GST Advance Rulings | `hard`, `adversarial`, `long_context` | Genuine classification disputes across the whole tariff — "does a quartz slab that is 92% crushed quartz and 8% resin fall under 6802 or 6810?" — with the applicant's rejected contention left in as a distractor |
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/provenance-dark.svg">
+  <img alt="Isometric diagram of four blocks whose height is the number of rows
+  carrying that provenance. model-first-pass: 126, quarantined, with a wall
+  marked 'validator refuses' between it and the rest. gazette-derived: 28, a
+  document lookup with no human confirmation. human-reviewed: 0. human: 0. The
+  two human blocks are flat."
+  src="docs/provenance-light.svg" width="100%">
+</picture>
 
 - **Every row records who decided it, and right now none of them is a human.**
   `labelled_by` takes four values, and the distinction is the dataset's central
