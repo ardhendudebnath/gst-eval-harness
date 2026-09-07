@@ -152,6 +152,43 @@ class Match:
         return next(iter(outcomes)) if len(outcomes) == 1 else None
 
     @property
+    def decides_it(self) -> str | None:
+        """The condition the competing entries turn on, in the Gazette's words.
+
+        These schedules are almost always built the same way: one entry
+        enumerates particular goods at a lower rate, and another sweeps up the
+        rest while excluding them by name. 3307 is 5% for "Shaving cream,
+        shaving lotion, aftershave lotion" and 18% for everything else in the
+        heading; 8708 is 5% for four listed tractor parts and 18% for
+        "[other than specified parts of tractors]".
+
+        So the exclusion clause states the axis outright, and surfacing it
+        turns the annotator's job from "read two schedule extracts and work out
+        what separates them" into "is this good one of these?". Returns None
+        when no entry carries one — then the extracts are all there is.
+        """
+        if not self.ambiguous:
+            return None
+        clauses: list[str] = []
+        for source in ([e.text for e in self.entries] + self.exempt_entries):
+            for m in _EXCLUSION.finditer(source):
+                # Truncated only when the *entry* was cut short, which
+                # `_entry_text` marks. A clause that simply ends where its
+                # entry ends is complete, and dropping its last word turned
+                # "rice bran" into "rice".
+                rest = source[m.end():].lstrip()
+                clause = _tidy_clause(m.group(1), truncated=rest.startswith("…"))
+                if clause and clause.lower() not in {c.lower() for c in clauses}:
+                    clauses.append(clause)
+        if not clauses:
+            return None
+        # Each clause is capped, but a heading with several of them can still
+        # join into a paragraph. Two conditions is a discriminator; five is an
+        # extract, and the entries are already shown in full.
+        joined = "; ".join(clauses[:3])
+        return joined if len(joined) <= 200 else joined[:197].rsplit(" ", 1)[0] + " …"
+
+    @property
     def schedule(self) -> str | None:
         """The schedule, when the entries agree on both rate and schedule."""
         if self.ambiguous or not self.entries:
@@ -186,11 +223,71 @@ def _schedule_at(bounds: list[tuple[int, str]], pos: int) -> str | None:
     return current
 
 
-def _entry_text(text: str, pos: int, width: int = 240) -> str:
-    """The entry around a match, trimmed to something quotable."""
+#: The next entry begins with its serial number: "250. 3307 41 00 Agarbatti".
+#: Used to end an entry where the schedule ends it.
+_NEXT_SERIAL = re.compile(r"\s\d{1,3}\s*\.\s+(?=\d{4}|\d{2}\b|[A-Z])")
+
+#: "[other than specified parts of tractors]", "other than charger or charging
+#: station for Electrically operated vehicles". Both bracketed and bare forms
+#: appear, and the clause names exactly the goods that change schedule.
+#: The ellipsis is excluded so `_entry_text`'s own truncation marker cannot be
+#: swallowed into the clause — when that happened the clause ended "...24 …"
+#: and neither the serial-stripping nor the truncation test could see it.
+#: A closing paren ends it too: "(other than medicaments) including sunscreen
+#: ..." is an exclusion of medicaments, and running past the paren swept the
+#: whole following list into the clause.
+_EXCLUSION = re.compile(r"other\s+than\s+([^\].;…)]{3,160})", re.I)
+
+#: A serial number left on the end of a clause when the entry was cut there —
+#: "...not to be used as fertilizers 24".
+_TRAILING_SERIAL = re.compile(r"\s+\d{1,3}\s*$")
+
+
+def _tidy_clause(raw: str, *, truncated: bool) -> str:
+    """Make an exclusion clause readable, and honest about being cut short.
+
+    The entry text ends at the next serial number, so a clause running past
+    that boundary arrives chopped — sometimes mid-word ("shaving cream,
+    shavin"). Silently presenting the fragment invites an annotator to read it
+    as the whole condition, so a cut clause loses its partial last word and
+    says it is incomplete.
+    """
+    clause = _TRAILING_SERIAL.sub("", re.sub(r"\s+", " ", raw)).strip(" ,.;]")
+    if truncated:
+        # The ellipsis alone says the clause is cut. An earlier version also
+        # dropped the last word to handle a half-word like "shavin", but that
+        # cost a whole word from every clause that merely ended where its
+        # entry ended — "rice bran" became "rice".
+        clause += " …"
+    # A clause this long has stopped being a discriminator and become an
+    # extract; the entry text is already shown, so cut it rather than repeat.
+    if len(clause) > 120:
+        clause = clause[:117].rsplit(" ", 1)[0] + " …"
+    return clause.strip()
+
+
+def _entry_text(text: str, pos: int, width: int = 320) -> str:
+    """The entry around a match, ending where the next serial number begins.
+
+    A fixed window runs straight into the following entries, so the extract
+    for heading 3307 arrived carrying serials 250 and 251 — text about
+    agarbatti and toilet soap, which are different headings entirely. An
+    annotator reading that has to work out which words belong to their goods
+    before they can start on the actual question.
+    """
     start = text.rfind(". ", max(0, pos - 160), pos)
     start = start + 2 if start != -1 else max(0, pos - 60)
-    return re.sub(r"\s+", " ", text[start : pos + width]).strip()
+    chunk = re.sub(r"\s+", " ", text[start : pos + width]).strip()
+
+    # Cut at the first serial that starts after this entry's own heading. The
+    # offset skips the heading itself, which is digits too.
+    cut = _NEXT_SERIAL.search(chunk, 12)
+    if cut:
+        return chunk[: cut.start()].strip()
+    # No serial found means the window ran out mid-entry. Say so: an extract
+    # that stops mid-sentence should not be read as the whole condition.
+    ended_naturally = len(text) <= pos + width
+    return chunk.strip() + ("" if ended_naturally else " …")
 
 
 #: A chapter number carrying goods. Every genuine chapter entry in these

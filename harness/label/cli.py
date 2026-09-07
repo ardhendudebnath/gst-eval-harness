@@ -705,6 +705,15 @@ def run_review_first_pass(
             print(f"     proposed slab:    {sug.slab}  "
                   f"[confidence: {notes.get('slab_confidence', '?')}]")
             print(f"       basis: {notes.get('slab_basis', '')}")
+            # The one question that actually needs answering, when the
+            # notification states it. Given its own line because it is the
+            # difference between reading two schedule extracts to work out
+            # what separates them, and answering "is this good one of these?".
+            if notes.get("slab_decided_by"):
+                print(f"\n     >> DECIDE: are these goods "
+                      f"{notes['slab_decided_by']}?")
+            for alt in notes.get("slab_alternatives") or []:
+                print(f"        · {alt}")
             if notes.get("rate_moved"):
                 print("     rate moved: yes — the source slab was abolished")
             if notes.get("conditional"):

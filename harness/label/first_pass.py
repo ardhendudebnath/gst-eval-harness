@@ -117,6 +117,7 @@ def suggest(record: dict, ex_id: str) -> Example:
     slab_conf = "none"
     slab_basis = "no heading established, so nothing to look up"
     alternatives: list[str] = []
+    decides_on: str | None = None
 
     if hsn4:
         found = lookup(hsn4)
@@ -144,11 +145,24 @@ def suggest(record: dict, ex_id: str) -> Example:
                 f"CHAPTER {hsn4[:2]} Sch {e.schedule} = {e.slab}%: {e.text[:150]}"
                 for e in found.chapter_entries
             ]
+            # The schedules are almost always built the same way: one entry
+            # enumerates particular goods at a lower rate, another sweeps up
+            # the rest and excludes them by name. That exclusion clause states
+            # the axis outright, so surfacing it turns the annotator's job from
+            # "read two extracts and work out what separates them" into "is
+            # this good one of these?".
+            decides = decides_on = found.decides_it
             if found.chapter_only:
                 slab_basis = (
                     f"{hsn4} has no entry of its own; chapter {hsn4[:2]} is "
                     f"specified in {len(alternatives)} places. Whether these goods "
                     "fall inside one is a reading of the entry, not a lookup."
+                )
+            elif decides:
+                slab_basis = (
+                    f"{hsn4} appears in {len(alternatives)} places, and the "
+                    f"notification separates them on: {decides}. Deciding which "
+                    "side these goods fall is a judgement about the goods."
                 )
             else:
                 slab_basis = (
@@ -173,6 +187,9 @@ def suggest(record: dict, ex_id: str) -> Example:
         "slab_confidence": slab_conf,
         "slab_basis": slab_basis,
         "slab_alternatives": alternatives,
+        #: The condition the competing entries turn on, in the Gazette's own
+        #: words. Present only when the notification states one.
+        "slab_decided_by": decides_on,
         "hsn_confidence": "high" if hsn4 else "none",
         "hsn_basis": hsn_basis,
         "rate_moved": rate_moved,
