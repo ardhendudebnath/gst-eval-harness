@@ -136,6 +136,38 @@ MODELS: dict[str, ModelSpec] = {
         nim_image="nvcr.io/nim/nvidia/nemotron-3-super-120b-a12b:latest",
         note="self-hosted; cost is your GPU time, not a per-token price",
     ),
+    # The same wire format again, served by vLLM rather than NIM, and with the
+    # model id left to NIM_MODEL rather than pinned here.
+    #
+    # `open-weight-local` above names one specific NIM container. This slot is
+    # for whichever model project 03 is actually benchmarking — the one being
+    # swept across fp16/int8/int4 on a single GPU. Pinning an id here would
+    # mean either a duplicate entry per model, or sending a model name the
+    # server does not recognise while the result file claimed otherwise.
+    #
+    # The empty model_id is deliberate and the runner already handles it: it
+    # falls back to NIM_MODEL and raises when that is unset, so this can never
+    # silently run against the wrong model. Same rule the ModelSpec docstring
+    # states — a slot may carry no id until one is chosen.
+    #
+    #   NIM_BASE_URL=http://localhost:8000 NIM_MODEL=<served id> \
+    #     python -m harness.run --model open-weight-vllm
+    "open-weight-vllm": ModelSpec(
+        key="open-weight-vllm",
+        provider="nim",
+        model_id="",
+        tier="open-weight",
+        usd_in_per_m=0.0,
+        usd_out_per_m=0.0,
+        # Blank rather than copied from the NIM rows above. vLLM applies the
+        # served model's own chat template, and a reasoning switch the template
+        # does not implement is silently ignored — which would record a run as
+        # thinking-on that actually ran thinking-off. Set it per model, once
+        # the model is chosen and the switch confirmed by calling it.
+        reasoning_style="",
+        note="self-hosted on vLLM for project 03; model id comes from "
+             "NIM_MODEL, cost is GPU time rather than a per-token price",
+    ),
     # Lighter open-weight option: 30B total with 3B active runs on far less
     # VRAM than a 49B dense model, at the price of a different reasoning
     # switch and no published container to point at.
