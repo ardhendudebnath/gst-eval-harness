@@ -20,6 +20,7 @@ FACTS = {
     "pdfs": 605, "off": 851, "rulings": 126, "suggestions": 126,
     "with_heading": 70, "ambiguous": 41, "grounded": 28, "golden": 28,
     "human": 0, "derived": 28,
+    "strata": {"typical": 9, "long_context": 19},
 }
 
 
@@ -39,6 +40,15 @@ def points(svg: str) -> list[tuple[float, float]]:
         out.append((float(d[0]), float(d[1])))
         out.append((float(d[2]), float(d[3])))
     return out
+
+
+def data_bars(svg: str) -> list[str]:
+    """Fill colours of the strata chart's actual-value bars.
+
+    Keyed on height 12, which only the data bars use — the legend swatches are
+    also rects at the same x and would otherwise be counted as data.
+    """
+    return re.findall(r'<rect [^>]*height="12"[^>]*fill="([^"]+)"', svg)
 
 
 def viewbox(svg: str) -> tuple[int, int]:
@@ -120,6 +130,56 @@ def test_a_subtitle_describes_the_encoding_actually_used(tmp_path):
     svg = build("provenance")
     assert "height is the number of rows" in svg
     assert "strength of the claim" not in svg
+
+
+# --- the strata chart, which is deliberately flat ------------------------
+
+def test_strata_is_not_isometric():
+    """The other three earn their dimension. This one asks the reader to
+    compare two lengths per row, and depth makes a length worse."""
+    svg = build("strata")
+    assert "<rect" in svg          # flat bars
+    assert "polygon" not in svg    # no cuboid faces
+
+
+def test_overshooting_a_composition_target_is_not_painted_as_success():
+    """long_context at 68 % against a 15 % target means the set is lopsided.
+    `got >= target` painted that green, which reports skew as achievement."""
+    over = dg.BUILDERS["strata"](
+        {**FACTS, "golden": 28, "strata": {"long_context": 19}}, dg.LIGHT).svg()
+    # Data bars only — height 12. The legend swatches are rects at the same x.
+    bars = data_bars(over)
+    assert dg.LIGHT["warn"] in bars
+    assert dg.LIGHT["good"] not in bars
+
+
+def test_a_stratum_close_to_target_is_on_target():
+    near = dg.BUILDERS["strata"](
+        {**FACTS, "golden": 10, "strata": {"typical": 4}}, dg.LIGHT).svg()
+    assert dg.LIGHT["good"] in data_bars(near)
+
+
+def test_an_empty_stratum_is_drawn_not_omitted():
+    """A zero-length bar renders as nothing, and an absent stratum reads as an
+    oversight rather than the finding it is."""
+    svg = build("strata")
+    assert "hard" in svg and "adversarial" in svg and "out of scope" in svg
+    assert svg.count(">0%<") >= 3
+    # A visible mark at the baseline for each empty stratum.
+    assert svg.count(f'stroke="{dg.LIGHT["critical"]}" stroke-width="3"') >= 3
+
+
+def test_the_colour_key_is_present_because_hue_carries_state():
+    svg = build("strata")
+    for label in ("on target", "under", "over", "empty"):
+        assert f">{label}<" in svg
+
+
+def test_every_bar_is_directly_labelled():
+    """Status colour never carries meaning alone."""
+    svg = build("strata")
+    assert ">32%<" in svg and ">68%<" in svg
+    assert "target 40%" in svg and "target 15%" in svg
 
 
 # --- the writer ----------------------------------------------------------

@@ -35,11 +35,15 @@ LIGHT = {
     "surface": "#fcfcfb", "ink": "#0b0b0b", "ink2": "#52514e", "muted": "#898781",
     "grid": "#e1e0d9", "axis": "#c3c2b7",
     "good": "#0ca30c", "critical": "#d03b3b", "other": "#2a78d6",
+    # Over-target is not success. A composition target overshot by four times
+    # is skew, and painting it with `good` tells the reader the opposite.
+    "warn": "#ec835a",
 }
 DARK = {
     "surface": "#1a1a19", "ink": "#ffffff", "ink2": "#c3c2b7", "muted": "#898781",
     "grid": "#2c2c2a", "axis": "#383835",
     "good": "#0ca30c", "critical": "#d03b3b", "other": "#3987e5",
+    "warn": "#ec835a",
 }
 
 CELL_W, CELL_D = 62.0, 34.0   # isometric footprint of one cell

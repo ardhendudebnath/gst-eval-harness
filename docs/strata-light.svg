@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="850" height="432" viewBox="0 0 850 432" font-family="system-ui,-apple-system,Segoe UI,sans-serif">
+<rect width="850" height="432" fill="#fcfcfb"/>
+<text x="30.0" y="38.0" text-anchor="start" font-size="20" font-weight="700" fill="#0b0b0b">Strata: what the plan asks for, and what the dataset has</text>
+<text x="30.0" y="62.0" text-anchor="start" font-size="13" font-weight="400" fill="#52514e">n=28 · targets from harness/schema.py · dashed outline is the target, solid bar is actual</text>
+<path d="M295.0,112.0 L295.0,348.0" stroke="#e1e0d9" stroke-width="1" fill="none"/>
+<text x="295.0" y="106.0" text-anchor="middle" font-size="10" font-weight="400" fill="#898781">17%</text>
+<path d="M400.0,112.0 L400.0,348.0" stroke="#e1e0d9" stroke-width="1" fill="none"/>
+<text x="400.0" y="106.0" text-anchor="middle" font-size="10" font-weight="400" fill="#898781">34%</text>
+<path d="M505.0,112.0 L505.0,348.0" stroke="#e1e0d9" stroke-width="1" fill="none"/>
+<text x="505.0" y="106.0" text-anchor="middle" font-size="10" font-weight="400" fill="#898781">51%</text>
+<path d="M610.0,112.0 L610.0,348.0" stroke="#e1e0d9" stroke-width="1" fill="none"/>
+<text x="610.0" y="106.0" text-anchor="middle" font-size="10" font-weight="400" fill="#898781">68%</text>
+<text x="176.0" y="134.0" text-anchor="end" font-size="13" font-weight="600" fill="#0b0b0b">typical</text>
+<rect x="190.0" y="121.0" width="247.6" height="18" rx="4" fill="none" stroke="#c3c2b7" stroke-width="1.5" stroke-dasharray="3 3"/>
+<rect x="190.0" y="124.0" width="198.9" height="12" rx="4" fill="#0ca30c"/>
+<text x="449.6" y="134.0" text-anchor="start" font-size="13" font-weight="700" fill="#0ca30c">32%</text>
+<text x="495.6" y="134.0" text-anchor="start" font-size="11" font-weight="400" fill="#898781">target 40%</text>
+<text x="176.0" y="180.0" text-anchor="end" font-size="13" font-weight="600" fill="#0b0b0b">hard</text>
+<rect x="190.0" y="167.0" width="154.7" height="18" rx="4" fill="none" stroke="#c3c2b7" stroke-width="1.5" stroke-dasharray="3 3"/>
+<path d="M190.0,169.0 L190.0,183.0" stroke="#d03b3b" stroke-width="3" stroke-linecap="round"/>
+<text x="356.7" y="180.0" text-anchor="start" font-size="13" font-weight="700" fill="#d03b3b">0%</text>
+<text x="402.7" y="180.0" text-anchor="start" font-size="11" font-weight="400" fill="#898781">target 25%</text>
+<text x="176.0" y="226.0" text-anchor="end" font-size="13" font-weight="600" fill="#0b0b0b">long context</text>
+<rect x="190.0" y="213.0" width="92.8" height="18" rx="4" fill="none" stroke="#c3c2b7" stroke-width="1.5" stroke-dasharray="3 3"/>
+<rect x="190.0" y="216.0" width="420.0" height="12" rx="4" fill="#ec835a"/>
+<text x="622.0" y="226.0" text-anchor="start" font-size="13" font-weight="700" fill="#ec835a">68%</text>
+<text x="668.0" y="226.0" text-anchor="start" font-size="11" font-weight="400" fill="#898781">target 15%</text>
+<text x="176.0" y="272.0" text-anchor="end" font-size="13" font-weight="600" fill="#0b0b0b">adversarial</text>
+<rect x="190.0" y="259.0" width="61.9" height="18" rx="4" fill="none" stroke="#c3c2b7" stroke-width="1.5" stroke-dasharray="3 3"/>
+<path d="M190.0,261.0 L190.0,275.0" stroke="#d03b3b" stroke-width="3" stroke-linecap="round"/>
+<text x="263.9" y="272.0" text-anchor="start" font-size="13" font-weight="700" fill="#d03b3b">0%</text>
+<text x="309.9" y="272.0" text-anchor="start" font-size="11" font-weight="400" fill="#898781">target 10%</text>
+<text x="176.0" y="318.0" text-anchor="end" font-size="13" font-weight="600" fill="#0b0b0b">out of scope</text>
+<rect x="190.0" y="305.0" width="61.9" height="18" rx="4" fill="none" stroke="#c3c2b7" stroke-width="1.5" stroke-dasharray="3 3"/>
+<path d="M190.0,307.0 L190.0,321.0" stroke="#d03b3b" stroke-width="3" stroke-linecap="round"/>
+<text x="263.9" y="318.0" text-anchor="start" font-size="13" font-weight="700" fill="#d03b3b">0%</text>
+<text x="309.9" y="318.0" text-anchor="start" font-size="11" font-weight="400" fill="#898781">target 10%</text>
+<text x="176.0" y="376.0" text-anchor="end" font-size="11" font-weight="400" fill="#898781">needs a human judgement:</text>
+<text x="190.0" y="376.0" text-anchor="start" font-size="11" font-weight="600" fill="#d03b3b">hard, adversarial, out of scope</text>
+<rect x="190.0" y="396.0" width="10" height="10" rx="2" fill="#0ca30c"/>
+<text x="205.0" y="405.0" text-anchor="start" font-size="10" font-weight="400" fill="#898781">on target</text>
+<rect x="266.4" y="396.0" width="10" height="10" rx="2" fill="#2a78d6"/>
+<text x="281.4" y="405.0" text-anchor="start" font-size="10" font-weight="400" fill="#898781">under</text>
+<rect x="320.4" y="396.0" width="10" height="10" rx="2" fill="#ec835a"/>
+<text x="335.4" y="405.0" text-anchor="start" font-size="10" font-weight="400" fill="#898781">over</text>
+<rect x="368.8" y="396.0" width="10" height="10" rx="2" fill="#d03b3b"/>
+<text x="383.8" y="405.0" text-anchor="start" font-size="10" font-weight="400" fill="#898781">empty</text>
+</svg>

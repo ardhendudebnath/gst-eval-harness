@@ -162,6 +162,7 @@ def facts() -> dict:
         "golden": len(gold),
         "human": by_prov.get("human", 0) + by_prov.get("human-reviewed", 0),
         "derived": by_prov.get("gazette-derived", 0),
+        "strata": dict(Counter(r.get("difficulty", "?") for r in gold)),
     }
 
 
@@ -372,7 +373,103 @@ def provenance(f: dict, theme: dict) -> Canvas:
 
 # --------------------------------------------------------------------------
 
-BUILDERS = {"funnel": funnel, "pipeline": pipeline, "provenance": provenance}
+def strata(f: dict, theme: dict) -> Canvas:
+    """Target composition against actual. Deliberately flat.
+
+    The other three diagrams earn their dimension — a taper, lane separation, a
+    wall. This one does not. It asks the reader to compare two lengths per row
+    and rank five gaps, and depth makes both harder: a foreshortened bar is a
+    worse length, and an isometric row is a worse baseline. Drawing it in 3D to
+    match the others would cost the only thing it is for.
+    """
+    from harness.schema import TARGET_STRATA
+
+    n = f["golden"] or 1
+    actual = f.get("strata", {})
+    rows = [(name, share, actual.get(name, 0) / n)
+            for name, share in TARGET_STRATA.items()]
+
+    left, top, bar_w, row_h = 190.0, 130.0, 420.0, 46.0
+    parts: list[str] = []
+    scale = max([r[1] for r in rows] + [r[2] for r in rows]) or 1.0
+
+    # Gridlines first, so every mark sits over them.
+    for frac in (0.25, 0.5, 0.75, 1.0):
+        gx = left + bar_w * frac
+        y0, y1 = top - 18, top + len(rows) * row_h - 12
+        parts.append(f'<path d="M{gx:.1f},{y0:.1f} L{gx:.1f},{y1:.1f}" '
+                     f'stroke="{theme["grid"]}" stroke-width="1" fill="none"/>')
+        parts.append(text(gx, y0 - 6, f"{scale * frac:.0%}", size=10,
+                          fill=theme["muted"], anchor="middle"))
+
+    for i, (name, target, got) in enumerate(rows):
+        y = top + i * row_h
+        parts.append(text(left - 14, y + 4, name.replace("_", " "), size=13,
+                          weight="600", fill=theme["ink"], anchor="end"))
+
+        # Target: an open bar, because it is a requirement rather than a
+        # measurement and should not read as data.
+        tw = bar_w * (target / scale)
+        parts.append(f'<rect x="{left:.1f}" y="{y - 9:.1f}" width="{tw:.1f}" '
+                     f'height="18" rx="4" fill="none" stroke="{theme["axis"]}" '
+                     f'stroke-width="1.5" stroke-dasharray="3 3"/>')
+
+        # Four states, not two. Overshooting a *composition* target is skew,
+        # not achievement: long-context at 68 % against a 15 % target means the
+        # set is lopsided, and `good` would report that as a success.
+        aw = bar_w * (got / scale)
+        near = abs(got - target) <= max(0.25 * target, 0.02)
+        if got == 0:
+            colour = theme["critical"]
+        elif near:
+            colour = theme["good"]
+        elif got > target:
+            colour = theme["warn"]
+        else:
+            colour = theme["other"]
+        if aw > 0:
+            parts.append(f'<rect x="{left:.1f}" y="{y - 6:.1f}" '
+                         f'width="{aw:.1f}" height="12" rx="4" fill="{colour}"/>')
+        else:
+            # A zero must still be visible, or an empty stratum reads as an
+            # omission rather than the finding it is.
+            parts.append(f'<path d="M{left:.1f},{y - 7:.1f} L{left:.1f},{y + 7:.1f}" '
+                         f'stroke="{colour}" stroke-width="3" stroke-linecap="round"/>')
+
+        end = left + max(aw, tw) + 12
+        parts.append(text(end, y + 4, f"{got:.0%}", size=13, weight="700",
+                          fill=colour))
+        parts.append(text(end + 46, y + 4, f"target {target:.0%}", size=11,
+                          fill=theme["muted"]))
+
+    empty = [r[0].replace("_", " ") for r in rows if r[2] == 0]
+    footer = top + len(rows) * row_h + 16
+    parts.append(text(left - 14, footer, "needs a human judgement:", size=11,
+                      fill=theme["muted"], anchor="end"))
+    parts.append(text(left, footer, ", ".join(empty) if empty else "none",
+                      size=11, weight="600", fill=theme["critical"]))
+
+    # Colour never carries the meaning alone: every bar is directly labelled
+    # with its own figure and its target. This says what the hues mean anyway.
+    key = [("on target", theme["good"]), ("under", theme["other"]),
+           ("over", theme["warn"]), ("empty", theme["critical"])]
+    kx = left
+    for label, colour in key:
+        parts.append(f'<rect x="{kx:.1f}" y="{footer + 20:.1f}" width="10" '
+                     f'height="10" rx="2" fill="{colour}"/>')
+        parts.append(text(kx + 15, footer + 29, label, size=10,
+                          fill=theme["muted"]))
+        kx += 26 + len(label) * 5.6
+
+    return Canvas(width=left + bar_w + 240, height=footer + 56, theme=theme,
+                  parts=parts,
+                  title="Strata: what the plan asks for, and what the dataset has",
+                  subtitle=f"n={f['golden']} · targets from harness/schema.py · "
+                           f"dashed outline is the target, solid bar is actual")
+
+
+BUILDERS = {"funnel": funnel, "pipeline": pipeline, "provenance": provenance,
+            "strata": strata}
 
 
 def main() -> int:

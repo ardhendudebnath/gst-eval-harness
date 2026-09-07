@@ -283,6 +283,27 @@ that lane.
 - That last stratum is the point. Models that answer confidently when the
   description does not determine a rate fail in production, and almost no
   benchmark tests for it.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/strata-dark.svg">
+  <img alt="Horizontal bar chart comparing the target share of each stratum
+  with what the dataset holds, at n=28. typical 32 % against a 40 % target;
+  hard 0 % against 25 %; long context 68 % against 15 %; adversarial 0 %
+  against 10 %; out of scope 0 % against 10 %. Three strata are empty."
+  src="docs/strata-light.svg" width="100%">
+</picture>
+
+**This one is flat on purpose.** The other diagrams earn their third dimension
+— a taper, lane separation, a wall. This chart asks you to compare two lengths
+per row and rank five gaps, and depth makes a length harder to read, not
+easier.
+
+Long-context is over target by four and a half times, not because it was
+prioritised but because advance-ruling excerpts are long. The three empty
+strata are the ones a document lookup cannot fill: `hard` and `adversarial`
+need a judgement about competing headings, and `unanswerable` needs someone to
+decide a description is under-determined. They stay at zero until a human
+labels them.
 - **Two sources, chosen for different strata:**
 
   | Source | Supplies | Why |
