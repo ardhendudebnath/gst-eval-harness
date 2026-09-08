@@ -100,9 +100,16 @@ class OpenAICompatRunner:
             messages.append({"role": "system", "content": system})
         messages.append({"role": "user", "content": prompt})
 
+        # A spec may cap this. Hosted models have context to spare, so the
+        # defaults above are generous; a self-hosted server does not, because
+        # its context length was bought with VRAM that the KV cache would
+        # otherwise use. Requesting more than such a server can produce is a
+        # hard 400, not a truncation, so every row errors and the run reports
+        # 0.0 % as though the model had failed.
+        default = MAX_TOKENS_THINKING if self.thinking else MAX_TOKENS
         payload: dict = {
             "model": self.model,
-            "max_tokens": MAX_TOKENS_THINKING if self.thinking else MAX_TOKENS,
+            "max_tokens": self.spec.max_output_tokens or default,
             "messages": messages,
         }
         apply_reasoning(payload, self.spec.reasoning_style, self.thinking)

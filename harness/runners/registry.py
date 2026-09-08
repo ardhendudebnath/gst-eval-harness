@@ -50,6 +50,21 @@ class ModelSpec:
     #: pullable image and a documented run command is demonstrably
     #: self-hostable, which an inference from parameter count is not.
     nim_image: str = ""
+    #: Cap on requested output tokens. Zero means use the provider default.
+    #:
+    #: Needed because the defaults in providers/openai_compat.py assume a
+    #: hosted model with a very large context. A **self-hosted** server does
+    #: not have one for free: context length is bought with VRAM, since the KV
+    #: cache grows with it, so a small GPU is deliberately configured with a
+    #: short context. Asking such a server for 16,384 output tokens is rejected
+    #: outright:
+    #:
+    #:   http_400: 'max_tokens' is too large: 16384. This model's maximum
+    #:   context length is 4096 tokens and your request has 890 input tokens
+    #:
+    #: Every row errors, the run scores 0.0 %, and it looks like the model
+    #: failed rather than the request being malformed for that deployment.
+    max_output_tokens: int = 0
 
     def cost_usd(self, tokens_in: int, tokens_out: int) -> float:
         return (
@@ -165,6 +180,11 @@ MODELS: dict[str, ModelSpec] = {
         # thinking-on that actually ran thinking-off. Set it per model, once
         # the model is chosen and the switch confirmed by calling it.
         reasoning_style="",
+        # The prompt asks for four short lines -- SLAB, HSN, ANSWERABLE and a
+        # one-sentence WHY. 256 is generous for that and leaves room inside a
+        # 4,096-token context for the longest advance ruling in the golden set,
+        # which runs to about 2,000 tokens.
+        max_output_tokens=256,
         note="self-hosted on vLLM for project 03; model id comes from "
              "NIM_MODEL, cost is GPU time rather than a per-token price",
     ),
